@@ -73,7 +73,7 @@ export default function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link href="#" className="justify-center text-sm text-primary">
+                <Link href="/notifications" className="justify-center text-sm text-primary">
                     View all notifications
                 </Link>
             </DropdownMenuItem>
