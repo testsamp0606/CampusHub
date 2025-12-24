@@ -65,6 +65,7 @@ const studentFormSchema = z.object({
 type StudentFormValues = z.infer<typeof studentFormSchema>;
 
 const defaultValues: Partial<StudentFormValues> = {
+  studentId: '',
   firstName: '',
   lastName: '',
   email: '',
@@ -126,7 +127,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <FormLabel>Student ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="S123456" {...field} disabled />
+                      <Input placeholder="S123456" {...field} disabled value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -140,7 +141,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <RequiredLabel>First Name</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input placeholder="John" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -153,7 +154,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <RequiredLabel>Last Name</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input placeholder="Doe" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -166,7 +167,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <RequiredLabel>Email</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="student@example.com" {...field} />
+                      <Input placeholder="student@example.com" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -203,7 +204,7 @@ export default function AddStudentPage() {
                     <FormItem className="flex-1">
                        <RequiredLabel>Phone Number</RequiredLabel>
                       <FormControl>
-                        <Input placeholder="9876543210" {...field} />
+                        <Input placeholder="9876543210" {...field} value={field.value || ''} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,6 +223,7 @@ export default function AddStudentPage() {
                         placeholder="123 Main St, Anytown, USA"
                         className="resize-none"
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -235,7 +237,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <RequiredLabel>Aadhar Number</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="1234 5678 9012" {...field} />
+                      <Input placeholder="1234 5678 9012" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -318,6 +320,7 @@ export default function AddStudentPage() {
                         placeholder="Tell us about the student's previous schooling..."
                         className="resize-none"
                         {...field}
+                        value={field.value || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -331,7 +334,7 @@ export default function AddStudentPage() {
                   <FormItem>
                     <FormLabel>Hobbies</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Reading, Painting, Sports" {...field} />
+                      <Input placeholder="e.g., Reading, Painting, Sports" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -340,11 +343,11 @@ export default function AddStudentPage() {
                <FormField
                 control={form.control}
                 name="profilePhoto"
-                render={({ field }) => (
+                render={({ field: { value, onChange, ...field } }) => (
                   <FormItem>
                     <FormLabel>Profile Photo</FormLabel>
                     <FormControl>
-                      <Input type="file" accept="image/*" {...field} />
+                      <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
                     </FormControl>
                     <FormDescription>
                       Upload a profile picture for the student.
