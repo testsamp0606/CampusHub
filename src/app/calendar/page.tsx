@@ -10,8 +10,8 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { eventsData } from '@/lib/data';
-import { format, isSameDay } from 'date-fns';
-import { DayPicker } from 'react-day-picker';
+import { format } from 'date-fns';
+import type { DayProps } from 'react-day-picker';
 
 type CalendarEvent = (typeof eventsData)[0];
 
@@ -48,13 +48,13 @@ export default function CalendarPage() {
     return eventsByDate[dateKey] || [];
   }, [selectedDate, eventsByDate]);
 
-  const DayWithDot = ({ date, ...props }: { date: Date, children: React.ReactNode } & any) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
+  const DayWithDot = (props: DayProps) => {
+    const dateKey = format(props.date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey];
     
     return (
       <div className="relative h-full w-full flex items-center justify-center">
-        {props.children}
+        <span>{format(props.date, 'd')}</span>
         {dayEvents && dayEvents.length > 0 && (
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex space-x-1">
              {dayEvents.slice(0, 3).map((event, index) => (
@@ -78,11 +78,7 @@ export default function CalendarPage() {
               onSelect={setSelectedDate}
               className="w-full"
               components={{
-                Day: ({ date, ...props }) => (
-                    <DayWithDot date={date} {...props}>
-                        {format(date, 'd')}
-                    </DayWithDot>
-                )
+                Day: DayWithDot,
               }}
                modifiers={{
                 event: (date: Date) => {
