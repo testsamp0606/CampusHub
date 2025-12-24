@@ -94,13 +94,7 @@ body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .print\:hidden {
+  .no-print {
     display: none;
-  }
-  .print\:shadow-none {
-    box-shadow: none;
-  }
-  .print\:border-none {
-    border: none;
   }
 }
