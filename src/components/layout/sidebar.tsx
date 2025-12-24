@@ -8,12 +8,82 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
+  SidebarCollapsible,
+  SidebarCollapsibleTrigger,
+  SidebarCollapsibleContent,
 } from '@/components/ui/sidebar';
-import { LogOut, Settings, GraduationCap } from 'lucide-react';
+import { LogOut, Settings, GraduationCap, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { NAV_ITEMS } from '@/lib/nav-items';
+import { NAV_ITEMS, type NavItem } from '@/lib/nav-items';
 import { Separator } from '../ui/separator';
+
+const renderNavItems = (items: NavItem[], pathname: string) => {
+  return items.map((item) => {
+    if (item.subItems) {
+      const isParentActive = item.subItems.some(sub => pathname.startsWith(sub.href || ''));
+      return (
+        <SidebarMenuItem key={item.label}>
+          <SidebarCollapsible>
+            <SidebarCollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  isActive={isParentActive}
+                  tooltip={item.label}
+                  className="justify-start"
+                  asChild
+                >
+                  <div>
+                    <item.icon />
+                    <span>{item.label}</span>
+                    <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  </div>
+                </SidebarMenuButton>
+            </SidebarCollapsibleTrigger>
+            <SidebarCollapsibleContent>
+              <SidebarMenu>
+                {item.subItems.map((subItem) => (
+                  <SidebarMenuItem key={subItem.label}>
+                    <Link href={subItem.href || '#'} passHref>
+                      <SidebarMenuButton
+                        isActive={pathname === subItem.href}
+                        tooltip={subItem.label}
+                        className="justify-start ml-4"
+                        asChild
+                      >
+                         <div>
+                          <subItem.icon />
+                          <span>{subItem.label}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarCollapsibleContent>
+          </SidebarCollapsible>
+        </SidebarMenuItem>
+      );
+    }
+
+    return (
+      <SidebarMenuItem key={item.label}>
+        <Link href={item.href || '#'} passHref>
+          <SidebarMenuButton
+            isActive={pathname === item.href}
+            tooltip={item.label}
+            className="justify-start"
+            asChild
+          >
+            <div>
+              <item.icon />
+              <span>{item.label}</span>
+            </div>
+          </SidebarMenuButton>
+        </Link>
+      </SidebarMenuItem>
+    );
+  });
+};
 
 export default function AppSidebar() {
   const pathname = usePathname();
@@ -37,25 +107,7 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="flex-1 p-2">
-        <SidebarMenu>
-          {NAV_ITEMS.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <Link href={item.href} passHref>
-                <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={item.label}
-                  className="justify-start"
-                  asChild
-                >
-                  <div>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </div>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <SidebarMenu>{renderNavItems(NAV_ITEMS, pathname)}</SidebarMenu>
       </SidebarContent>
 
       <Separator className="my-2" />

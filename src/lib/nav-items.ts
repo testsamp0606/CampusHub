@@ -3,9 +3,7 @@ import {
   School,
   ClipboardCheck,
   FileText,
-  CircleDollarSign,
   BookUser,
-  TrendingDown,
   Library,
   Calendar,
   Archive,
@@ -14,9 +12,18 @@ import {
   Contact,
   CreditCard,
   Briefcase,
+  TrendingDown,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
-export const NAV_ITEMS = [
+export type NavItem = {
+  href?: string;
+  label: string;
+  icon: LucideIcon;
+  subItems?: NavItem[];
+};
+
+export const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   {
     href: '/students',
@@ -49,13 +56,14 @@ export const NAV_ITEMS = [
     icon: FileText,
   },
   {
-    href: '/fees',
-    label: 'Student Fee',
-    icon: CircleDollarSign,
+    label: 'Accounts',
+    icon: BookUser,
+    subItems: [
+      { href: '/fees', label: 'Fee Collection', icon: CreditCard },
+      { href: '/payment', label: 'Payments', icon: CreditCard },
+      { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+    ],
   },
-  { href: '/payment', label: 'Payment', icon: CreditCard },
-  { href: '/accounts', label: 'Accounts', icon: BookUser },
-  { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/library', label: 'Library', icon: Library },
   { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/assets', label: 'Assets', icon: Archive },
