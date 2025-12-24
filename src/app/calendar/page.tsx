@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -12,6 +13,8 @@ import {
   eventsData as initialEventsData,
   classesData,
   teachersData,
+  timetablesData as initialTimetablesData,
+  subjects,
 } from '@/lib/data';
 import { format, isValid, parseISO } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
@@ -21,6 +24,7 @@ import {
   Clock,
   PartyPopper,
   PlusCircle,
+  Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,9 +72,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-type CalendarEvent = (typeof initialEventsData)[0];
-type Teacher = (typeof teachersData)[0];
+import type { CalendarEvent, Teacher, TimetableEntry, FullTimetable } from '@/lib/data';
 
 const periodTimes = [
   '09:00 - 09:45',
@@ -81,29 +83,11 @@ const periodTimes = [
   '14:15 - 15:00',
 ];
 
-type TimetableEntry = {
-  period: number;
-  subject: string;
-  teacher: string;
-  time: string;
-};
-
-const subjects = [
-  'Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'English',
-  'History',
-  'Geography',
-  'Computer Science',
-];
-
-const generateRandomTimetable = (teachers: Teacher[]): TimetableEntry[] => {
+const generateRandomTimetable = (classId: string, day: string): TimetableEntry[] => {
   return Array.from({ length: 6 }, (_, i) => ({
     period: i + 1,
     subject: subjects[Math.floor(Math.random() * subjects.length)],
-    teacher: teachers[Math.floor(Math.random() * teachers.length)].name,
+    teacherId: teachersData[Math.floor(Math.random() * teachersData.length)].id,
     time: periodTimes[i],
   }));
 };
@@ -141,21 +125,60 @@ const eventTypeDetails: {
 };
 
 const WeeklyTimetable = () => {
+  const { toast } = useToast();
   const [selectedClass, setSelectedClass] = useState<string>(classesData[0].id);
-  const [timetable, setTimetable] = useState<Record<string, TimetableEntry[]>>(
-    {}
-  );
+  const [timetables, setTimetables] = useState<FullTimetable[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    const newTimetable: Record<string, TimetableEntry[]> = {};
-    days.forEach((day) => {
-      newTimetable[day] = generateRandomTimetable(teachersData);
-    });
-    setTimetable(newTimetable);
-  }, [selectedClass]);
+    const storedTimetables = localStorage.getItem('timetablesData');
+    if (storedTimetables) {
+        setTimetables(JSON.parse(storedTimetables));
+    } else {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        const initialData = classesData.flatMap(cls => 
+            days.map(day => ({
+                classId: cls.id,
+                day: day as any,
+                entries: generateRandomTimetable(cls.id, day),
+            }))
+        );
+      setTimetables(initialData);
+      localStorage.setItem('timetablesData', JSON.stringify(initialData));
+    }
+  }, []);
 
   const classOptions = classesData.map((c) => ({ value: c.id, label: c.name }));
+  const subjectOptions = subjects.map(s => ({ value: s, label: s }));
+  const teacherOptions = teachersData.map(t => ({ value: t.id, label: t.name }));
+
+  const classTimetable = useMemo(() => {
+    return timetables.filter(t => t.classId === selectedClass);
+  }, [timetables, selectedClass]);
+  
+  const handleTimetableChange = (day: string, period: number, field: 'subject' | 'teacherId', value: string) => {
+    setTimetables(prev => {
+        const newTimetables = [...prev];
+        const timetableIndex = newTimetables.findIndex(t => t.classId === selectedClass && t.day === day);
+        if (timetableIndex !== -1) {
+            const entryIndex = newTimetables[timetableIndex].entries.findIndex(e => e.period === period);
+            if (entryIndex !== -1) {
+                (newTimetables[timetableIndex].entries[entryIndex] as any)[field] = value;
+            }
+        }
+        return newTimetables;
+    });
+    setHasChanges(true);
+  };
+
+  const handleSaveChanges = () => {
+    localStorage.setItem('timetablesData', JSON.stringify(timetables));
+    setHasChanges(false);
+    toast({
+      title: 'Timetable Saved',
+      description: 'Your changes to the timetable have been successfully saved.',
+    });
+  };
 
   return (
     <Card>
@@ -164,22 +187,28 @@ const WeeklyTimetable = () => {
           <div>
             <CardTitle>Weekly Class Timetable</CardTitle>
             <CardDescription>
-              Select a class to view its weekly schedule.
+              Select a class to view and edit its weekly schedule.
             </CardDescription>
           </div>
-          <div className="mt-4 md:mt-0">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger className="w-full md:w-[280px]">
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {classOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex gap-2 items-center mt-4 md:mt-0">
+             <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="w-full md:w-[280px]">
+                  <SelectValue placeholder="Select a class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasChanges && (
+                 <Button onClick={handleSaveChanges}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Changes
+                </Button>
+              )}
           </div>
         </div>
       </CardHeader>
@@ -189,30 +218,56 @@ const WeeklyTimetable = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-1/6">Day</TableHead>
-                {Object.values(timetable)[0]?.map((entry) => (
-                  <TableHead key={entry.period} className="text-center">
-                    Period {entry.period}
+                {periodTimes.map((time, i) => (
+                  <TableHead key={i} className="text-center">
+                    Period {i+1}
                     <div className="text-xs font-normal text-muted-foreground">
-                      {entry.time}
+                      {time}
                     </div>
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Object.entries(timetable).map(([day, entries]) => (
-                <TableRow key={day}>
-                  <TableCell className="font-semibold py-4">{day}</TableCell>
-                  {entries.map((entry) => (
-                    <TableCell key={entry.period} className="text-center py-4">
-                      <div className="font-medium">{entry.subject}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {entry.teacher}
-                      </div>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => {
+                const dayEntries = classTimetable.find(t => t.day === day)?.entries || [];
+                return (
+                  <TableRow key={day}>
+                    <TableCell className="font-semibold py-4">{day}</TableCell>
+                    {Array.from({ length: 6 }).map((_, periodIndex) => {
+                      const entry = dayEntries.find(e => e.period === periodIndex + 1);
+                      return (
+                        <TableCell key={periodIndex} className="text-center p-1">
+                          <div className="flex flex-col gap-1">
+                            <Select
+                                value={entry?.subject}
+                                onValueChange={(value) => handleTimetableChange(day, periodIndex + 1, 'subject', value)}
+                            >
+                                <SelectTrigger className="text-xs h-7">
+                                    <SelectValue placeholder="Subject" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {subjectOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                             <Select
+                                value={entry?.teacherId}
+                                onValueChange={(value) => handleTimetableChange(day, periodIndex + 1, 'teacherId', value)}
+                            >
+                                <SelectTrigger className="text-xs h-7">
+                                    <SelectValue placeholder="Teacher" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {teacherOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                          </div>
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

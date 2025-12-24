@@ -659,7 +659,21 @@ export const marksData = [
     { markId: 'M006', examId: 'EX004', studentId: 'S005', subject: 'English', marks: 88 },
 ];
 
-export const teachersData = [
+export type Teacher = {
+    id: string;
+    name: string;
+    department: string;
+    subjects: string[];
+    role: string;
+    qualification: string;
+    experience: string;
+    phone: string;
+    email: string;
+    status: 'Active' | 'On Leave' | 'Inactive';
+    profilePhoto: string;
+};
+
+export const teachersData: Teacher[] = [
     {
         id: 'T001',
         name: 'Mr. John Doe',
@@ -670,7 +684,7 @@ export const teachersData = [
         experience: '10 years',
         phone: '111-222-3333',
         email: 'john.doe.teacher@example.com',
-        status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        status: 'Active',
         profilePhoto: 'https://picsum.photos/seed/teacher1/200/200',
     },
     {
@@ -683,7 +697,7 @@ export const teachersData = [
         experience: '15 years',
         phone: '222-333-4444',
         email: 'jane.smith.teacher@example.com',
-        status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        status: 'Active',
         profilePhoto: 'https://picsum.photos/seed/teacher2/200/200',
     },
     {
@@ -696,7 +710,7 @@ export const teachersData = [
         experience: '12 years',
         phone: '333-444-5555',
         email: 'robert.brown.teacher@example.com',
-        status: 'On Leave' as 'Active' | 'On Leave' | 'Inactive',
+        status: 'On Leave',
         profilePhoto: 'https://picsum.photos/seed/teacher3/200/200',
     },
     {
@@ -709,7 +723,7 @@ export const teachersData = [
         experience: '8 years',
         phone: '444-555-6666',
         email: 'emily.white.teacher@example.com',
-        status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        status: 'Active',
         profilePhoto: 'https://picsum.photos/seed/teacher4/200/200',
     },
     {
@@ -722,7 +736,7 @@ export const teachersData = [
         experience: '5 years',
         phone: '555-666-7777',
         email: 'michael.green.teacher@example.com',
-        status: 'Inactive' as 'Active' | 'On Leave' | 'Inactive',
+        status: 'Inactive',
         profilePhoto: 'https://picsum.photos/seed/teacher5/200/200',
     }
 ];
@@ -747,3 +761,18 @@ export const eventsData: CalendarEvent[] = [
   { date: '2024-12-31', title: 'New Year\'s Eve', type: 'Holiday' },
   { date: '2025-01-26', title: 'Republic Day', type: 'Holiday' },
 ];
+
+export type TimetableEntry = {
+  period: number;
+  subject: string;
+  teacherId: string;
+  time: string;
+};
+
+export type FullTimetable = {
+    classId: string;
+    day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
+    entries: TimetableEntry[];
+}
+
+export const timetablesData: FullTimetable[] = [];
