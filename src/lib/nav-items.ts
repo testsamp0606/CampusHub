@@ -19,6 +19,7 @@ import {
   BookCopy,
   Book,
   Megaphone,
+  ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -85,16 +86,41 @@ export const ALL_NAV_ITEMS: NavItem[] = [
       { href: '/accounts', label: 'Ledger', icon: BookUser },
     ],
   },
-  { href: '/library', label: 'Library', icon: Library, roles: ['SuperAdmin', 'Admin', 'Librarian'] },
-  { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['SuperAdmin', 'Admin'] },
-  { href: '/assets', label: 'Assets', icon: Archive, roles: ['SuperAdmin', 'Admin'] },
-  { href: '/transport', label: 'Transport', icon: Bus, roles: ['SuperAdmin', 'Admin', 'Transport Manager'] },
+  {
+    href: '/library',
+    label: 'Library',
+    icon: Library,
+    roles: ['SuperAdmin', 'Admin', 'Librarian'],
+  },
+  {
+    href: '/announcements',
+    label: 'Announcements',
+    icon: Megaphone,
+    roles: ['SuperAdmin', 'Admin'],
+  },
+  {
+    href: '/assets',
+    label: 'Assets',
+    icon: Archive,
+    roles: ['SuperAdmin', 'Admin'],
+  },
+  {
+    href: '/transport',
+    label: 'Transport',
+    icon: Bus,
+    roles: ['SuperAdmin', 'Admin', 'Transport Manager'],
+  },
+   {
+    href: '/permissions',
+    label: 'Permissions',
+    icon: ShieldCheck,
+    roles: ['SuperAdmin'],
+  },
 ];
-
 
 const filterNavItemsByRole = (items: NavItem[], role: string): NavItem[] => {
   return items
-    .map(item => {
+    .map((item) => {
       // If the item has roles defined and the user's role is not included, filter it out.
       if (item.roles && !item.roles.includes(role)) {
         return null;
@@ -115,7 +141,9 @@ const filterNavItemsByRole = (items: NavItem[], role: string): NavItem[] => {
     .filter((item): item is NavItem => item !== null);
 };
 
-
 // Simulate getting the current user's role
 const CURRENT_USER_ROLE = 'SuperAdmin'; // Change this to 'Admin', 'Accountant', etc. to test
-export const NAV_ITEMS = filterNavItemsByRole(ALL_NAV_ITEMS, CURRENT_USER_ROLE);
+export const NAV_ITEMS = filterNavItemsByRole(
+  ALL_NAV_ITEMS,
+  CURRENT_USER_ROLE
+);
