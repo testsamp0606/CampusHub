@@ -11,6 +11,8 @@ import {
   SidebarCollapsible,
   SidebarCollapsibleTrigger,
   SidebarCollapsibleContent,
+  SidebarTrigger,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { LogOut, Settings, GraduationCap, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
@@ -94,7 +96,8 @@ export default function AppSidebar() {
       collapsible="icon"
       className="hidden border-r border-sidebar-border md:flex"
     >
-      <SidebarHeader className="h-16 justify-center">
+      <SidebarRail />
+      <SidebarHeader className="h-16 justify-between px-3">
         <Link
           href="/"
           className="flex items-center gap-2 text-lg font-bold text-primary"
@@ -104,6 +107,7 @@ export default function AppSidebar() {
             Campus Hub
           </span>
         </Link>
+         <SidebarTrigger className="hidden md:flex" />
       </SidebarHeader>
 
       <SidebarContent className="flex-1 p-2">

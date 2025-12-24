@@ -45,14 +45,13 @@ export default function Header() {
         {/* The Dashboard title was here and has been removed as per your request. */}
       </div>
 
-      <div className="hidden md:block">
-        <p className="font-headline font-semibold">St. Peter School</p>
-        <p className="text-xs text-muted-foreground">
-          Academic Year: 2024-2025
-        </p>
+      <div className="flex-1 text-center">
+        <h1 className="font-headline text-xl font-semibold md:text-2xl">
+          St. Peter School
+        </h1>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex flex-1 items-center justify-end gap-2">
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
             <Button
