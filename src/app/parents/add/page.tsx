@@ -27,13 +27,7 @@ import { useRouter } from 'next/navigation';
 import { students } from '@/lib/data';
 import { useEffect, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 
 const parentFormSchema = z.object({
   parentId: z.string(),
@@ -160,22 +154,18 @@ export default function AddParentPage() {
                 control={form.control}
                 name="studentId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <RequiredLabel>Tag a Student</RequiredLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a student" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {studentOptions.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Combobox
+                        options={studentOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Select a student..."
+                        searchPlaceholder="Search students..."
+                        emptyResultText="No student found."
+                      />
+                    </FormControl>
                     <FormDescription>
                       Link this parent to an existing student.
                     </FormDescription>
