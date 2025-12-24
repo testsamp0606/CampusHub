@@ -13,6 +13,7 @@ import {
   Users2,
   Contact,
   CreditCard,
+  Briefcase,
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
@@ -21,6 +22,11 @@ export const NAV_ITEMS = [
     href: '/students',
     label: 'Students',
     icon: Users2,
+  },
+  {
+    href: '/teachers',
+    label: 'Teachers',
+    icon: Briefcase,
   },
   {
     href: '/parents',
