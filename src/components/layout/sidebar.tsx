@@ -115,7 +115,7 @@ export default function AppSidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Settings">
+            <SidebarMenuButton asChild tooltip="Settings" isActive={pathname === '/settings'}>
               <Link href="/settings">
                 <Settings />
                 <span>Settings</span>
@@ -124,7 +124,7 @@ export default function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Log Out">
-              <Link href="/logout">
+              <Link href="#">
                 <LogOut />
                 <span>Log Out</span>
               </Link>
