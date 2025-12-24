@@ -215,18 +215,22 @@ export default function ClassDetailsPage() {
             <TableBody>
               {timetable.map((entry) => (
                 <TableRow key={entry.period}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium py-4">
                     Period {entry.period}
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    {entry.time}
+                  <TableCell className="py-4">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      {entry.time}
+                    </div>
                   </TableCell>
-                  <TableCell className="flex items-center gap-2">
-                     <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    {entry.subject}
+                  <TableCell className="py-4">
+                     <div className="flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        {entry.subject}
+                     </div>
                   </TableCell>
-                  <TableCell>{entry.teacher}</TableCell>
+                  <TableCell className="py-4">{entry.teacher}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -264,10 +268,10 @@ export default function ClassDetailsPage() {
             <TableBody>
               {students.map((student) => (
                 <TableRow key={student.id}>
-                  <TableCell>{student.id}</TableCell>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.email}</TableCell>
-                  <TableCell>{student.parentName}</TableCell>
+                  <TableCell className="py-4">{student.id}</TableCell>
+                  <TableCell className="font-medium py-4">{student.name}</TableCell>
+                  <TableCell className="py-4">{student.email}</TableCell>
+                  <TableCell className="py-4">{student.parentName}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

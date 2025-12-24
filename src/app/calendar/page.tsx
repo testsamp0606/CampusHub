@@ -202,9 +202,9 @@ const WeeklyTimetable = () => {
             <TableBody>
               {Object.entries(timetable).map(([day, entries]) => (
                 <TableRow key={day}>
-                  <TableCell className="font-semibold">{day}</TableCell>
+                  <TableCell className="font-semibold py-4">{day}</TableCell>
                   {entries.map((entry) => (
-                    <TableCell key={entry.period} className="text-center">
+                    <TableCell key={entry.period} className="text-center py-4">
                       <div className="font-medium">{entry.subject}</div>
                       <div className="text-xs text-muted-foreground">
                         {entry.teacher}
@@ -288,7 +288,7 @@ export default function CalendarPage() {
 
   const DayWithEvents = (props: DayProps) => {
     if (!isValid(props.date)) {
-      return <div />;
+      return <></>;
     }
     const dateKey = format(props.date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey] || [];
