@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Table,
   TableBody,
@@ -31,13 +31,13 @@ export default function PermissionsPage() {
   const [permissions, setPermissions] = useState(initialPermissionsData);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handlePermissionChange = (
+  const handlePermissionChange = useCallback((
     module: string,
     role: string,
     permission: Permission
   ) => {
     setPermissions(prev => {
-      const newPermissions = JSON.parse(JSON.stringify(prev)); // Deep copy to ensure immutability
+      const newPermissions = JSON.parse(JSON.stringify(prev));
       const currentPermissions = newPermissions[module]?.[role] || [];
       const permissionIndex = currentPermissions.indexOf(permission);
 
@@ -46,7 +46,7 @@ export default function PermissionsPage() {
       } else {
         currentPermissions.push(permission);
       }
-      
+
       if (!newPermissions[module]) {
         newPermissions[module] = {};
       }
@@ -55,7 +55,7 @@ export default function PermissionsPage() {
       return newPermissions;
     });
     setHasChanges(true);
-  };
+  }, []);
 
   const handleSaveChanges = () => {
     // In a real app, you would save this to a database.
@@ -117,9 +117,9 @@ export default function PermissionsPage() {
               <TableBody>
                 {modules.map(module => (
                   <TableRow key={module}>
-                    <TableCell className="font-semibold">{module}</TableCell>
+                    <TableCell className="font-semibold py-2">{module}</TableCell>
                     {roles.map(role => (
-                      <TableCell key={`${module}-${role}`}>
+                      <TableCell key={`${module}-${role}`} className="py-2">
                         <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
                           {permissionTypes.map(pType => {
                             const currentPermissions =
