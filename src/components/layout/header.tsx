@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Bell } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
@@ -33,6 +33,10 @@ export default function Header() {
           Academic Year: 2024-2025
         </p>
       </div>
+       <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+          <Bell className="h-5 w-5" />
+          <span className="sr-only">Notifications</span>
+        </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
