@@ -28,40 +28,51 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { students } from '@/lib/data';
 import { useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const parentFormSchema = z.object({
   parentId: z.string(),
-  firstName: z.string().min(2, 'First name must be at least 2 characters.'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters.'),
-  gender: z.enum(['male', 'female', 'other'], {
-    required_error: 'You need to select a gender.',
-  }),
-  occupation: z.string().min(2, 'Occupation is required.'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
-  email: z.string().email('Invalid email address.'),
-  address: z.string().min(10, 'Address must be at least 10 characters.'),
+  fatherName: z.string().min(2, 'Father name must be at least 2 characters.'),
+  fatherOccupation: z.string().min(2, 'Father occupation is required.'),
+  fatherPhone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
+  motherName: z.string().min(2, 'Mother name must be at least 2 characters.'),
+  motherOccupation: z.string().min(2, 'Mother occupation is required.'),
+  motherPhone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
+  monthlyIncome: z.coerce.number().min(0, 'Monthly income must be a positive number.'),
+  permanentAddress: z.string().min(10, 'Permanent address must be at least 10 characters.'),
+  temporaryAddress: z.string().optional(),
+  sameAsStudentAddress: z.boolean().default(false),
   studentId: z.string({
     required_error: 'Please select a student to tag.',
   }),
   profilePhoto: z.any().optional(),
+  getUpdates: z.boolean().default(false),
+  getResults: z.boolean().default(false),
+  getComplaints: z.boolean().default(false),
 });
 
 type ParentFormValues = z.infer<typeof parentFormSchema>;
 
 const defaultValues: Partial<ParentFormValues> = {
   parentId: '',
-  firstName: '',
-  lastName: '',
-  occupation: '',
-  phone: '',
-  email: '',
-  address: '',
+  fatherName: '',
+  fatherOccupation: '',
+  fatherPhone: '',
+  motherName: '',
+  motherOccupation: '',
+  motherPhone: '',
+  monthlyIncome: 0,
+  permanentAddress: '',
+  temporaryAddress: '',
+  sameAsStudentAddress: false,
+  getUpdates: false,
+  getResults: false,
+  getComplaints: false,
 };
 
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
@@ -78,11 +89,23 @@ export default function AddParentPage() {
     defaultValues,
   });
 
+  const studentId = form.watch('studentId');
+  const sameAsStudentAddress = form.watch('sameAsStudentAddress');
+
   useEffect(() => {
     // Generate a unique parent ID when the component mounts
     const uniqueId = `P${Date.now().toString().slice(-6)}`;
     form.setValue('parentId', uniqueId);
   }, [form]);
+  
+  useEffect(() => {
+    if (sameAsStudentAddress && studentId) {
+      const student = students.find((s) => s.id === studentId);
+      if (student) {
+        form.setValue('permanentAddress', student.address);
+      }
+    }
+  }, [sameAsStudentAddress, studentId, form]);
 
   function onSubmit(data: ParentFormValues) {
     console.log(data);
@@ -90,7 +113,7 @@ export default function AddParentPage() {
       students.find((s) => s.id === data.studentId)?.name || 'a student';
     toast({
       title: 'Parent Registered',
-      description: `${data.firstName} ${data.lastName} has been successfully registered and tagged with ${studentName}.`,
+      description: `Parents of ${studentName} have been successfully registered.`,
     });
     form.reset();
     router.push('/parents');
@@ -99,9 +122,9 @@ export default function AddParentPage() {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Add New Parent</CardTitle>
+        <CardTitle>Add New Parent/Guardian</CardTitle>
         <CardDescription>
-          Fill out the form below to register a new parent and tag a student. Fields marked with <span className="text-destructive">*</span> are required.
+          Fill out the form below to register new parents and tag a student. Fields marked with <span className="text-destructive">*</span> are required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -116,126 +139,6 @@ export default function AddParentPage() {
                     <FormLabel>Parent ID</FormLabel>
                     <FormControl>
                       <Input placeholder="P123456" {...field} disabled value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div />
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>First Name</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="Jane" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Last Name</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="Doe" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="gender"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <RequiredLabel>Gender</RequiredLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <RadioGroupItem value="male" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Male</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <RadioGroupItem value="female" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Female</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <RadioGroupItem value="other" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Other</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="occupation"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Occupation</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="Engineer" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Phone Number</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="9876543210" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Email</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="parent@example.com" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <RequiredLabel>Address</RequiredLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="123 Main St, Anytown, USA"
-                        className="resize-none"
-                        {...field}
-                         value={field.value || ''}
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -268,26 +171,253 @@ export default function AddParentPage() {
                   </FormItem>
                 )}
               />
-               <FormField
+            </div>
+
+            <div className="space-y-4 rounded-md border p-4">
+                <h3 className="font-semibold">Father's Details</h3>
+                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <FormField
+                        control={form.control}
+                        name="fatherName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Father's Name</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="John Doe" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="fatherOccupation"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Father's Occupation</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="Engineer" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                     <FormField
+                        control={form.control}
+                        name="fatherPhone"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Father's Phone</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="9876543210" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+
+             <div className="space-y-4 rounded-md border p-4">
+                <h3 className="font-semibold">Mother's Details</h3>
+                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <FormField
+                        control={form.control}
+                        name="motherName"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Mother's Name</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="Jane Doe" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="motherOccupation"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Mother's Occupation</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="Doctor" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="motherPhone"
+                        render={({ field }) => (
+                        <FormItem>
+                            <RequiredLabel>Mother's Phone</RequiredLabel>
+                            <FormControl>
+                            <Input placeholder="9876543211" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                 <FormField
+                    control={form.control}
+                    name="monthlyIncome"
+                    render={({ field }) => (
+                    <FormItem>
+                        <RequiredLabel>Monthly Income (Family)</RequiredLabel>
+                        <FormControl>
+                        <Input type="number" placeholder="50000" {...field} value={field.value || ''} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            </div>
+            
+             <FormField
                 control={form.control}
-                name="profilePhoto"
-                render={({ field: { value, onChange, ...field } }) => (
-                  <FormItem>
-                    <FormLabel>Profile Photo</FormLabel>
+                name="sameAsStudentAddress"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
-                      <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                    <FormDescription>
-                      Upload a profile picture for the parent.
-                    </FormDescription>
-                    <FormMessage />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Same Address as Student
+                      </FormLabel>
+                      <FormDescription>
+                        Select this if the parents' address is the same as the student's permanent address.
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />
+
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                 <FormField
+                    control={form.control}
+                    name="permanentAddress"
+                    render={({ field }) => (
+                    <FormItem>
+                        <RequiredLabel>Permanent Address</RequiredLabel>
+                        <FormControl>
+                        <Textarea
+                            placeholder="123 Main St, Anytown, USA"
+                            className="resize-none"
+                            {...field}
+                            value={field.value || ''}
+                        />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="temporaryAddress"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Temporary Address</FormLabel>
+                        <FormControl>
+                        <Textarea
+                            placeholder="456 Park Ave, Anytown, USA"
+                            className="resize-none"
+                            {...field}
+                            value={field.value || ''}
+                        />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
             </div>
 
+            <div className="space-y-4 rounded-md border p-4">
+                 <FormLabel>Communication Preferences</FormLabel>
+                 <FormDescription>Select how you'd like to be updated.</FormDescription>
+                 <div className="flex flex-col space-y-2 pt-2">
+                     <FormField
+                        control={form.control}
+                        name="getUpdates"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                                Get child updates regularly
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="getResults"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                                Get test results
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="getComplaints"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                                Receive any complaints
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                 </div>
+            </div>
+
+            <FormField
+            control={form.control}
+            name="profilePhoto"
+            render={({ field: { value, onChange, ...field } }) => (
+                <FormItem>
+                <FormLabel>Parents' Photo</FormLabel>
+                <FormControl>
+                    <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
+                </FormControl>
+                <FormDescription>
+                    Upload a profile picture for the parents.
+                </FormDescription>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+
             <div className="flex gap-4">
-              <Button type="submit">Add Parent</Button>
+              <Button type="submit">Add Parents</Button>
                <Button
                 type="button"
                 variant="outline"

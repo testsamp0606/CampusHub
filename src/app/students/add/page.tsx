@@ -49,7 +49,8 @@ const studentFormSchema = z.object({
   email: z.string().email('Invalid email address.'),
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
   countryCode: z.enum(['+91'], { required_error: 'Country code is required.' }),
-  address: z.string().min(10, 'Address must be at least 10 characters.'),
+  permanentAddress: z.string().min(10, 'Permanent Address must be at least 10 characters.'),
+  temporaryAddress: z.string().min(10, 'Temporary Address must be at least 10 characters.').optional(),
   aadhar: z
     .string()
     .regex(/^\d{12}$/, 'Aadhar number must be 12 digits.'),
@@ -71,7 +72,8 @@ const defaultValues: Partial<StudentFormValues> = {
   email: '',
   phone: '',
   countryCode: '+91',
-  address: '',
+  permanentAddress: '',
+  temporaryAddress: '',
   aadhar: '',
   academicBackground: '',
   hobbies: '',
@@ -214,13 +216,31 @@ export default function AddStudentPage() {
 
               <FormField
                 control={form.control}
-                name="address"
+                name="permanentAddress"
                 render={({ field }) => (
                   <FormItem>
-                     <RequiredLabel>Address</RequiredLabel>
+                     <RequiredLabel>Permanent Address</RequiredLabel>
                     <FormControl>
                       <Textarea
                         placeholder="123 Main St, Anytown, USA"
+                        className="resize-none"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="temporaryAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Temporary Address</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="456 Park Ave, Anytown, USA"
                         className="resize-none"
                         {...field}
                         value={field.value || ''}
