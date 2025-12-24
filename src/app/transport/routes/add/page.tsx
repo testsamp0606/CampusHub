@@ -27,6 +27,8 @@ import { useEffect, useState } from 'react';
 import { routesData as initialRoutesData, vehiclesData as initialVehiclesData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 
 type Route = (typeof initialRoutesData)[0];
 type Vehicle = (typeof initialVehiclesData)[0];
@@ -75,7 +77,7 @@ export default function AddRoutePage() {
 
   function onSubmit(data: RouteFormValues) {
     const storedRoutes = localStorage.getItem('routesData');
-    const currentRoutes: Route[] = storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData;
+    const currentRoutes: Route[] = storedRoutes ? JSON.parse(storedRoutes) : [];
 
     const newRoute: Route = {
         id: data.id,
@@ -135,28 +137,37 @@ export default function AddRoutePage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="vehicleId"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Assign Vehicle</RequiredLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a vehicle" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {vehicleOptions.map(opt => (
-                           <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <RequiredLabel>Assign Vehicle</RequiredLabel>
+                <div className="flex gap-2 items-center">
+                  <FormField
+                    control={form.control}
+                    name="vehicleId"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a vehicle" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {vehicleOptions.map(opt => (
+                               <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button asChild variant="outline">
+                    <Link href="/transport/vehicles/add" target="_blank">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Vehicle
+                    </Link>
+                  </Button>
+                </div>
+              </div>
             </div>
              <FormField
                 control={form.control}

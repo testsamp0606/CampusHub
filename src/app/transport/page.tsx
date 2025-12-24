@@ -57,18 +57,20 @@ export default function TransportPage() {
 
   useEffect(() => {
     const storedRoutes = localStorage.getItem('routesData');
-    setRoutesData(storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData);
+    const currentRoutes = storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData;
+    setRoutesData(currentRoutes);
 
     const storedVehicles = localStorage.getItem('vehiclesData');
-    setVehiclesData(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
+    const currentVehicles = storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData;
+    setVehiclesData(currentVehicles);
 
      const storedAllocations = localStorage.getItem('studentTransportData');
      const allocations = storedAllocations ? JSON.parse(storedAllocations) : initialStudentTransportData;
 
      const enrichedAllocations = allocations.map((allocation: any) => {
         const student = students.find(s => s.id === allocation.studentId);
-        const route = (storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData).find((r: Route) => r.id === allocation.routeId);
-        const vehicle = (storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData).find((v: Vehicle) => v.id === route?.vehicleId);
+        const route = currentRoutes.find((r: Route) => r.id === allocation.routeId);
+        const vehicle = currentVehicles.find((v: Vehicle) => v.id === route?.vehicleId);
         return {
           ...allocation,
           studentName: student?.name || 'N/A',
@@ -168,8 +170,10 @@ export default function TransportPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>All Vehicles</CardTitle>
-                 <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Vehicle
+                 <Button asChild>
+                  <Link href="/transport/vehicles/add">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Vehicle
+                  </Link>
                 </Button>
               </div>
               <CardDescription>
