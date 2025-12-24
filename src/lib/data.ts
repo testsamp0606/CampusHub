@@ -277,3 +277,66 @@ export const attendanceData = [
   { studentId: 'S005', studentName: 'Chris Green', classId: 'C002', date: '2024-07-04', status: 'absent' },
   { studentId: 'S005', studentName: 'Chris Green', classId: 'C002', date: '2024-07-05', status: 'absent' },
 ];
+
+export const feesData = [
+  {
+    invoiceId: 'INV001',
+    studentId: 'S001',
+    studentName: 'John Doe',
+    class: 'Class X',
+    amount: 1500,
+    dueDate: '2024-08-01',
+    status: 'Paid',
+    paymentDate: '2024-07-25',
+    paymentMethod: 'Credit Card',
+    description: 'Monthly Tuition Fee for July'
+  },
+  {
+    invoiceId: 'INV002',
+    studentId: 'S002',
+    studentName: 'Jane Smith',
+    class: 'Class IX',
+    amount: 1200,
+    dueDate: '2024-08-01',
+    status: 'Unpaid',
+    paymentDate: null,
+    paymentMethod: null,
+    description: 'Monthly Tuition Fee for July'
+  },
+  {
+    invoiceId: 'INV003',
+    studentId: 'S003',
+    studentName: 'Mike Johnson',
+    class: 'Class X',
+    amount: 1500,
+    dueDate: '2024-07-01',
+    status: 'Overdue',
+    paymentDate: null,
+    paymentMethod: null,
+    description: 'Monthly Tuition Fee for June'
+  },
+  {
+    invoiceId: 'INV004',
+    studentId: 'S004',
+    studentName: 'Emily White',
+    class: 'Class VIII',
+    amount: 1000,
+    dueDate: '2024-08-01',
+    status: 'Paid',
+    paymentDate: '2024-07-20',
+    paymentMethod: 'Bank Transfer',
+    description: 'Monthly Tuition Fee for July'
+  },
+  {
+    invoiceId: 'INV005',
+    studentId: 'S001',
+    studentName: 'John Doe',
+    class: 'Class X',
+    amount: 250,
+    dueDate: '2024-08-10',
+    status: 'Unpaid',
+    paymentDate: null,
+    paymentMethod: null,
+    description: 'Exam Fee - Mid Term'
+  },
+];
