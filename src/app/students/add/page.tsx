@@ -40,8 +40,10 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const studentFormSchema = z.object({
+  studentId: z.string(),
   firstName: z.string().min(2, 'First name must be at least 2 characters.'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters.'),
   email: z.string().email('Invalid email address.'),
@@ -88,6 +90,13 @@ export default function AddStudentPage() {
     defaultValues,
   });
 
+  useEffect(() => {
+    // Generate a unique student ID when the component mounts
+    const uniqueId = `S${Date.now().toString().slice(-6)}`;
+    form.setValue('studentId', uniqueId);
+  }, [form]);
+
+
   function onSubmit(data: StudentFormValues) {
     console.log(data);
     toast({
@@ -110,6 +119,20 @@ export default function AddStudentPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+               <FormField
+                control={form.control}
+                name="studentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Student ID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="S123456" {...field} disabled />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div /> 
               <FormField
                 control={form.control}
                 name="firstName"
@@ -332,7 +355,16 @@ export default function AddStudentPage() {
               />
             </div>
 
-            <Button type="submit">Add Student</Button>
+            <div className="flex gap-4">
+              <Button type="submit">Add Student</Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+              >
+                Close
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
