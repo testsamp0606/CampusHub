@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -12,7 +13,6 @@ import {
   SidebarCollapsibleTrigger,
   SidebarCollapsibleContent,
   SidebarRail,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { LogOut, Settings, GraduationCap, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
@@ -96,9 +96,7 @@ export default function AppSidebar() {
       collapsible="icon"
       className="hidden border-r border-sidebar-border md:flex"
     >
-      <SidebarRail>
-        <SidebarTrigger />
-      </SidebarRail>
+      <SidebarRail />
       <SidebarHeader className="h-16 justify-start px-3">
         <Link
           href="/"
