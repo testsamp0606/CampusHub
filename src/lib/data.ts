@@ -7,6 +7,10 @@ import {
   ShieldCheck,
   ClipboardList,
   School2,
+  Wallet,
+  BookUp,
+  UserX,
+  Building,
 } from 'lucide-react';
 
 export type StatCardData = {
@@ -66,6 +70,68 @@ export const statCardsData: StatCardData[] = [
     Icon: School2,
     color: 'text-pink-500',
     bgColor: 'bg-pink-100',
+  },
+];
+
+export const studentStatsData: StatCardData[] = [
+  {
+    title: 'Total Students',
+    count: '203',
+    Icon: Users,
+    color: 'text-blue-500',
+    bgColor: 'bg-blue-100',
+  },
+  {
+    title: 'New Admissions',
+    count: '15',
+    Icon: UserCheck,
+    color: 'text-green-500',
+    bgColor: 'bg-green-100',
+  },
+  {
+    title: 'Overdue Fees',
+    count: '5',
+    Icon: Wallet,
+    color: 'text-red-500',
+    bgColor: 'bg-red-100',
+  },
+  {
+    title: 'Overall Attendance',
+    count: '95%',
+    Icon: ClipboardList,
+    color: 'text-indigo-500',
+    bgColor: 'bg-indigo-100',
+  }
+];
+
+export const teacherStatsData: StatCardData[] = [
+  {
+    title: 'Total Teachers',
+    count: '25',
+    Icon: Briefcase,
+    color: 'text-green-500',
+    bgColor: 'bg-green-100',
+  },
+  {
+    title: 'Teachers on Leave',
+    count: '2',
+    Icon: UserX,
+    color: 'text-yellow-500',
+    bgColor: 'bg-yellow-100',
+  },
+  {
+    title: 'Total Departments',
+    count: '6',
+    Icon: Building,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-100',
+  },
+  {
+    title: 'Avg. Workload',
+    count: '15h/w',
+    Icon: BookUp,
+    color: 'text-sky-500',
+    bgColor: 'bg-sky-100',
   },
 ];
 

@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatCard from './stat-card';
-import { statCardsData } from '@/lib/data';
+import { statCardsData, studentStatsData, teacherStatsData } from '@/lib/data';
 import AttendanceCard from './attendance-card';
 import ClassesTable from './classes-table';
 import AnomalyDetector from './anomaly-detector';
@@ -32,10 +32,18 @@ export default function MainDashboard() {
           </div>
         </TabsContent>
         <TabsContent value="students">
-          <div>This is the students tab content.</div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {studentStatsData.map((card) => (
+              <StatCard key={card.title} {...card} />
+            ))}
+          </div>
         </TabsContent>
         <TabsContent value="teachers">
-          <div>This is the teachers tab content.</div>
+           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {teacherStatsData.map((card) => (
+              <StatCard key={card.title} {...card} />
+            ))}
+          </div>
         </TabsContent>
         <TabsContent value="status">
           <AnomalyDetector />
