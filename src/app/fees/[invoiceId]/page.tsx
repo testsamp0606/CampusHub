@@ -1,6 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { feesData, students } from '@/lib/data';
+import { feesData as initialFeesData, students } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -15,6 +15,9 @@ import { ArrowLeft, Printer, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useEffect, useState } from 'react';
+
+type Fee = (typeof initialFeesData)[0];
 
 export default function InvoiceDetailsPage() {
   const params = useParams();
@@ -22,7 +25,15 @@ export default function InvoiceDetailsPage() {
   const { toast } = useToast();
   const invoiceId = params.invoiceId;
 
-  const invoice = feesData.find((f) => f.invoiceId === invoiceId);
+  const [invoice, setInvoice] = useState<Fee | undefined>(undefined);
+
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
+    const currentInvoice = fees.find((f) => f.invoiceId === invoiceId);
+    setInvoice(currentInvoice);
+  }, [invoiceId]);
+  
   const student = invoice ? students.find(s => s.id === invoice.studentId) : null;
 
   if (!invoice || !student) {
@@ -37,7 +48,6 @@ export default function InvoiceDetailsPage() {
     toast({ title: 'Generating PDF...', description: 'Your invoice is being prepared for download.' });
     const input = document.getElementById('invoice-pdf');
     if (input) {
-        // Hide elements not needed for the PDF before capture
         const elementsToHide = document.querySelectorAll('.no-print');
         elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
 
@@ -46,13 +56,11 @@ export default function InvoiceDetailsPage() {
             useCORS: true, 
             logging: true,
             onclone: (document) => {
-              // On the cloned document, we can be more aggressive with hiding
               const clonedElementsToHide = document.querySelectorAll('.no-print');
               clonedElementsToHide.forEach(el => (el as HTMLElement).style.display = 'none');
             }
         })
         .then((canvas) => {
-            // Restore hidden elements after capture
             elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
             const imgData = canvas.toDataURL('image/png');
@@ -67,7 +75,6 @@ export default function InvoiceDetailsPage() {
         .catch(err => {
             console.error("Failed to generate PDF", err);
             toast({ variant: 'destructive', title: 'PDF Generation Failed', description: 'Could not create the invoice PDF.' });
-             // Restore hidden elements on error as well
             elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'visible');
         });
     }
@@ -92,7 +99,7 @@ export default function InvoiceDetailsPage() {
                     Pay Now
                 </Button>
             )}
-            <Button variant="outline" onClick={() => router.back()}>
+            <Button variant="outline" onClick={() => router.push('/fees')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to List
             </Button>

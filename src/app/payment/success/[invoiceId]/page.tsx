@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Card,
@@ -11,11 +12,35 @@ import {
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { feesData as initialFeesData } from '@/lib/data';
+import { format } from 'date-fns';
+
+type Fee = (typeof initialFeesData)[0];
 
 export default function PaymentSuccessPage() {
   const params = useParams();
   const router = useRouter();
   const invoiceId = params.invoiceId as string;
+
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
+
+    const updatedFees = fees.map(fee => {
+      if (fee.invoiceId === invoiceId) {
+        return {
+          ...fee,
+          status: 'Paid' as 'Paid',
+          paymentDate: format(new Date(), 'yyyy-MM-dd'),
+          paymentMethod: 'Credit Card (Online)',
+        };
+      }
+      return fee;
+    });
+
+    localStorage.setItem('feesData', JSON.stringify(updatedFees));
+
+  }, [invoiceId]);
 
   return (
     <div className="flex justify-center items-center min-h-[70vh]">

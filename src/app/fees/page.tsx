@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -20,11 +20,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, Search, FilePlus2, Bell, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { feesData } from '@/lib/data';
+import { feesData as initialFeesData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+type Fee = (typeof initialFeesData)[0];
 
 const FEES_PER_PAGE = 5;
 
@@ -33,12 +36,40 @@ export default function FeesPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [feesData, setFeesData] = useState<Fee[]>([]);
+
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    if (storedFees) {
+      setFeesData(JSON.parse(storedFees));
+    } else {
+      setFeesData(initialFeesData);
+      localStorage.setItem('feesData', JSON.stringify(initialFeesData));
+    }
+  }, []);
+
+  const updateAndStoreFees = (newFees: Fee[]) => {
+    setFeesData(newFees);
+    localStorage.setItem('feesData', JSON.stringify(newFees));
+  };
 
   const handleRecordPayment = (invoiceId: string) => {
+    const updatedFees = feesData.map((fee) => {
+      if (fee.invoiceId === invoiceId) {
+        return {
+          ...fee,
+          status: 'Paid' as 'Paid',
+          paymentDate: format(new Date(), 'yyyy-MM-dd'),
+          paymentMethod: 'Manual Record',
+        };
+      }
+      return fee;
+    });
+    updateAndStoreFees(updatedFees);
+
     toast({
       title: 'Payment Recorded',
       description: `Payment for invoice ${invoiceId} has been successfully recorded.`,
-      variant: 'success'
     });
   };
 
@@ -56,7 +87,7 @@ export default function FeesPage() {
         fee.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         fee.invoiceId.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, feesData]);
 
   const totalPages = Math.ceil(filteredFees.length / FEES_PER_PAGE);
 
