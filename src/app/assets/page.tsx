@@ -155,13 +155,17 @@ export default function AssetsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                         <Button variant="ghost" size="icon" title="View Details" disabled>
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View</span>
+                         <Button asChild variant="ghost" size="icon" title="View Details">
+                            <Link href={`/assets/${asset.id}`}>
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View</span>
+                            </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" title="Edit" disabled>
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
+                        <Button asChild variant="ghost" size="icon" title="Edit">
+                             <Link href={`/assets/${asset.id}/edit`}>
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                            </Link>
                         </Button>
                         <Button
                           variant="ghost"
