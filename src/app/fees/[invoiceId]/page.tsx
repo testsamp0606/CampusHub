@@ -41,8 +41,8 @@ export default function InvoiceDetailsPage() {
   };
 
   return (
-    <Card className="shadow-lg max-w-4xl mx-auto">
-      <CardHeader>
+    <Card className="shadow-lg max-w-4xl mx-auto print:shadow-none print:border-none">
+      <CardHeader className="print:hidden">
         <div className="flex justify-between items-start">
             <div>
                 <CardTitle className="text-3xl">Invoice #{invoice.invoiceId}</CardTitle>
@@ -130,11 +130,13 @@ export default function InvoiceDetailsPage() {
         )}
 
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print Invoice
-        </Button>
+      <CardFooter className="flex justify-end gap-2 print:hidden">
+        {invoice.status === 'Paid' && (
+            <Button variant="outline" onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Print Invoice
+            </Button>
+        )}
         {invoice.status !== 'Paid' && (
              <Button onClick={handlePayNow}>
                 <CreditCard className="mr-2 h-4 w-4" />

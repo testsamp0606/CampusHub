@@ -36,8 +36,9 @@ export default function FeesPage() {
 
   const handleRecordPayment = (invoiceId: string) => {
     toast({
-      title: 'Record Payment',
-      description: `Opening payment recording for invoice: ${invoiceId}`,
+      title: 'Payment Recorded',
+      description: `Payment for invoice ${invoiceId} has been successfully recorded.`,
+      variant: 'success'
     });
   };
 

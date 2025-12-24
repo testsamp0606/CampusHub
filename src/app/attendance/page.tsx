@@ -145,6 +145,7 @@ export default function AttendancePage() {
         description: `Attendance for ${
           classesData.find((c) => c.id === selectedClass)?.name
         } on ${format(selectedDate, 'PPP')} has been finalized.`,
+        variant: 'success'
       });
       router.push('/students');
     }
@@ -332,6 +333,8 @@ export default function AttendancePage() {
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   initialFocus
+                  defaultMonth={selectedDate}
+                  today={new Date()}
                 />
               </PopoverContent>
             </Popover>

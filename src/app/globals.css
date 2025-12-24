@@ -88,3 +88,19 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print\:hidden {
+    display: none;
+  }
+  .print\:shadow-none {
+    box-shadow: none;
+  }
+  .print\:border-none {
+    border: none;
+  }
+}
