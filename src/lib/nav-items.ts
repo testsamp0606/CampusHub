@@ -27,13 +27,15 @@ export type NavItem = {
   label: string;
   icon: LucideIcon;
   subItems?: NavItem[];
+  roles?: string[];
 };
 
-export const NAV_ITEMS: NavItem[] = [
+export const ALL_NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   {
     label: 'Users',
     icon: Users,
+    roles: ['SuperAdmin', 'Admin'],
     subItems: [
       {
         href: '/students',
@@ -55,6 +57,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Academics',
     icon: School,
+    roles: ['SuperAdmin', 'Admin'],
     subItems: [
       { href: '/classes', label: 'Classes', icon: BookCopy },
       { href: '/subjects', label: 'Subjects', icon: Book },
@@ -74,6 +77,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     label: 'Accounts',
     icon: BookUser,
+    roles: ['SuperAdmin', 'Admin', 'Accountant'],
     subItems: [
       { href: '/fees', label: 'Fee Collection', icon: CreditCard },
       { href: '/payment', label: 'Payments', icon: CreditCard },
@@ -81,8 +85,37 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/accounts', label: 'Ledger', icon: BookUser },
     ],
   },
-  { href: '/library', label: 'Library', icon: Library },
-  { href: '/announcements', label: 'Announcements', icon: Megaphone },
-  { href: '/assets', label: 'Assets', icon: Archive },
-  { href: '/transport', label: 'Transport', icon: Bus },
+  { href: '/library', label: 'Library', icon: Library, roles: ['SuperAdmin', 'Admin', 'Librarian'] },
+  { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['SuperAdmin', 'Admin'] },
+  { href: '/assets', label: 'Assets', icon: Archive, roles: ['SuperAdmin', 'Admin'] },
+  { href: '/transport', label: 'Transport', icon: Bus, roles: ['SuperAdmin', 'Admin', 'Transport Manager'] },
 ];
+
+
+const filterNavItemsByRole = (items: NavItem[], role: string): NavItem[] => {
+  return items
+    .map(item => {
+      // If the item has roles defined and the user's role is not included, filter it out.
+      if (item.roles && !item.roles.includes(role)) {
+        return null;
+      }
+
+      // If the item has sub-items, filter them recursively.
+      if (item.subItems) {
+        const filteredSubItems = filterNavItemsByRole(item.subItems, role);
+        // If all sub-items are filtered out, don't show the parent.
+        if (filteredSubItems.length === 0) {
+          return null;
+        }
+        return { ...item, subItems: filteredSubItems };
+      }
+
+      return item;
+    })
+    .filter((item): item is NavItem => item !== null);
+};
+
+
+// Simulate getting the current user's role
+const CURRENT_USER_ROLE = 'Accountant'; // Change this to 'Admin', 'Accountant', etc. to test
+export const NAV_ITEMS = filterNavItemsByRole(ALL_NAV_ITEMS, CURRENT_USER_ROLE);
