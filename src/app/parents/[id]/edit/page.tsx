@@ -27,7 +27,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { students, parents } from '@/lib/data';
 import { useEffect, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Combobox } from '@/components/ui/combobox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const parentFormSchema = z.object({
   parentId: z.string(),
@@ -177,16 +183,22 @@ export default function EditParentPage() {
                 control={form.control}
                 name="studentId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem>
                     <RequiredLabel>Tag a Student</RequiredLabel>
-                    <Combobox
-                        options={studentOptions}
-                        {...field}
-                        onChange={(value) => form.setValue('studentId', value)}
-                        placeholder="Select a student"
-                        searchPlaceholder="Search student..."
-                        emptyText="No student found."
-                    />
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a student" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {studentOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormDescription>
                       Link this parent to an existing student.
                     </FormDescription>
