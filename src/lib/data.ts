@@ -807,3 +807,39 @@ export type FullTimetable = {
 }
 
 export const timetablesData: FullTimetable[] = [];
+
+export type Announcement = {
+    id: string;
+    title: string;
+    content: string;
+    date: string;
+    author: string;
+    audience: 'All' | 'Teachers' | 'Students' | 'Parents';
+};
+
+export const announcementsData: Announcement[] = [
+    {
+        id: 'ANN001',
+        title: 'Mid-Term Exam Schedule',
+        content: 'The mid-term examinations for classes IX to XII will commence from September 15th. The detailed schedule has been uploaded to the student portal.',
+        date: '2024-08-20',
+        author: 'Principal\'s Office',
+        audience: 'All'
+    },
+    {
+        id: 'ANN002',
+        title: 'Parent-Teacher Meeting',
+        content: 'A parent-teacher meeting is scheduled for Saturday, August 31st, from 9:00 AM to 1:00 PM to discuss the students\' progress.',
+        date: '2024-08-18',
+        author: 'Admin Office',
+        audience: 'Parents'
+    },
+    {
+        id: 'ANN003',
+        title: 'Faculty Development Program',
+        content: 'A workshop on "Modern Teaching Methodologies" will be held on August 24th for all faculty members. Attendance is mandatory.',
+        date: '2024-08-15',
+        author: 'Academic Head',
+        audience: 'Teachers'
+    }
+];

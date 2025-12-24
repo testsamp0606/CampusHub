@@ -18,6 +18,7 @@ import {
   TrendingDown,
   BookCopy,
   Book,
+  Megaphone,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -81,6 +82,7 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   { href: '/library', label: 'Library', icon: Library },
+  { href: '/announcements', label: 'Announcements', icon: Megaphone },
   { href: '/assets', label: 'Assets', icon: Archive },
   { href: '/transport', label: 'Transport', icon: Bus },
 ];
