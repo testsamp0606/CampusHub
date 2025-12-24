@@ -21,6 +21,7 @@ import {
   Users,
   ChevronUp,
   Trash2,
+  BookOpen,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
@@ -37,6 +38,32 @@ import {
 
 type ClassInfo = (typeof initialClassesData)[0];
 type Student = (typeof allStudents)[0];
+type Teacher = (typeof teachersData)[0];
+
+type TimetableEntry = {
+  period: number;
+  subject: string;
+  teacher: string;
+};
+
+const subjects = [
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'English',
+  'History',
+  'Geography',
+  'Computer Science',
+];
+
+const generateRandomTimetable = (teachers: Teacher[]): TimetableEntry[] => {
+  return Array.from({ length: 6 }, (_, i) => ({
+    period: i + 1,
+    subject: subjects[Math.floor(Math.random() * subjects.length)],
+    teacher: teachers[Math.floor(Math.random() * teachers.length)].name,
+  }));
+};
 
 export default function ClassDetailsPage() {
   const params = useParams();
@@ -45,6 +72,7 @@ export default function ClassDetailsPage() {
 
   const [cls, setCls] = useState<ClassInfo | undefined>(undefined);
   const [students, setStudents] = useState<Student[]>([]);
+  const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
 
   useEffect(() => {
     const storedClasses = localStorage.getItem('classesData');
@@ -59,6 +87,8 @@ export default function ClassDetailsPage() {
 
       const classStudents = allStudents.filter((s) => s.classId === classId);
       setStudents(classStudents);
+
+      setTimetable(generateRandomTimetable(teachersData));
     }
   }, [classId]);
 
@@ -150,6 +180,40 @@ export default function ClassDetailsPage() {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Class Timetable</CardTitle>
+          <CardDescription>
+            A sample daily routine for {cls.name}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Period</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Teacher</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {timetable.map((entry) => (
+                <TableRow key={entry.period}>
+                  <TableCell className="font-medium">
+                    Period {entry.period}
+                  </TableCell>
+                  <TableCell className="flex items-center gap-2">
+                     <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    {entry.subject}
+                  </TableCell>
+                  <TableCell>{entry.teacher}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
