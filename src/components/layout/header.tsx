@@ -9,11 +9,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuFooter,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
-import { User, Settings, LogOut, Bell } from 'lucide-react';
+import { User, Settings, LogOut, Bell, UserPlus, AlertCircle, FileWarning } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
@@ -33,10 +34,51 @@ export default function Header() {
           Academic Year: 2024-2025
         </p>
       </div>
-       <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Notifications</span>
-        </Button>
+       <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+            <Bell className="h-5 w-5" />
+             <span className="absolute top-2 right-2.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+            <span className="sr-only">Notifications</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+           <DropdownMenuSeparator />
+            <DropdownMenuItem className="flex items-start gap-3">
+              <UserPlus className="mt-1 h-4 w-4 text-green-500" />
+              <div>
+                <p className="font-semibold">New student registered</p>
+                <p className="text-xs text-muted-foreground">John Doe has been admitted to Class I.</p>
+              </div>
+            </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem className="flex items-start gap-3">
+              <FileWarning className="mt-1 h-4 w-4 text-yellow-500" />
+              <div>
+                <p className="font-semibold">Fee Payment Overdue</p>
+                <p className="text-xs text-muted-foreground">Invoice INV003 for Mike Johnson is overdue.</p>
+              </div>
+            </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem className="flex items-start gap-3">
+              <AlertCircle className="mt-1 h-4 w-4 text-red-500" />
+              <div>
+                <p className="font-semibold">Maintenance Alert</p>
+                <p className="text-xs text-muted-foreground">Vehicle V003 reported for maintenance.</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+                <Link href="#" className="justify-center text-sm text-primary">
+                    View all notifications
+                </Link>
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
