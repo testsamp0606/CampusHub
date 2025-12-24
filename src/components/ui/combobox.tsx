@@ -47,6 +47,16 @@ export function Combobox({
     return options.find((option) => option.value === value)
   }, [options, value])
 
+  const filter = (value: string, search: string) => {
+    const option = options.find(o => o.value === value);
+    if (!option) return 0;
+    
+    const labelIncludes = option.label.toLowerCase().includes(search.toLowerCase());
+    const valueIncludes = option.value.toLowerCase().includes(search.toLowerCase());
+
+    return (labelIncludes || valueIncludes) ? 1 : 0;
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -61,7 +71,7 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-        <Command>
+        <Command filter={filter}>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyResultText}</CommandEmpty>
