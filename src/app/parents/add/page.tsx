@@ -15,13 +15,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Card,
   CardContent,
   CardDescription,
@@ -34,6 +27,7 @@ import { useRouter } from 'next/navigation';
 import { students } from '@/lib/data';
 import { useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Combobox } from '@/components/ui/combobox';
 
 const parentFormSchema = z.object({
   parentId: z.string(),
@@ -119,6 +113,11 @@ export default function AddParentPage() {
     router.push('/parents');
   }
 
+  const studentOptions = students.map((student) => ({
+    value: student.id,
+    label: `${student.name} (${student.id})`,
+  }));
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -148,22 +147,16 @@ export default function AddParentPage() {
                 control={form.control}
                 name="studentId"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <RequiredLabel>Tag a Student</RequiredLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a student" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {students.map((student) => (
-                          <SelectItem key={student.id} value={student.id}>
-                            {student.name} ({student.id})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                        options={studentOptions}
+                        {...field}
+                        onChange={(value) => form.setValue('studentId', value)}
+                        placeholder="Select a student"
+                        searchPlaceholder="Search student..."
+                        emptyText="No student found."
+                    />
                     <FormDescription>
                       Link this parent to an existing student.
                     </FormDescription>
