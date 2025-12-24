@@ -1,5 +1,6 @@
 'use client';
 
+import * as React from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -14,11 +15,27 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
-import { User, Settings, LogOut, Bell, UserPlus, AlertCircle, FileWarning } from 'lucide-react';
+import {
+  User,
+  Settings,
+  LogOut,
+  Bell,
+  UserPlus,
+  AlertCircle,
+  FileWarning,
+  MessageSquare,
+} from 'lucide-react';
 import Link from 'next/link';
+import { conversationsData } from '@/lib/data';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function Header() {
-  const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar-1');
+  const userAvatar = PlaceHolderImages.find(
+    (img) => img.id === 'user-avatar-1'
+  );
+  const unreadConversations = conversationsData
+    .filter((c) => !c.read)
+    .slice(0, 3);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -34,11 +51,84 @@ export default function Header() {
           Academic Year: 2024-2025
         </p>
       </div>
-       <DropdownMenu>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-10 w-10 rounded-full"
+          >
+            <MessageSquare className="h-5 w-5" />
+            {unreadConversations.length > 0 && (
+              <span className="absolute top-2 right-2.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+            )}
+            <span className="sr-only">Messages</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuLabel>Recent Messages</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {unreadConversations.length > 0 ? (
+            unreadConversations.map((convo) => (
+              <React.Fragment key={convo.id}>
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/messages/${convo.id}`}
+                    className="flex items-start gap-3"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {convo.participants
+                          .find((p) => p.id !== 'user')
+                          ?.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold truncate">{convo.subject}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {convo.lastMessage}
+                      </p>
+                      <p className="text-xs text-muted-foreground/80 mt-1">
+                        {formatDistanceToNow(
+                          new Date(convo.lastMessageTimestamp),
+                          { addSuffix: true }
+                        )}
+                      </p>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </React.Fragment>
+            ))
+          ) : (
+            <DropdownMenuItem disabled>
+              <p className="text-sm text-muted-foreground text-center w-full">
+                No new messages
+              </p>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem asChild>
+            <Link
+              href="/messages"
+              className="justify-center text-sm text-primary"
+            >
+              View all messages
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative h-10 w-10 rounded-full"
+          >
             <Bell className="h-5 w-5" />
-             <span className="absolute top-2 right-2.5 flex h-2 w-2">
+            <span className="absolute top-2 right-2.5 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
             </span>
@@ -46,37 +136,46 @@ export default function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-80">
-           <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-           <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-start gap-3">
-              <UserPlus className="mt-1 h-4 w-4 text-green-500" />
-              <div>
-                <p className="font-semibold">New student registered</p>
-                <p className="text-xs text-muted-foreground">John Doe has been admitted to Class I.</p>
-              </div>
-            </DropdownMenuItem>
-             <DropdownMenuSeparator />
-             <DropdownMenuItem className="flex items-start gap-3">
-              <FileWarning className="mt-1 h-4 w-4 text-yellow-500" />
-              <div>
-                <p className="font-semibold">Fee Payment Overdue</p>
-                <p className="text-xs text-muted-foreground">Invoice INV003 for Mike Johnson is overdue.</p>
-              </div>
-            </DropdownMenuItem>
-             <DropdownMenuSeparator />
-             <DropdownMenuItem className="flex items-start gap-3">
-              <AlertCircle className="mt-1 h-4 w-4 text-red-500" />
-              <div>
-                <p className="font-semibold">Maintenance Alert</p>
-                <p className="text-xs text-muted-foreground">Vehicle V003 reported for maintenance.</p>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/notifications" className="justify-center text-sm text-primary">
-                    View all notifications
-                </Link>
-            </DropdownMenuItem>
+          <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="flex items-start gap-3">
+            <UserPlus className="mt-1 h-4 w-4 text-green-500" />
+            <div>
+              <p className="font-semibold">New student registered</p>
+              <p className="text-xs text-muted-foreground">
+                John Doe has been admitted to Class I.
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="flex items-start gap-3">
+            <FileWarning className="mt-1 h-4 w-4 text-yellow-500" />
+            <div>
+              <p className="font-semibold">Fee Payment Overdue</p>
+              <p className="text-xs text-muted-foreground">
+                Invoice INV003 for Mike Johnson is overdue.
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="flex items-start gap-3">
+            <AlertCircle className="mt-1 h-4 w-4 text-red-500" />
+            <div>
+              <p className="font-semibold">Maintenance Alert</p>
+              <p className="text-xs text-muted-foreground">
+                Vehicle V003 reported for maintenance.
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link
+              href="/notifications"
+              className="justify-center text-sm text-primary"
+            >
+              View all notifications
+            </Link>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <DropdownMenu>
