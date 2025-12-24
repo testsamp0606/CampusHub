@@ -73,6 +73,12 @@ const defaultValues: Partial<StudentFormValues> = {
   hobbies: '',
 };
 
+const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
+  <FormLabel>
+    {children} <span className="text-destructive">*</span>
+  </FormLabel>
+);
+
 export default function AddStudentPage() {
   const { toast } = useToast();
   const form = useForm<StudentFormValues>({
@@ -94,7 +100,7 @@ export default function AddStudentPage() {
       <CardHeader>
         <CardTitle>Add New Student</CardTitle>
         <CardDescription>
-          Fill out the form below to add a new student.
+          Fill out the form below to add a new student. Fields marked with <span className="text-destructive">*</span> are required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -106,7 +112,7 @@ export default function AddStudentPage() {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <RequiredLabel>First Name</RequiredLabel>
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -119,7 +125,7 @@ export default function AddStudentPage() {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <RequiredLabel>Last Name</RequiredLabel>
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -132,7 +138,7 @@ export default function AddStudentPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <RequiredLabel>Email</RequiredLabel>
                     <FormControl>
                       <Input placeholder="student@example.com" {...field} />
                     </FormControl>
@@ -146,7 +152,7 @@ export default function AddStudentPage() {
                   name="countryCode"
                   render={({ field }) => (
                     <FormItem className="w-1/4">
-                      <FormLabel>Code</FormLabel>
+                       <RequiredLabel>Code</RequiredLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -169,7 +175,7 @@ export default function AddStudentPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>Phone Number</FormLabel>
+                       <RequiredLabel>Phone Number</RequiredLabel>
                       <FormControl>
                         <Input placeholder="9876543210" {...field} />
                       </FormControl>
@@ -184,7 +190,7 @@ export default function AddStudentPage() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                     <RequiredLabel>Address</RequiredLabel>
                     <FormControl>
                       <Textarea
                         placeholder="123 Main St, Anytown, USA"
@@ -201,7 +207,7 @@ export default function AddStudentPage() {
                 name="aadhar"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Aadhar Number</FormLabel>
+                    <RequiredLabel>Aadhar Number</RequiredLabel>
                     <FormControl>
                       <Input placeholder="1234 5678 9012" {...field} />
                     </FormControl>
@@ -214,7 +220,7 @@ export default function AddStudentPage() {
                 name="joiningDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Joining Date</FormLabel>
+                     <RequiredLabel>Joining Date</RequiredLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -255,7 +261,7 @@ export default function AddStudentPage() {
                 name="classId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Class</FormLabel>
+                    <RequiredLabel>Class</RequiredLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -280,7 +286,7 @@ export default function AddStudentPage() {
                 name="academicBackground"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Academic Background</FormLabel>
+                     <RequiredLabel>Academic Background</RequiredLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Tell us about the student's previous schooling..."
