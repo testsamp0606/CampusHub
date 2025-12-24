@@ -17,6 +17,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type Conversation = (typeof initialConversationsData)[0];
 
@@ -66,43 +72,54 @@ export default function MessagesPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y">
-            {filteredConversations.map((convo) => (
-              <div
-                key={convo.id}
-                className={cn(
-                    "flex items-start gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors",
-                    !convo.read && "bg-blue-50"
-                )}
-                onClick={() => router.push(`/messages/${convo.id}`)}
-              >
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback>{convo.participants.find(p => p.id !== 'user')?.name.charAt(0) || 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold">{convo.subject}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {convo.participants.map(p => p.name).join(', ')}
+          <TooltipProvider>
+            <div className="divide-y">
+              {filteredConversations.map((convo) => {
+                const participant = convo.participants.find(p => p.id !== 'user');
+                return (
+                <div
+                  key={convo.id}
+                  className={cn(
+                      "flex items-start gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors",
+                      !convo.read && "bg-blue-50"
+                  )}
+                  onClick={() => router.push(`/messages/${convo.id}`)}
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback>{participant?.name.charAt(0) || 'U'}</AvatarFallback>
+                      </Avatar>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{participant?.name} ({participant?.id})</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold">{convo.subject}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {convo.participants.map(p => p.name).join(', ')}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDistanceToNow(new Date(convo.lastMessageTimestamp), { addSuffix: true })}
                       </p>
                     </div>
-                    <p className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(convo.lastMessageTimestamp), { addSuffix: true })}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1 truncate">{convo.lastMessage}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1 truncate">{convo.lastMessage}</p>
+                  {!convo.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5"></div>}
                 </div>
-                {!convo.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5"></div>}
-              </div>
-            ))}
-             {filteredConversations.length === 0 && (
-                <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <Inbox className="h-10 w-10" />
-                    <p>No messages found.</p>
-                </div>
-            )}
-          </div>
+              )})}
+              {filteredConversations.length === 0 && (
+                  <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
+                      <Inbox className="h-10 w-10" />
+                      <p>No messages found.</p>
+                  </div>
+              )}
+            </div>
+          </TooltipProvider>
         </CardContent>
       </Card>
     </div>
