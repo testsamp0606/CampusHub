@@ -448,7 +448,7 @@ export const vehiclesData = [
     capacity: 40,
     driverName: 'Ramesh Kumar',
     driverContact: '9876543210',
-    status: 'Active',
+    status: 'Active' as 'Active' | 'Maintenance',
   },
   {
     id: 'V002',
@@ -457,7 +457,7 @@ export const vehiclesData = [
     capacity: 40,
     driverName: 'Suresh Singh',
     driverContact: '9876543211',
-    status: 'Active',
+    status: 'Active' as 'Active' | 'Maintenance',
   },
   {
     id: 'V003',
@@ -466,7 +466,7 @@ export const vehiclesData = [
     capacity: 12,
     driverName: 'Mahesh Patil',
     driverContact: '9876543212',
-    status: 'Maintenance',
+    status: 'Maintenance' as 'Active' | 'Maintenance',
   },
 ];
 
@@ -510,6 +510,7 @@ export const assetsData = [
     warrantyEndDate: '2026-01-14',
     value: 1200,
     assignedTo: 'Computer Lab',
+    notes: 'Primary laptop for the main computer lab.',
   },
   {
     id: 'ASSET002',
@@ -519,17 +520,19 @@ export const assetsData = [
     purchaseDate: '2022-11-20',
     warrantyEndDate: '2024-11-19',
     value: 800,
-    assignedTo: 'Room 101',
+    assignedTo: 'Classroom 101',
+    notes: 'Ceiling mounted projector.',
   },
   {
     id: 'ASSET003',
     name: 'Student Desk',
     category: 'Furniture',
-    status: 'In Use' as 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed',
+    status: 'In Storage' as 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed',
     purchaseDate: '2021-05-10',
-    warrantyEndDate: '2022-05-09',
+    warrantyEndDate: '',
     value: 150,
-    assignedTo: 'Room 102',
+    assignedTo: 'Storage Room B',
+    notes: '2-seater student desk. 10 units in storage.',
   },
   {
     id: 'ASSET004',
@@ -540,15 +543,74 @@ export const assetsData = [
     warrantyEndDate: '2024-08-29',
     value: 450,
     assignedTo: 'Staff Room',
+    notes: 'Paper jam issue. Sent for repair on 2024-07-20.',
   },
   {
     id: 'ASSET005',
     name: 'Whiteboard',
-    category: 'Classroom Supplies',
-    status: 'In Use' as 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed',
-    purchaseDate: '2023-02-28',
-    warrantyEndDate: '2024-02-27',
+    category: 'Office Supplies',
+    status: 'Disposed' as 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed',
+    purchaseDate: '2020-02-28',
+    warrantyEndDate: '',
     value: 100,
-    assignedTo: 'Room 103',
+    assignedTo: 'Classroom 103',
+    notes: 'Surface damaged. Disposed on 2024-06-15.',
   },
+];
+
+export const expensesData = [
+    {
+        id: 'EXP001',
+        category: 'Utilities',
+        amount: 500,
+        date: '2024-07-15',
+        status: 'Approved' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'Administration',
+        description: 'Monthly Electricity Bill'
+    },
+    {
+        id: 'EXP002',
+        category: 'Supplies',
+        amount: 250,
+        date: '2024-07-20',
+        status: 'Pending' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'Academics',
+        description: 'Purchase of stationery for exams'
+    },
+    {
+        id: 'EXP003',
+        category: 'Maintenance',
+        amount: 1200,
+        date: '2024-07-18',
+        status: 'Approved' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'Infrastructure',
+        description: 'Repair of classroom furniture'
+    },
+    {
+        id: 'EXP004',
+        category: 'Transport',
+        amount: 300,
+        date: '2024-07-22',
+        status: 'Rejected' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'Transport',
+        description: 'Fuel for school bus V003 (Not in service)'
+    },
+    {
+        id: 'EXP005',
+        category: 'Events',
+        amount: 800,
+        date: '2024-06-30',
+        status: 'Approved' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'Administration',
+        description: 'Annual Day celebration expenses'
+    },
+     {
+        id: 'EXP006',
+        category: 'Salaries',
+        amount: 25000,
+        date: '2024-07-31',
+        status: 'Pending' as 'Approved' | 'Pending' | 'Rejected',
+        department: 'HR',
+        description: 'Monthly staff salaries'
+    }
 ];
