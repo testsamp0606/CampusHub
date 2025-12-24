@@ -10,7 +10,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { eventsData } from '@/lib/data';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
 
 type CalendarEvent = (typeof eventsData)[0];
@@ -33,22 +33,28 @@ export default function CalendarPage() {
   const eventsByDate = useMemo(() => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
     eventsData.forEach(event => {
-      const dateKey = format(new Date(event.date), 'yyyy-MM-dd');
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
+      const eventDate = new Date(event.date);
+      if (isValid(eventDate)) {
+        const dateKey = format(eventDate, 'yyyy-MM-dd');
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(event);
       }
-      grouped[dateKey].push(event);
     });
     return grouped;
   }, []);
 
   const selectedDayEvents = useMemo(() => {
-    if (!selectedDate) return [];
+    if (!selectedDate || !isValid(selectedDate)) return [];
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
     return eventsByDate[dateKey] || [];
   }, [selectedDate, eventsByDate]);
 
   const DayWithDot = (props: DayProps) => {
+    if (!isValid(props.date)) {
+      return <div />;
+    }
     const dateKey = format(props.date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey];
     
@@ -82,6 +88,7 @@ export default function CalendarPage() {
               }}
                modifiers={{
                 event: (date: Date) => {
+                  if (!isValid(date)) return false;
                   const dateKey = format(date, 'yyyy-MM-dd');
                   return !!eventsByDate[dateKey];
                 },
@@ -92,7 +99,7 @@ export default function CalendarPage() {
         <Card className="shadow-lg">
            <CardHeader>
             <CardTitle>
-                Events for {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : '...'}
+                Events for {selectedDate && isValid(selectedDate) ? format(selectedDate, 'MMMM d, yyyy') : '...'}
             </CardTitle>
             <CardDescription>
                 A list of all events, holidays, and exams for the selected day.
