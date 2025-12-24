@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -28,22 +28,47 @@ import {
   MapPin,
 } from 'lucide-react';
 import {
-  routesData,
-  vehiclesData,
-  studentTransportData,
+  routesData as initialRoutesData,
+  vehiclesData as initialVehiclesData,
+  studentTransportData as initialStudentTransportData,
   students,
 } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+type Route = (typeof initialRoutesData)[0];
+type Vehicle = (typeof initialVehiclesData)[0];
+type Allocation = (typeof initialStudentTransportData)[0] & { 
+  studentName: string, 
+  className: string, 
+  routeName: string, 
+  vehicleNumber: string 
+};
+
 
 export default function TransportPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
-  const filteredAllocations = useMemo(() => {
-    return studentTransportData
-      .map(allocation => {
+  const [routesData, setRoutesData] = useState<Route[]>([]);
+  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>([]);
+  const [studentTransportData, setStudentTransportData] = useState<Allocation[]>([]);
+
+  useEffect(() => {
+    const storedRoutes = localStorage.getItem('routesData');
+    setRoutesData(storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData);
+
+    const storedVehicles = localStorage.getItem('vehiclesData');
+    setVehiclesData(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
+
+     const storedAllocations = localStorage.getItem('studentTransportData');
+     const allocations = storedAllocations ? JSON.parse(storedAllocations) : initialStudentTransportData;
+
+     const enrichedAllocations = allocations.map((allocation: any) => {
         const student = students.find(s => s.id === allocation.studentId);
-        const route = routesData.find(r => r.id === allocation.routeId);
-        const vehicle = vehiclesData.find(v => v.id === route?.vehicleId);
+        const route = (storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData).find((r: Route) => r.id === allocation.routeId);
+        const vehicle = (storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData).find((v: Vehicle) => v.id === route?.vehicleId);
         return {
           ...allocation,
           studentName: student?.name || 'N/A',
@@ -51,14 +76,20 @@ export default function TransportPage() {
           routeName: route?.routeName || 'N/A',
           vehicleNumber: vehicle?.vehicleNumber || 'N/A',
         };
-      })
+      });
+    setStudentTransportData(enrichedAllocations);
+
+  }, []);
+
+  const filteredAllocations = useMemo(() => {
+    return studentTransportData
       .filter(
         item =>
           item.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.routeName.toLowerCase().includes(searchQuery.toLowerCase())
       );
-  }, [searchQuery]);
+  }, [searchQuery, studentTransportData]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,8 +115,10 @@ export default function TransportPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Transport Routes</CardTitle>
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Route
+                <Button asChild>
+                  <Link href="/transport/routes/add">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Route
+                  </Link>
                 </Button>
               </div>
               <CardDescription>
