@@ -14,6 +14,7 @@ import {
   CreditCard,
   Briefcase,
   TrendingDown,
+  BookCopy,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -48,19 +49,22 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    href: '/school',
-    label: 'School',
+    label: 'Academics',
     icon: School,
-  },
-  {
-    href: '/attendance',
-    label: 'Attendance',
-    icon: ClipboardCheck,
-  },
-  {
-    href: '/examinations',
-    label: 'Examinations',
-    icon: FileText,
+    subItems: [
+      { href: '/classes', label: 'Classes', icon: BookCopy },
+      {
+        href: '/examinations',
+        label: 'Examinations',
+        icon: FileText,
+      },
+      {
+        href: '/attendance',
+        label: 'Attendance',
+        icon: ClipboardCheck,
+      },
+      { href: '/calendar', label: 'Calendar', icon: Calendar },
+    ],
   },
   {
     label: 'Accounts',
@@ -69,10 +73,10 @@ export const NAV_ITEMS: NavItem[] = [
       { href: '/fees', label: 'Fee Collection', icon: CreditCard },
       { href: '/payment', label: 'Payments', icon: CreditCard },
       { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+      { href: '/accounts', label: 'Ledger', icon: BookUser },
     ],
   },
   { href: '/library', label: 'Library', icon: Library },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/assets', label: 'Assets', icon: Archive },
   { href: '/transport', label: 'Transport', icon: Bus },
 ];

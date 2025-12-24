@@ -72,51 +72,79 @@ export const statCardsData: StatCardData[] = [
 export type ClassInfo = {
   id: string;
   name: string;
+  teacherId: string;
   studentCount: number;
-  dailyAttendance: number;
-  classTeacher: string;
+  capacity: number;
+  academicYear: string;
+  status: 'Active' | 'Archived' | 'Completed';
+  dailyAttendance?: number;
+  classTeacher?: string;
 };
 
 export const classesData: ClassInfo[] = [
   {
     id: 'C001',
     name: 'Class I',
+    teacherId: 'T001',
     studentCount: 30,
+    capacity: 35,
+    academicYear: '2024-2025',
+    status: 'Active',
     dailyAttendance: 95,
     classTeacher: 'Mr. John Doe',
   },
   {
     id: 'C002',
     name: 'Class II',
+    teacherId: 'T002',
     studentCount: 28,
+    capacity: 30,
+    academicYear: '2024-2025',
+    status: 'Active',
     dailyAttendance: 98,
     classTeacher: 'Ms. Jane Smith',
   },
   {
     id: 'C003',
     name: 'Class III',
+    teacherId: 'T003',
     studentCount: 32,
+    capacity: 35,
+    academicYear: '2024-2025',
+    status: 'Active',
     dailyAttendance: 92,
     classTeacher: 'Mr. Robert Brown',
   },
   {
     id: 'C004',
     name: 'Class IV',
+    teacherId: 'T004',
     studentCount: 29,
+    capacity: 30,
+    academicYear: '2024-2025',
+    status: 'Active',
     dailyAttendance: 100,
     classTeacher: 'Ms. Emily White',
   },
   {
     id: 'C005',
     name: 'Class V',
+    teacherId: 'T005',
     studentCount: 31,
+    capacity: 35,
+    academicYear: '2024-2025',
+    status: 'Active',
     dailyAttendance: 94,
     classTeacher: 'Mr. Michael Green',
   },
   {
     id: 'C006',
     name: 'Class VI',
+    teacherId: 'T001',
     studentCount: 25,
+    capacity: 30,
+    academicYear: '2024-2025',
+    status: 'Archived',
     dailyAttendance: 96,
     classTeacher: 'Ms. Sarah Black',
   },
@@ -126,7 +154,7 @@ export const students = [
   {
     id: 'S001',
     name: 'John Doe',
-    class: 'Class X',
+    class: 'Class I',
     classId: 'C001',
     parentName: 'Jane Doe',
     admissionDate: '2023-04-15',
@@ -142,7 +170,7 @@ export const students = [
   {
     id: 'S002',
     name: 'Jane Smith',
-    class: 'Class IX',
+    class: 'Class II',
     classId: 'C002',
     parentName: 'John Smith',
     admissionDate: '2023-05-20',
@@ -158,7 +186,7 @@ export const students = [
   {
     id: 'S003',
     name: 'Mike Johnson',
-    class: 'Class X',
+    class: 'Class I',
     classId: 'C001',
     parentName: 'Mary Johnson',
     admissionDate: '2023-04-18',
@@ -174,7 +202,7 @@ export const students = [
   {
     id: 'S004',
     name: 'Emily White',
-    class: 'Class VIII',
+    class: 'Class III',
     classId: 'C003',
     parentName: 'David White',
     admissionDate: '2023-06-01',
@@ -190,7 +218,7 @@ export const students = [
     {
     id: 'S005',
     name: 'Chris Green',
-    class: 'Class IX',
+    class: 'Class II',
     classId: 'C002',
     parentName: 'Laura Green',
     admissionDate: '2023-05-22',
