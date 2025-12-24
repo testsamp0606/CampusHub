@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
@@ -683,20 +684,21 @@ const SidebarMenuSkeleton = React.forwardRef<
 SidebarMenuSkeleton.displayName = "SidebarMenuSkeleton"
 
 const SidebarMenuSub = React.forwardRef<
-  HTMLUListElement,
-  React.ComponentProps<"ul">
+  HTMLDivElement,
+  React.ComponentProps<typeof CollapsiblePrimitive.Content>
 >(({ className, ...props }, ref) => (
-  <ul
+  <CollapsiblePrimitive.Content
     ref={ref}
     data-sidebar="menu-sub"
     className={cn(
-      "mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-0.5",
-      "group-data-[collapsible=icon]:hidden",
+      'overflow-hidden transition-all data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down',
+      'mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l border-sidebar-border px-2.5 py-1',
+      'group-data-[collapsible=icon]:hidden',
       className
     )}
     {...props}
   />
-))
+));
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 const SidebarMenuSubItem = React.forwardRef<
@@ -735,6 +737,10 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
+const SidebarCollapsible = CollapsiblePrimitive.Root;
+const SidebarCollapsibleTrigger = CollapsiblePrimitive.Trigger;
+const SidebarCollapsibleContent = SidebarMenuSub;
+
 export {
   Sidebar,
   SidebarContent,
@@ -760,4 +766,7 @@ export {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
+  SidebarCollapsible,
+  SidebarCollapsibleTrigger,
+  SidebarCollapsibleContent
 }
