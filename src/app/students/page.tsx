@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -12,11 +12,13 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Eye, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { students } from '@/lib/data';
 import { useRouter } from 'next/navigation';
@@ -24,9 +26,13 @@ import Link from 'next/link';
 
 type Student = (typeof students)[0];
 
+const STUDENTS_PER_PAGE = 5;
+
 export default function StudentsPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleEdit = (studentId: string) => {
     router.push(`/students/${studentId}/edit`);
@@ -38,6 +44,31 @@ export default function StudentsPage() {
       variant: 'destructive',
       description: `Deleting student with ID: ${studentId}`,
     });
+  };
+
+  const filteredStudents = useMemo(() => {
+    return students.filter(
+      (student) =>
+        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
+
+  const paginatedStudents = useMemo(() => {
+    const startIndex = (currentPage - 1) * STUDENTS_PER_PAGE;
+    const endIndex = startIndex + STUDENTS_PER_PAGE;
+    return filteredStudents.slice(startIndex, endIndex);
+  }, [filteredStudents, currentPage]);
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   return (
@@ -54,6 +85,19 @@ export default function StudentsPage() {
           <CardDescription>
             A list of all students in the school.
           </CardDescription>
+          <div className="relative mt-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search students by name, ID, or email..."
+              className="w-full rounded-lg bg-background pl-8"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // Reset to first page on new search
+              }}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -68,7 +112,7 @@ export default function StudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student) => (
+              {paginatedStudents.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell>{student.id}</TableCell>
                   <TableCell className="font-medium">{student.name}</TableCell>
@@ -106,7 +150,41 @@ export default function StudentsPage() {
               ))}
             </TableBody>
           </Table>
+           {paginatedStudents.length === 0 && (
+            <div className="py-10 text-center text-muted-foreground">
+              No students found.
+            </div>
+          )}
         </CardContent>
+         <CardFooter className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing{' '}
+            <strong>
+              {Math.min((currentPage - 1) * STUDENTS_PER_PAGE + 1, filteredStudents.length)}
+            </strong>{' '}
+            to{' '}
+            <strong>
+              {Math.min(currentPage * STUDENTS_PER_PAGE, filteredStudents.length)}
+            </strong>{' '}
+            of <strong>{filteredStudents.length}</strong> students
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || totalPages === 0}
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

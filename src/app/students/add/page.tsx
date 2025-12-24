@@ -39,6 +39,7 @@ import {
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 const studentFormSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters.'),
@@ -81,6 +82,7 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 
 export default function AddStudentPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues,
@@ -93,6 +95,7 @@ export default function AddStudentPage() {
       description: `${data.firstName} ${data.lastName} has been successfully registered.`,
     });
     form.reset();
+    router.push('/students');
   }
 
   return (
