@@ -18,6 +18,7 @@ import type { DayProps } from 'react-day-picker';
 import {
   BookOpen,
   Calendar as CalendarIcon,
+  Clock,
   PartyPopper,
   PlusCircle,
 } from 'lucide-react';
@@ -70,10 +71,21 @@ import {
 
 type CalendarEvent = (typeof initialEventsData)[0];
 type Teacher = (typeof teachersData)[0];
+
+const periodTimes = [
+  '09:00 - 09:45',
+  '09:45 - 10:30',
+  '11:00 - 11:45',
+  '11:45 - 12:30',
+  '13:30 - 14:15',
+  '14:15 - 15:00',
+];
+
 type TimetableEntry = {
   period: number;
   subject: string;
   teacher: string;
+  time: string;
 };
 
 const subjects = [
@@ -92,6 +104,7 @@ const generateRandomTimetable = (teachers: Teacher[]): TimetableEntry[] => {
     period: i + 1,
     subject: subjects[Math.floor(Math.random() * subjects.length)],
     teacher: teachers[Math.floor(Math.random() * teachers.length)].name,
+    time: periodTimes[i],
   }));
 };
 
@@ -179,6 +192,9 @@ const WeeklyTimetable = () => {
                 {Object.values(timetable)[0]?.map((entry) => (
                   <TableHead key={entry.period} className="text-center">
                     Period {entry.period}
+                    <div className="text-xs font-normal text-muted-foreground">
+                      {entry.time}
+                    </div>
                   </TableHead>
                 ))}
               </TableRow>
@@ -272,7 +288,7 @@ export default function CalendarPage() {
 
   const DayWithEvents = (props: DayProps) => {
     if (!isValid(props.date)) {
-      return null;
+      return <div />;
     }
     const dateKey = format(props.date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey] || [];

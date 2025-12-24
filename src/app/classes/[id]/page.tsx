@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Trash2,
   BookOpen,
+  Clock,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
@@ -40,10 +41,20 @@ type ClassInfo = (typeof initialClassesData)[0];
 type Student = (typeof allStudents)[0];
 type Teacher = (typeof teachersData)[0];
 
+const periodTimes = [
+  '09:00 - 09:45',
+  '09:45 - 10:30',
+  '11:00 - 11:45',
+  '11:45 - 12:30',
+  '13:30 - 14:15',
+  '14:15 - 15:00',
+];
+
 type TimetableEntry = {
   period: number;
   subject: string;
   teacher: string;
+  time: string;
 };
 
 const subjects = [
@@ -62,6 +73,7 @@ const generateRandomTimetable = (teachers: Teacher[]): TimetableEntry[] => {
     period: i + 1,
     subject: subjects[Math.floor(Math.random() * subjects.length)],
     teacher: teachers[Math.floor(Math.random() * teachers.length)].name,
+    time: periodTimes[i],
   }));
 };
 
@@ -195,6 +207,7 @@ export default function ClassDetailsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Period</TableHead>
+                <TableHead>Time</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Teacher</TableHead>
               </TableRow>
@@ -204,6 +217,10 @@ export default function ClassDetailsPage() {
                 <TableRow key={entry.period}>
                   <TableCell className="font-medium">
                     Period {entry.period}
+                  </TableCell>
+                  <TableCell className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    {entry.time}
                   </TableCell>
                   <TableCell className="flex items-center gap-2">
                      <BookOpen className="h-4 w-4 text-muted-foreground" />
