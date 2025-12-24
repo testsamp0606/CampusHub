@@ -1,3 +1,5 @@
+'use client';
+
 import {
   LayoutDashboard,
   School,
@@ -15,6 +17,7 @@ import {
   Briefcase,
   TrendingDown,
   BookCopy,
+  Book,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -53,6 +56,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: School,
     subItems: [
       { href: '/classes', label: 'Classes', icon: BookCopy },
+      { href: '/subjects', label: 'Subjects', icon: Book },
       {
         href: '/examinations',
         label: 'Examinations',

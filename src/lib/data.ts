@@ -762,7 +762,7 @@ export const eventsData: CalendarEvent[] = [
   { date: '2025-01-26', title: 'Republic Day', type: 'Holiday' },
 ];
 
-export const subjects = [
+export const subjectOptions = [
   'Mathematics',
   'Physics',
   'Chemistry',
@@ -775,6 +775,23 @@ export const subjects = [
   'Music',
   'Physical Education'
 ];
+
+export type Subject = {
+  id: string;
+  name: string;
+  code: string;
+  teacherId: string;
+};
+
+export const subjectsData: Subject[] = [
+    { id: 'SUB01', name: 'Mathematics', code: 'MATH101', teacherId: 'T002' },
+    { id: 'SUB02', name: 'Physics', code: 'PHY101', teacherId: 'T001' },
+    { id: 'SUB03', name: 'Chemistry', code: 'CHEM101', teacherId: 'T001' },
+    { id: 'SUB04', name: 'English', code: 'ENG101', teacherId: 'T003' },
+    { id: 'SUB05', name: 'History', code: 'HIST101', teacherId: 'T004' },
+    { id: 'SUB06', name: 'Computer Science', code: 'CS101', teacherId: 'T005' },
+];
+
 
 export type TimetableEntry = {
   period: number;
