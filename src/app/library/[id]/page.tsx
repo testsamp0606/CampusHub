@@ -5,13 +5,12 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookCheck, BookUp } from 'lucide-react';
+import { ArrowLeft, BookCheck, BookUp, QrCode } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
@@ -49,8 +48,11 @@ export default function BookDetailsPage() {
   const studentOptions = useMemo(() => students.map(s => ({ value: s.id, label: `${s.name} (${s.id})` })), []);
 
   const updateAndStoreBooks = (books: Book[]) => {
-    setBook(books.find(b => b.id === bookId));
-    localStorage.setItem('booksData', JSON.stringify(books));
+    const updatedBook = books.find(b => b.id === bookId);
+    if (updatedBook) {
+      setBook(updatedBook);
+      localStorage.setItem('booksData', JSON.stringify(books));
+    }
   };
 
   const updateAndStoreIssues = (issues: BookIssue[]) => {
@@ -68,11 +70,14 @@ export default function BookDetailsPage() {
         return;
     }
 
-    const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || '[]');
-    const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
+    const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || JSON.stringify(initialBooksData));
+    const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || JSON.stringify(initialBookIssueData));
 
     const targetBook = storedBooks.find(b => b.id === bookId);
-    if (!targetBook || targetBook.available <= 0) {
+    if (!targetBook) { return; }
+
+    const availableCopies = targetBook.quantity - targetBook.issued - targetBook.lost;
+    if (availableCopies <= 0) {
          toast({
             variant: 'destructive',
             title: 'Book Unavailable',
@@ -91,7 +96,7 @@ export default function BookDetailsPage() {
         status: 'Issued',
     };
 
-    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, available: b.available - 1 } : b);
+    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: b.issued + 1 } : b);
     const updatedIssues = [...storedIssues, newIssue];
 
     updateAndStoreBooks(updatedBooks);
@@ -116,7 +121,7 @@ export default function BookDetailsPage() {
      }
 
      const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd') } : i);
-     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, available: b.available + 1 } : b);
+     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, b.issued - 1) } : b);
 
      updateAndStoreBooks(updatedBooks);
      updateAndStoreIssues(updatedIssues);
@@ -134,6 +139,8 @@ export default function BookDetailsPage() {
       </div>
     );
   }
+
+  const availableCopies = book.quantity - book.issued - book.lost;
 
   return (
     <div className="space-y-4">
@@ -156,32 +163,54 @@ export default function BookDetailsPage() {
                 <div className="flex-1">
                     <CardTitle className="text-3xl">{book.title}</CardTitle>
                     <CardDescription className="text-lg text-muted-foreground">{book.author}</CardDescription>
-                    <div className="mt-4 flex gap-2">
-                        <Badge variant="secondary">{book.genre}</Badge>
-                         <Badge variant={book.available > 0 ? 'success' : 'destructive'}>
-                            {book.available > 0 ? `${book.available} Available` : 'Unavailable'}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <Badge variant="secondary">{book.category}</Badge>
+                         <Badge variant={availableCopies > 0 ? 'success' : 'destructive'}>
+                            {availableCopies > 0 ? `${availableCopies} Available` : 'Unavailable'}
                         </Badge>
+                        <Badge variant="outline">{book.resourceType}</Badge>
+                        <Badge variant="outline">{book.language}</Badge>
                     </div>
-                     <div className="mt-6 space-y-2 text-sm">
-                        <div className="grid grid-cols-2">
-                            <p className="font-semibold">ISBN</p>
-                            <p>{book.isbn}</p>
-                        </div>
-                        <div className="grid grid-cols-2">
-                            <p className="font-semibold">Book ID</p>
-                            <p>{book.id}</p>
-                        </div>
-                         <div className="grid grid-cols-2">
-                            <p className="font-semibold">Total Copies</p>
-                            <p>{book.quantity}</p>
+                    <div className="mt-6 space-y-2 text-sm">
+                        <div className="grid grid-cols-3 gap-x-4">
+                            <p className="font-semibold">Book ID</p><p className="col-span-2">{book.id}</p>
+                            <p className="font-semibold">ISBN</p><p className="col-span-2">{book.isbn}</p>
+                            <p className="font-semibold">Publisher</p><p className="col-span-2">{book.publisher}</p>
+                            <p className="font-semibold">Edition</p><p className="col-span-2">{book.edition || 'N/A'}</p>
                         </div>
                     </div>
+                     {book.barcode && (
+                        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                            <QrCode className="h-4 w-4" />
+                            <span>{book.barcode}</span>
+                        </div>
+                    )}
                 </div>
             </div>
           </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">Inventory Details</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <p className="font-medium">Total Copies:</p><p>{book.quantity}</p>
+                        <p className="font-medium">Issued Copies:</p><p>{book.issued}</p>
+                        <p className="font-medium">Lost Copies:</p><p>{book.lost}</p>
+                        <p className="font-medium">Available Copies:</p><p className="font-bold">{availableCopies}</p>
+                    </div>
+                </div>
+                 <div className="space-y-4">
+                    <h3 className="font-semibold text-lg border-b pb-2">Location</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <p className="font-medium">Shelf:</p><p>{book.shelf || 'N/A'}</p>
+                        <p className="font-medium">Rack:</p><p>{book.rack || 'N/A'}</p>
+                    </div>
+                </div>
+            </div>
+          </CardContent>
         </Card>
 
-        {book.available > 0 && (
+        {availableCopies > 0 && (
             <Card>
                 <CardHeader>
                     <CardTitle>Issue Book</CardTitle>

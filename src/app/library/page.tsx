@@ -19,9 +19,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Search, BookPlus, Trash2 } from 'lucide-react';
+import { Eye, Search, BookPlus, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { booksData as initialBooksData, bookIssueData as initialBookIssueData } from '@/lib/data';
+import { booksData as initialBooksData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -44,11 +44,6 @@ export default function LibraryPage() {
       setBooks(initialBooksData);
       localStorage.setItem('booksData', JSON.stringify(initialBooksData));
     }
-
-    const storedIssues = localStorage.getItem('bookIssueData');
-    if (!storedIssues) {
-        localStorage.setItem('bookIssueData', JSON.stringify(initialBookIssueData));
-    }
   }, []);
 
   const updateAndStoreBooks = (newBooks: Book[]) => {
@@ -58,11 +53,17 @@ export default function LibraryPage() {
 
 
   const handleDelete = (bookId: string) => {
+    const updatedBooks = books.filter(book => book.id !== bookId);
+    updateAndStoreBooks(updatedBooks);
     toast({
-      title: 'Delete Book',
+      title: 'Book Deleted',
       variant: 'destructive',
-      description: `This will permanently delete book with ID: ${bookId}. This action is not yet implemented.`,
+      description: `Book with ID: ${bookId} has been permanently deleted.`,
     });
+  };
+
+  const handleEdit = (bookId: string) => {
+    router.push(`/library/${bookId}/edit`);
   };
 
   const filteredBooks = useMemo(() => {
@@ -127,44 +128,52 @@ export default function LibraryPage() {
                 <TableHead>Book ID</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Author</TableHead>
-                <TableHead>Genre</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedBooks.map((book) => (
-                <TableRow key={book.id}>
-                  <TableCell className="font-medium">{book.id}</TableCell>
-                  <TableCell>{book.title}</TableCell>
-                  <TableCell>{book.author}</TableCell>
-                  <TableCell>{book.genre}</TableCell>
-                  <TableCell>
-                    <Badge variant={book.available > 0 ? 'success' : 'destructive'}>
-                      {book.available > 0 ? `${book.available} Available` : 'Unavailable'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                       <Button asChild variant="ghost" size="icon" title="View Details">
-                        <Link href={`/library/${book.id}`}>
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(book.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {paginatedBooks.map((book) => {
+                const available = book.quantity - book.issued - book.lost;
+                return (
+                  <TableRow key={book.id}>
+                    <TableCell className="font-medium">{book.id}</TableCell>
+                    <TableCell>{book.title}</TableCell>
+                    <TableCell>{book.author}</TableCell>
+                    <TableCell>{book.category}</TableCell>
+                    <TableCell>
+                      <Badge variant={available > 0 ? 'success' : 'destructive'}>
+                        {available > 0 ? `${available} Available` : 'Unavailable'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                         <Button asChild variant="ghost" size="icon" title="View Details">
+                          <Link href={`/library/${book.id}`}>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View</span>
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Edit" onClick={() => handleEdit(book.id)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(book.id)}
+                          className="text-destructive hover:text-destructive"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
            {paginatedBooks.length === 0 && (
