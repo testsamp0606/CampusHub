@@ -101,13 +101,13 @@ export default function PermissionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/6 font-semibold">
+                  <TableHead className="w-1/6 font-semibold text-xs">
                     Module
                   </TableHead>
                   {roles.map(role => (
                     <TableHead
                       key={role}
-                      className="text-center font-semibold"
+                      className="text-center font-semibold text-xs"
                     >
                       {role}
                     </TableHead>
@@ -117,10 +117,10 @@ export default function PermissionsPage() {
               <TableBody>
                 {modules.map(module => (
                   <TableRow key={module}>
-                    <TableCell className="font-semibold py-2">{module}</TableCell>
+                    <TableCell className="font-semibold py-1 text-xs">{module}</TableCell>
                     {roles.map(role => (
-                      <TableCell key={`${module}-${role}`} className="py-2">
-                        <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
+                      <TableCell key={`${module}-${role}`} className="py-1">
+                        <div className="flex justify-center gap-1 md:gap-2 flex-wrap">
                           {permissionTypes.map(pType => {
                             const currentPermissions =
                               permissions[module]?.[role] || [];
@@ -131,7 +131,7 @@ export default function PermissionsPage() {
                                 key={pType}
                                 variant={hasPermission ? 'default' : 'outline'}
                                 size="sm"
-                                className="w-8 h-8"
+                                className="w-7 h-7 text-xs"
                                 title={permissionLabels[pType]}
                                 onClick={() =>
                                   handlePermissionChange(module, role, pType)
