@@ -700,22 +700,22 @@ export const teachersData = [
 ];
 
 export type CalendarEvent = {
-  date: Date;
+  date: string;
   title: string;
   type: 'Holiday' | 'Event' | 'Exam';
 };
 
 export const eventsData: CalendarEvent[] = [
-  { date: new Date('2024-08-15'), title: 'Independence Day', type: 'Holiday' },
-  { date: new Date('2024-08-26'), title: 'Raksha Bandhan', type: 'Holiday' },
-  { date: new Date('2024-09-05'), title: 'Teachers\' Day', type: 'Event' },
-  { date: new Date('2024-09-15'), title: 'Mid-Term Exams Start', type: 'Exam' },
-  { date: new Date('2024-09-22'), title: 'Mid-Term Exams End', type: 'Exam' },
-  { date: new Date('2024-10-02'), title: 'Gandhi Jayanti', type: 'Holiday' },
-  { date: new Date('2024-10-15'), title: 'Annual Sports Day', type: 'Event' },
-  { date: new Date('2024-11-01'), title: 'Diwali Break Starts', type: 'Holiday' },
-  { date: new Date('2024-11-05'), title: 'Diwali Break Ends', type: 'Holiday' },
-  { date: new Date('2024-12-25'), title: 'Christmas Day', type: 'Holiday' },
-  { date: new Date('2024-12-31'), title: 'New Year\'s Eve', type: 'Holiday' },
-  { date: new Date('2025-01-26'), title: 'Republic Day', type: 'Holiday' },
+  { date: '2024-08-15', title: 'Independence Day', type: 'Holiday' },
+  { date: '2024-08-26', title: 'Raksha Bandhan', type: 'Holiday' },
+  { date: '2024-09-05', title: 'Teachers\' Day', type: 'Event' },
+  { date: '2024-09-15', title: 'Mid-Term Exams Start', type: 'Exam' },
+  { date: '2024-09-22', title: 'Mid-Term Exams End', type: 'Exam' },
+  { date: '2024-10-02', title: 'Gandhi Jayanti', type: 'Holiday' },
+  { date: '2024-10-15', title: 'Annual Sports Day', type: 'Event' },
+  { date: '2024-11-01', title: 'Diwali Break Starts', type: 'Holiday' },
+  { date: '2024-11-05', title: 'Diwali Break Ends', type: 'Holiday' },
+  { date: '2024-12-25', title: 'Christmas Day', type: 'Holiday' },
+  { date: '2024-12-31', title: 'New Year\'s Eve', type: 'Holiday' },
+  { date: '2025-01-26', title: 'Republic Day', type: 'Holiday' },
 ];

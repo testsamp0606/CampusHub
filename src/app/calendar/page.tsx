@@ -11,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { eventsData } from '@/lib/data';
 import { format, isSameDay } from 'date-fns';
+import { DayPicker } from 'react-day-picker';
 
 type CalendarEvent = (typeof eventsData)[0];
 
@@ -32,7 +33,7 @@ export default function CalendarPage() {
   const eventsByDate = useMemo(() => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
     eventsData.forEach(event => {
-      const dateKey = format(event.date, 'yyyy-MM-dd');
+      const dateKey = format(new Date(event.date), 'yyyy-MM-dd');
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
       }
@@ -47,12 +48,12 @@ export default function CalendarPage() {
     return eventsByDate[dateKey] || [];
   }, [selectedDate, eventsByDate]);
 
-  const DayWithDot = ({ date, ...props }: { date: Date } & any) => {
+  const DayWithDot = ({ date, ...props }: { date: Date, children: React.ReactNode } & any) => {
     const dateKey = format(date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey];
     
     return (
-      <div className="relative">
+      <div className="relative h-full w-full flex items-center justify-center">
         {props.children}
         {dayEvents && dayEvents.length > 0 && (
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex space-x-1">
@@ -77,10 +78,11 @@ export default function CalendarPage() {
               onSelect={setSelectedDate}
               className="w-full"
               components={{
-                Day: ({ date, displayMonth }) => {
-                    const isOutside = props => props.displayMonth.getMonth() !== date.getMonth();
-                    return <DayWithDot date={date}>{format(date, 'd')}</DayWithDot>
-                }
+                Day: ({ date, ...props }) => (
+                    <DayWithDot date={date} {...props}>
+                        {format(date, 'd')}
+                    </DayWithDot>
+                )
               }}
                modifiers={{
                 event: (date: Date) => {
