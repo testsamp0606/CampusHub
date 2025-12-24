@@ -41,7 +41,14 @@ export default function PermissionsPage() {
       setPermissions(prev => {
         const newPermissions = JSON.parse(JSON.stringify(prev)); // Deep copy
 
-        const currentPermissions = newPermissions[module]?.[role] || [];
+        if (!newPermissions[module]) {
+          newPermissions[module] = {};
+        }
+        if (!newPermissions[module][role]) {
+          newPermissions[module][role] = [];
+        }
+
+        const currentPermissions = newPermissions[module][role];
         const permissionIndex = currentPermissions.indexOf(permission);
 
         if (permissionIndex > -1) {
@@ -49,11 +56,6 @@ export default function PermissionsPage() {
         } else {
           currentPermissions.push(permission);
         }
-
-        if (!newPermissions[module]) {
-          newPermissions[module] = {};
-        }
-        newPermissions[module][role] = currentPermissions;
 
         return newPermissions;
       });
@@ -157,7 +159,7 @@ export default function PermissionsPage() {
                                       {pType}
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>
+                                  <TooltipContent side="top" align="end">
                                     <p>{permissionLabels[pType]}</p>
                                   </TooltipContent>
                                 </Tooltip>
