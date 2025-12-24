@@ -11,13 +11,13 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { CommandList } from "cmdk"
 
 type ComboboxProps = {
     options: { label: string; value: string }[];
@@ -51,16 +51,15 @@ export function Combobox({ options, value, onChange, placeholder, searchPlacehol
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
           <CommandInput placeholder={searchPlaceholder || "Search..."} />
-          <CommandEmpty>{emptyText || "No options found."}</CommandEmpty>
           <CommandList>
+            <CommandEmpty>{emptyText || "No options found."}</CommandEmpty>
             <CommandGroup>
                 {options.map((option) => (
                 <CommandItem
                     key={option.value}
-                    value={option.label} // Search against the label
-                    onSelect={(currentValue) => {
-                        const selectedValue = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase())?.value || "";
-                        onChange(selectedValue === value ? "" : selectedValue)
+                    value={option.label}
+                    onSelect={() => {
+                        onChange(option.value === value ? "" : option.value)
                         setOpen(false)
                     }}
                 >
