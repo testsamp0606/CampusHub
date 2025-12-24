@@ -762,6 +762,20 @@ export const eventsData: CalendarEvent[] = [
   { date: '2025-01-26', title: 'Republic Day', type: 'Holiday' },
 ];
 
+export const subjects = [
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'English',
+  'History',
+  'Geography',
+  'Computer Science',
+  'Art',
+  'Music',
+  'Physical Education'
+];
+
 export type TimetableEntry = {
   period: number;
   subject: string;
