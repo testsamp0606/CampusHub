@@ -352,7 +352,7 @@ export const booksData = [
     category: 'Classic',
     language: 'English',
     quantity: 5,
-    issued: 3,
+    issued: 2,
     lost: 0,
     coverImage: 'https://picsum.photos/seed/book1/200/300',
     resourceType: 'Book',
@@ -438,4 +438,64 @@ export const bookIssueData = [
     { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10 10:30', dueDate: '2024-07-24', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
     { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15 14:00', dueDate: '2024-07-29', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
     { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20 11:00', dueDate: '2024-07-04', returnDate: '2024-07-05 09:15', status: 'Returned' as 'Issued' | 'Returned' },
+];
+
+export const vehiclesData = [
+  {
+    id: 'V001',
+    vehicleNumber: 'KA-01-AB-1234',
+    type: 'Bus',
+    capacity: 40,
+    driverName: 'Ramesh Kumar',
+    driverContact: '9876543210',
+    status: 'Active',
+  },
+  {
+    id: 'V002',
+    vehicleNumber: 'KA-01-CD-5678',
+    type: 'Bus',
+    capacity: 40,
+    driverName: 'Suresh Singh',
+    driverContact: '9876543211',
+    status: 'Active',
+  },
+  {
+    id: 'V003',
+    vehicleNumber: 'KA-01-EF-9101',
+    type: 'Van',
+    capacity: 12,
+    driverName: 'Mahesh Patil',
+    driverContact: '9876543212',
+    status: 'Maintenance',
+  },
+];
+
+export const routesData = [
+    {
+        id: 'R001',
+        routeName: 'City Center Route',
+        vehicleId: 'V001',
+        stops: ['Central Station', 'City Market', 'Town Hall', 'Green Park'],
+    },
+    {
+        id: 'R002',
+        routeName: 'Suburb Route',
+        vehicleId: 'V002',
+        stops: ['Suburb Square', 'Lake View', 'West End', 'North Point'],
+    },
+    {
+        id: 'R003',
+        routeName: 'Express Route',
+        vehicleId: 'V003',
+        stops: ['Highway Junction', 'Tech Park', 'East Gate'],
+    }
+];
+
+
+export const studentTransportData = [
+    { allocationId: 'T001', studentId: 'S001', routeId: 'R001', stop: 'City Market', feeStatus: 'Paid' },
+    { allocationId: 'T002', studentId: 'S002', routeId: 'R002', stop: 'Lake View', feeStatus: 'Paid' },
+    { allocationId: 'T003', studentId: 'S003', routeId: 'R001', stop: 'Green Park', feeStatus: 'Unpaid' },
+    { allocationId: 'T004', studentId: 'S004', routeId: 'R002', stop: 'North Point', feeStatus: 'Paid' },
+    { allocationId: 'T005', studentId: 'S005', routeId: 'R001', stop: 'Central Station', feeStatus: 'Unpaid' },
 ];
