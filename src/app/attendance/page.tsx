@@ -72,8 +72,9 @@ export default function AttendancePage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Report Dialog State
-  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
-  const [reportType, setReportType] = useState<ReportType>('class-monthly');
+  const [isClassReportDialogOpen, setIsClassReportDialogOpen] = useState(false);
+  const [isStudentReportDialogOpen, setIsStudentReportDialogOpen] = useState(false);
+  
   const [reportClassId, setReportClassId] = useState<string>('');
   const [reportStudentId, setReportStudentId] = useState<string>('');
   const [reportMonth, setReportMonth] = useState<string>((new Date().getMonth() + 1).toString());
@@ -164,17 +165,15 @@ export default function AttendancePage() {
         });
     };
 
-    const handleGenerateReport = () => {
-        let reportDetails = `Type: ${reportType}, Month: ${reportMonth}, Year: ${reportYear}`;
-        if (reportType === 'class-monthly' && reportClassId) {
+    const handleGenerateClassReport = () => {
+        let reportDetails = `Type: class-monthly, Month: ${reportMonth}, Year: ${reportYear}`;
+        if (reportClassId) {
             reportDetails += `, Class: ${classesData.find(c => c.id === reportClassId)?.name}`;
-        } else if (reportType === 'student-monthly' && reportStudentId) {
-            reportDetails += `, Student: ${students.find(s => s.id === reportStudentId)?.name}`;
         } else {
              toast({
                 variant: 'destructive',
                 title: 'Invalid Selection',
-                description: 'Please select all required fields for the report.',
+                description: 'Please select a class for the report.',
             });
             return;
         }
@@ -182,9 +181,30 @@ export default function AttendancePage() {
         console.log("Generating report with details:", reportDetails);
         toast({
             title: 'Report Generation Started',
-            description: 'Your attendance report is being generated and will be available for download shortly.',
+            description: 'Your class attendance report is being generated.',
         });
-        setIsReportDialogOpen(false);
+        setIsClassReportDialogOpen(false);
+    }
+    
+    const handleGenerateStudentReport = () => {
+        let reportDetails = `Type: student-monthly, Month: ${reportMonth}, Year: ${reportYear}`;
+        if (reportStudentId) {
+            reportDetails += `, Student: ${students.find(s => s.id === reportStudentId)?.name}`;
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Invalid Selection',
+                description: 'Please select a student for the report.',
+            });
+            return;
+        }
+
+        console.log("Generating report with details:", reportDetails);
+        toast({
+            title: 'Report Generation Started',
+            description: 'Your student attendance report is being generated.',
+        });
+        setIsStudentReportDialogOpen(false);
     }
 
   const filteredAttendance = useMemo(() => {
@@ -199,38 +219,25 @@ export default function AttendancePage() {
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Attendance Management</h1>
-         <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Generate Report
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                 <DialogHeader>
-                    <DialogTitle>Generate Attendance Report</DialogTitle>
-                    <DialogDescription>
-                        Select the criteria for the attendance report.
-                    </DialogDescription>
-                </DialogHeader>
-                 <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="report-type" className="text-right">Report Type</Label>
-                        <Select value={reportType} onValueChange={(value) => setReportType(value as ReportType)}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select report type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="class-monthly">Class-wise Monthly</SelectItem>
-                                <SelectItem value="student-monthly">Student Monthly</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                     {reportType === 'class-monthly' && (
+        <div className="flex gap-2">
+            <Dialog open={isClassReportDialogOpen} onOpenChange={setIsClassReportDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Class Report
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Generate Class Attendance Report</DialogTitle>
+                        <DialogDescription>
+                            Select the criteria for the class-wise monthly report.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="class" className="text-right">Class</Label>
-                             <Select value={reportClassId} onValueChange={setReportClassId}>
+                            <Select value={reportClassId} onValueChange={setReportClassId}>
                                 <SelectTrigger className="col-span-3">
                                     <SelectValue placeholder="Select a class" />
                                 </SelectTrigger>
@@ -243,10 +250,51 @@ export default function AttendancePage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                    )}
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="month" className="text-right">Month</Label>
+                            <Select value={reportMonth} onValueChange={setReportMonth}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {monthOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="year" className="text-right">Year</Label>
+                            <Select value={reportYear} onValueChange={setReportYear}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" onClick={handleGenerateClassReport}>Generate</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
-                    {reportType === 'student-monthly' && (
-                         <div className="grid grid-cols-4 items-center gap-4">
+            <Dialog open={isStudentReportDialogOpen} onOpenChange={setIsStudentReportDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Student Report
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Generate Student Attendance Report</DialogTitle>
+                        <DialogDescription>
+                            Select the criteria for the student monthly report.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="student" className="text-right">Student</Label>
                             <Combobox
                                 options={studentOptions}
@@ -258,36 +306,35 @@ export default function AttendancePage() {
                                 className="col-span-3"
                             />
                         </div>
-                    )}
-
-                    <div className="grid grid-cols-4 items-center gap-4">
-                         <Label htmlFor="month" className="text-right">Month</Label>
-                         <Select value={reportMonth} onValueChange={setReportMonth}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {monthOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="month" className="text-right">Month</Label>
+                            <Select value={reportMonth} onValueChange={setReportMonth}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select month" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {monthOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="year" className="text-right">Year</Label>
+                            <Select value={reportYear} onValueChange={setReportYear}>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Select year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {yearOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                         <Label htmlFor="year" className="text-right">Year</Label>
-                         <Select value={reportYear} onValueChange={setReportYear}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {yearOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                 </div>
-                <DialogFooter>
-                    <Button type="button" onClick={handleGenerateReport}>Generate</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <DialogFooter>
+                        <Button type="button" onClick={handleGenerateStudentReport}>Generate</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
       </div>
       <Card>
         <CardHeader>
