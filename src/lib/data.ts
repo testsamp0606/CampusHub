@@ -286,7 +286,7 @@ export const feesData = [
     class: 'Class X',
     amount: 1500,
     dueDate: '2024-08-01',
-    status: 'Paid',
+    status: 'Paid' as 'Paid' | 'Unpaid' | 'Overdue',
     paymentDate: '2024-07-25',
     paymentMethod: 'Credit Card',
     description: 'Monthly Tuition Fee for July'
@@ -298,7 +298,7 @@ export const feesData = [
     class: 'Class IX',
     amount: 1200,
     dueDate: '2024-08-01',
-    status: 'Unpaid',
+    status: 'Unpaid' as 'Paid' | 'Unpaid' | 'Overdue',
     paymentDate: null,
     paymentMethod: null,
     description: 'Monthly Tuition Fee for July'
@@ -310,7 +310,7 @@ export const feesData = [
     class: 'Class X',
     amount: 1500,
     dueDate: '2024-07-01',
-    status: 'Overdue',
+    status: 'Overdue' as 'Paid' | 'Unpaid' | 'Overdue',
     paymentDate: null,
     paymentMethod: null,
     description: 'Monthly Tuition Fee for June'
@@ -322,7 +322,7 @@ export const feesData = [
     class: 'Class VIII',
     amount: 1000,
     dueDate: '2024-08-01',
-    status: 'Paid',
+    status: 'Paid' as 'Paid' | 'Unpaid' | 'Overdue',
     paymentDate: '2024-07-20',
     paymentMethod: 'Bank Transfer',
     description: 'Monthly Tuition Fee for July'
@@ -334,9 +334,68 @@ export const feesData = [
     class: 'Class X',
     amount: 250,
     dueDate: '2024-08-10',
-    status: 'Unpaid',
+    status: 'Unpaid' as 'Paid' | 'Unpaid' | 'Overdue',
     paymentDate: null,
     paymentMethod: null,
     description: 'Exam Fee - Mid Term'
   },
+];
+
+export const booksData = [
+  {
+    id: 'B001',
+    title: 'The Great Gatsby',
+    author: 'F. Scott Fitzgerald',
+    isbn: '9780743273565',
+    genre: 'Classic',
+    quantity: 5,
+    available: 2,
+    coverImage: 'https://picsum.photos/seed/book1/200/300',
+  },
+  {
+    id: 'B002',
+    title: 'To Kill a Mockingbird',
+    author: 'Harper Lee',
+    isbn: '9780061120084',
+    genre: 'Fiction',
+    quantity: 3,
+    available: 3,
+    coverImage: 'https://picsum.photos/seed/book2/200/300',
+  },
+  {
+    id: 'B003',
+    title: '1984',
+    author: 'George Orwell',
+    isbn: '9780451524935',
+    genre: 'Dystopian',
+    quantity: 7,
+    available: 5,
+    coverImage: 'https://picsum.photos/seed/book3/200/300',
+  },
+  {
+    id: 'B004',
+    title: 'Pride and Prejudice',
+    author: 'Jane Austen',
+    isbn: '9780141439518',
+    genre: 'Romance',
+    quantity: 4,
+    available: 1,
+    coverImage: 'https://picsum.photos/seed/book4/200/300',
+  },
+  {
+    id: 'B005',
+    title: 'The Hobbit',
+    author: 'J.R.R. Tolkien',
+    isbn: '9780345339683',
+    genre: 'Fantasy',
+    quantity: 6,
+    available: 6,
+    coverImage: 'https://picsum.photos/seed/book5/200/300',
+  },
+];
+
+export const bookIssueData = [
+    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10', dueDate: '2024-07-24', returnDate: null, status: 'Issued' },
+    { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15', dueDate: '2024-07-29', returnDate: null, status: 'Issued' },
+    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20', dueDate: '2024-07-04', returnDate: '2024-07-05', status: 'Returned' },
 ];
