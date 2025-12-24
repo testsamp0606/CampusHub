@@ -39,15 +39,18 @@ export default function AppSidebar() {
       <SidebarContent className="flex-1 p-2">
         <SidebarMenu>
           {NAV_ITEMS.map((item) => (
-            <SidebarMenuItem key={item.label} asChild>
-              <Link href={item.href} passHref legacyBehavior>
+            <SidebarMenuItem key={item.label}>
+              <Link href={item.href} passHref>
                 <SidebarMenuButton
                   isActive={pathname === item.href}
                   tooltip={item.label}
                   className="justify-start"
+                  asChild
                 >
-                  <item.icon />
-                  <span>{item.label}</span>
+                  <div>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </div>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
