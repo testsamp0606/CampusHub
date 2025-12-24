@@ -14,7 +14,7 @@ import {
   classesData,
   teachersData,
   timetablesData as initialTimetablesData,
-  subjects,
+  subjectsData,
 } from '@/lib/data';
 import { format, isValid, parseISO } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
@@ -86,7 +86,7 @@ const periodTimes = [
 const generateRandomTimetable = (classId: string, day: string): TimetableEntry[] => {
   return Array.from({ length: 6 }, (_, i) => ({
     period: i + 1,
-    subject: subjects[Math.floor(Math.random() * subjects.length)],
+    subject: subjectsData[Math.floor(Math.random() * subjectsData.length)].name,
     teacherId: teachersData[Math.floor(Math.random() * teachersData.length)].id,
     time: periodTimes[i],
   }));
@@ -149,7 +149,7 @@ const WeeklyTimetable = () => {
   }, []);
 
   const classOptions = classesData.map((c) => ({ value: c.id, label: c.name }));
-  const subjectOptions = subjects.map(s => ({ value: s, label: s }));
+  const subjectOptions = subjectsData.map(s => ({ value: s.name, label: s.name }));
   const teacherOptions = teachersData.map(t => ({ value: t.id, label: t.name }));
 
   const classTimetable = useMemo(() => {
