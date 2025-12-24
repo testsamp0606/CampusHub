@@ -81,9 +81,7 @@ export default function AddVehiclePage() {
       title: 'Vehicle Added',
       description: `Vehicle "${data.vehicleNumber}" has been successfully added.`,
     });
-    form.reset();
-    
-    // Check if window can be closed (if opened from another tab)
+
     if (window.opener) {
         window.close();
     } else {
@@ -92,8 +90,8 @@ export default function AddVehiclePage() {
   }
 
   return (
-    <div className="p-4">
-        <Card className="shadow-lg max-w-4xl mx-auto">
+    <div className="p-4 bg-background h-screen">
+        <Card className="shadow-lg max-w-4xl mx-auto border-none">
           <CardHeader>
             <CardTitle>Add New Vehicle</CardTitle>
             <CardDescription>
@@ -219,7 +217,7 @@ export default function AddVehiclePage() {
                    <Button
                     type="button"
                     variant="outline"
-                    onClick={() => router.back()}
+                    onClick={() => window.close()}
                   >
                     Close
                   </Button>

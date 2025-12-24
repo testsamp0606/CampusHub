@@ -23,11 +23,10 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { routesData as initialRoutesData, vehiclesData as initialVehiclesData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 
 type Route = (typeof initialRoutesData)[0];
@@ -64,16 +63,17 @@ export default function AddRoutePage() {
     resolver: zodResolver(routeFormSchema),
     defaultValues,
   });
-
-  useEffect(() => {
-    // Generate a unique route ID when the component mounts
-    const uniqueId = `R${Date.now().toString().slice(-6)}`;
-    form.setValue('id', uniqueId);
-
+  
+  const fetchVehicles = useCallback(() => {
     const storedVehicles = localStorage.getItem('vehiclesData');
     setVehicles(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
+  }, []);
 
-  }, [form]);
+  useEffect(() => {
+    const uniqueId = `R${Date.now().toString().slice(-6)}`;
+    form.setValue('id', uniqueId);
+    fetchVehicles();
+  }, [form, fetchVehicles]);
 
   function onSubmit(data: RouteFormValues) {
     const storedRoutes = localStorage.getItem('routesData');
@@ -102,11 +102,20 @@ export default function AddRoutePage() {
     const height = 700;
     const left = (window.screen.width / 2) - (width / 2);
     const top = (window.screen.height / 2) - (height / 2);
-    window.open(
+    const newWindow = window.open(
         '/transport/vehicles/add',
         'addVehicleWindow',
         `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
     );
+
+    if (newWindow) {
+      const timer = setInterval(() => {
+        if (newWindow.closed) {
+          clearInterval(timer);
+          fetchVehicles();
+        }
+      }, 500);
+    }
   };
 
   const vehicleOptions = vehicles.map(v => ({ value: v.id, label: `${v.vehicleNumber} (${v.type})`}));
