@@ -86,10 +86,6 @@ export default function CalendarPage() {
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: '',
-      type: 'Event',
-    },
   });
   
   useEffect(() => {
@@ -101,6 +97,14 @@ export default function CalendarPage() {
       localStorage.setItem('eventsData', JSON.stringify(initialEventsData));
     }
   }, []);
+
+  useEffect(() => {
+    form.reset({
+      title: '',
+      type: 'Event',
+      date: selectedDate || new Date(),
+    });
+  }, [isFormOpen, selectedDate, form]);
 
   const eventsByDate = useMemo(() => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
