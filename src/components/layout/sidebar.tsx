@@ -8,14 +8,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarCollapsible,
-  SidebarCollapsibleTrigger,
-  SidebarCollapsibleContent,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import { LogOut, Settings, GraduationCap, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/nav-items';
@@ -46,40 +40,16 @@ export default function AppSidebar() {
         <SidebarMenu>
           {NAV_ITEMS.map((item) => (
             <SidebarMenuItem key={item.label} asChild>
-              <SidebarCollapsible>
-                <SidebarCollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href)}
-                    tooltip={item.label}
-                    className="justify-between"
-                  >
-                    <div className="flex items-center gap-2">
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.subItems && (
-                      <ChevronDown className="h-4 w-4 text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden data-[state=open]:rotate-180 transition-transform" />
-                    )}
-                  </SidebarMenuButton>
-                </SidebarCollapsibleTrigger>
-                {item.subItems && (
-                  <SidebarCollapsibleContent>
-                    <SidebarMenuSub>
-                      {item.subItems.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.href}>
-                          <Link href={subItem.href} passHref legacyBehavior>
-                             <SidebarMenuSubButton
-                              isActive={pathname === subItem.href}
-                            >
-                              {subItem.label}
-                            </SidebarMenuSubButton>
-                          </Link>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </SidebarCollapsibleContent>
-                )}
-              </SidebarCollapsible>
+              <Link href={item.href} passHref legacyBehavior>
+                <SidebarMenuButton
+                  isActive={pathname === item.href}
+                  tooltip={item.label}
+                  className="justify-start"
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
