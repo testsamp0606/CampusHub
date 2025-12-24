@@ -151,13 +151,7 @@ export default function BookDetailsPage() {
   }
 
   const handlePayFine = (issueId: string) => {
-      const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
-      const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, fineStatus: 'Paid' as const } : i);
-      updateAndStoreIssues(updatedIssues);
-      toast({
-          title: 'Fine Paid',
-          description: 'The fine has been successfully marked as paid.',
-      });
+      router.push(`/library/fine/${issueId}/pay`);
   }
 
   if (!book) {
