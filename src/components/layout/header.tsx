@@ -40,11 +40,6 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
       <SidebarTrigger className="md:hidden" />
-      <div className="flex items-center gap-4">
-        <h1 className="font-headline text-xl font-semibold md:text-2xl">
-          Dashboard
-        </h1>
-      </div>
 
       <div className="flex-1 flex justify-center">
         <div className="hidden text-center md:block">
