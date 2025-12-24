@@ -53,7 +53,7 @@ export default function CalendarPage() {
 
   const DayWithDot = (props: DayProps) => {
     if (!isValid(props.date)) {
-      return <div />;
+      return <></>;
     }
     const dateKey = format(props.date, 'yyyy-MM-dd');
     const dayEvents = eventsByDate[dateKey];
