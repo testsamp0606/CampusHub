@@ -643,6 +643,7 @@ export const teachersData = [
         phone: '111-222-3333',
         email: 'john.doe.teacher@example.com',
         status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        profilePhoto: 'https://picsum.photos/seed/teacher1/200/200',
     },
     {
         id: 'T002',
@@ -655,6 +656,7 @@ export const teachersData = [
         phone: '222-333-4444',
         email: 'jane.smith.teacher@example.com',
         status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        profilePhoto: 'https://picsum.photos/seed/teacher2/200/200',
     },
     {
         id: 'T003',
@@ -667,6 +669,7 @@ export const teachersData = [
         phone: '333-444-5555',
         email: 'robert.brown.teacher@example.com',
         status: 'On Leave' as 'Active' | 'On Leave' | 'Inactive',
+        profilePhoto: 'https://picsum.photos/seed/teacher3/200/200',
     },
     {
         id: 'T004',
@@ -679,6 +682,7 @@ export const teachersData = [
         phone: '444-555-6666',
         email: 'emily.white.teacher@example.com',
         status: 'Active' as 'Active' | 'On Leave' | 'Inactive',
+        profilePhoto: 'https://picsum.photos/seed/teacher4/200/200',
     },
     {
         id: 'T005',
@@ -691,5 +695,6 @@ export const teachersData = [
         phone: '555-666-7777',
         email: 'michael.green.teacher@example.com',
         status: 'Inactive' as 'Active' | 'On Leave' | 'Inactive',
+        profilePhoto: 'https://picsum.photos/seed/teacher5/200/200',
     }
 ];

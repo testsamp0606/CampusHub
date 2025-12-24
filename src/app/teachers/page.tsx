@@ -36,11 +36,6 @@ export default function TeachersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleEdit = (teacherId: string) => {
-    // router.push(`/teachers/${teacherId}/edit`);
-    toast({ title: "Coming Soon!", description: "Edit functionality will be available soon."})
-  };
-
   const handleDelete = (teacherId: string) => {
     toast({
       title: 'Delete Teacher',
@@ -89,7 +84,7 @@ export default function TeachersPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Faculty Management</h1>
         <Button asChild>
-          <Link href="#">
+          <Link href="/teachers/add">
             <PlusCircle className="mr-2 h-4 w-4" /> Add New Teacher
           </Link>
         </Button>
@@ -141,19 +136,16 @@ export default function TeachersPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                        <Button asChild variant="ghost" size="icon" title="View Details">
-                        <Link href="#">
+                        <Link href={`/teachers/${teacher.id}`}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">View</span>
                         </Link>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Edit"
-                        onClick={() => handleEdit(teacher.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
+                      <Button asChild variant="ghost" size="icon" title="Edit">
+                        <Link href={`/teachers/${teacher.id}/edit`}>
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"
