@@ -76,7 +76,7 @@ export default function BookDetailsPage() {
     const targetBook = storedBooks.find(b => b.id === bookId);
     if (!targetBook) { return; }
 
-    const availableCopies = targetBook.quantity - targetBook.issued - (targetBook.lost || 0);
+    const availableCopies = (targetBook.quantity || 0) - (targetBook.issued || 0) - (targetBook.lost || 0);
     if (availableCopies <= 0) {
          toast({
             variant: 'destructive',
@@ -96,7 +96,7 @@ export default function BookDetailsPage() {
         status: 'Issued',
     };
 
-    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: b.issued + 1 } : b);
+    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: (b.issued || 0) + 1 } : b);
     const updatedIssues = [...storedIssues, newIssue];
 
     updateAndStoreBooks(updatedBooks);
@@ -121,7 +121,7 @@ export default function BookDetailsPage() {
      }
 
      const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd') } : i);
-     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, b.issued - 1) } : b);
+     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, (b.issued || 0) - 1) } : b);
 
      updateAndStoreBooks(updatedBooks);
      updateAndStoreIssues(updatedIssues);
@@ -140,7 +140,7 @@ export default function BookDetailsPage() {
     );
   }
 
-  const availableCopies = book.quantity - book.issued - (book.lost || 0);
+  const availableCopies = (book.quantity || 0) - (book.issued || 0) - (book.lost || 0);
 
   return (
     <div className="space-y-4">
