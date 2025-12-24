@@ -11,11 +11,10 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookCheck, BookX, BookUp } from 'lucide-react';
+import { ArrowLeft, BookCheck, BookUp } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import { format, addDays } from 'date-fns';
@@ -32,7 +31,6 @@ export default function BookDetailsPage() {
   
   const [book, setBook] = useState<Book | undefined>(undefined);
   const [issueHistory, setIssueHistory] = useState<BookIssue[]>([]);
-  const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
   const [issueStudentId, setIssueStudentId] = useState('');
 
   useEffect(() => {
@@ -105,7 +103,6 @@ export default function BookDetailsPage() {
     });
     
     setIssueStudentId('');
-    setIsIssueDialogOpen(false);
   }
 
   const handleReturnBook = (issueId: string) => {
@@ -182,39 +179,33 @@ export default function BookDetailsPage() {
                 </div>
             </div>
           </CardHeader>
-          <CardFooter className="flex justify-end gap-2">
-             <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button disabled={book.available === 0}>
-                        <BookCheck className="mr-2 h-4 w-4" />
-                        Issue Book
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Issue "{book.title}"</DialogTitle>
-                        <DialogDescription>Select a student to issue this book to. The due date will be set to 14 days from today.</DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="student-id">Student</Label>
-                             <Combobox
-                                options={studentOptions}
-                                value={issueStudentId}
-                                onChange={setIssueStudentId}
-                                placeholder="Select a student..."
-                                searchPlaceholder="Search students..."
-                                emptyResultText="No student found."
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={handleIssueBook}>Confirm Issue</Button>
-                    </DialogFooter>
-                </DialogContent>
-             </Dialog>
-          </CardFooter>
         </Card>
+
+        {book.available > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Issue Book</CardTitle>
+                    <CardDescription>Select a student to issue this book to. The due date will be set to 14 days from today.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col md:flex-row gap-4 items-end">
+                    <div className="w-full md:w-1/2">
+                        <Label htmlFor="student-id">Student</Label>
+                        <Combobox
+                            options={studentOptions}
+                            value={issueStudentId}
+                            onChange={setIssueStudentId}
+                            placeholder="Select a student..."
+                            searchPlaceholder="Search students..."
+                            emptyResultText="No student found."
+                        />
+                    </div>
+                    <Button onClick={handleIssueBook}>
+                        <BookCheck className="mr-2 h-4 w-4" />
+                        Confirm Issue
+                    </Button>
+                </CardContent>
+            </Card>
+        )}
 
         <Card>
             <CardHeader>
