@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Eye, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const students = [
@@ -52,6 +52,13 @@ const students = [
 export default function StudentsPage() {
   const { toast } = useToast();
 
+  const handleView = (studentId: string) => {
+    toast({
+      title: 'View Student',
+      description: `Viewing student with ID: ${studentId}`,
+    });
+  };
+
   const handleEdit = (studentId: string) => {
     toast({
       title: 'Edit Student',
@@ -69,13 +76,15 @@ export default function StudentsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Students</h1>
+        <h1 className="text-2xl font-bold">Students</h1>
         <Button>Add New Student</Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>All Students</CardTitle>
-          <CardDescription>A list of all students in the school.</CardDescription>
+          <CardDescription>
+            A list of all students in the school.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -98,6 +107,14 @@ export default function StudentsPage() {
                   <TableCell>{student.parentName}</TableCell>
                   <TableCell>{student.admissionDate}</TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleView(student.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">View</span>
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
