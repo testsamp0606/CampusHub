@@ -16,10 +16,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { roles, modules, permissionsData as initialPermissionsData, Permission } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function PermissionsPage() {
     const { toast } = useToast();
@@ -77,7 +77,7 @@ export default function PermissionsPage() {
                 <CardHeader>
                 <CardTitle>Role-Based Access Control</CardTitle>
                 <CardDescription>
-                    Manage permissions for each user role across different modules.
+                    Manage permissions for each user role across different modules. Click a button to grant or revoke a permission.
                 </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -102,16 +102,16 @@ export default function PermissionsPage() {
                                                         const currentPermissions = permissions[module]?.[role] || [];
                                                         const hasPermission = currentPermissions.includes(pType);
                                                         return (
-                                                            <div key={pType} className="flex items-center gap-1.5 p-2" title={`${permissionLabels[pType]}`}>
-                                                                <Checkbox
-                                                                    id={`${module}-${role}-${pType}`}
-                                                                    checked={hasPermission}
-                                                                    onCheckedChange={() => handlePermissionChange(module, role, pType)}
-                                                                />
-                                                                <label htmlFor={`${module}-${role}-${pType}`} className="text-xs font-medium cursor-pointer">
-                                                                    {pType}
-                                                                </label>
-                                                            </div>
+                                                            <Button
+                                                                key={pType}
+                                                                variant={hasPermission ? 'default' : 'outline'}
+                                                                size="sm"
+                                                                className="w-8 h-8"
+                                                                title={permissionLabels[pType]}
+                                                                onClick={() => handlePermissionChange(module, role, pType)}
+                                                            >
+                                                                {pType}
+                                                            </Button>
                                                         );
                                                     })}
                                                 </div>
