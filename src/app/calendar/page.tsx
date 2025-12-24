@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -9,12 +9,56 @@ import {
 } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { eventsData } from '@/lib/data';
-import { format, isValid } from 'date-fns';
+import { eventsData as initialEventsData } from '@/lib/data';
+import { format, isValid, parseISO } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
-import { BookOpen, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
+import { BookOpen, Calendar as CalendarIcon, PartyPopper, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
-type CalendarEvent = (typeof eventsData)[0];
+type CalendarEvent = (typeof initialEventsData)[0];
+
+const eventFormSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters.'),
+  date: z.date({ required_error: 'Please select a date for the event.' }),
+  type: z.enum(['Holiday', 'Event', 'Exam']),
+});
+
+type EventFormValues = z.infer<typeof eventFormSchema>;
 
 const eventTypeDetails: { [key in CalendarEvent['type']]: { color: string; dotColor: string; icon: React.ElementType } } = {
   Holiday: {
@@ -35,12 +79,33 @@ const eventTypeDetails: { [key in CalendarEvent['type']]: { color: string; dotCo
 };
 
 export default function CalendarPage() {
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      title: '',
+      type: 'Event',
+    },
+  });
   
+  useEffect(() => {
+    const storedEvents = localStorage.getItem('eventsData');
+    if (storedEvents) {
+      setEvents(JSON.parse(storedEvents));
+    } else {
+      setEvents(initialEventsData);
+      localStorage.setItem('eventsData', JSON.stringify(initialEventsData));
+    }
+  }, []);
+
   const eventsByDate = useMemo(() => {
     const grouped: { [key: string]: CalendarEvent[] } = {};
-    eventsData.forEach(event => {
-      const eventDate = new Date(event.date);
+    events.forEach(event => {
+      const eventDate = parseISO(event.date);
       if (isValid(eventDate)) {
         const dateKey = format(eventDate, 'yyyy-MM-dd');
         if (!grouped[dateKey]) {
@@ -50,13 +115,32 @@ export default function CalendarPage() {
       }
     });
     return grouped;
-  }, []);
+  }, [events]);
 
   const selectedDayEvents = useMemo(() => {
     if (!selectedDate || !isValid(selectedDate)) return [];
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
     return eventsByDate[dateKey] || [];
   }, [selectedDate, eventsByDate]);
+
+  function onSubmit(data: EventFormValues) {
+    const newEvent: CalendarEvent = {
+      ...data,
+      date: format(data.date, 'yyyy-MM-dd'),
+    };
+    
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    localStorage.setItem('eventsData', JSON.stringify(updatedEvents));
+    
+    toast({
+      title: 'Event Created',
+      description: `"${newEvent.title}" has been added to the calendar.`,
+    });
+    
+    form.reset();
+    setIsFormOpen(false);
+  }
 
   const DayWithDot = (props: DayProps) => {
     if (!isValid(props.date)) {
@@ -82,11 +166,100 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Academic Calendar</CardTitle>
-          <CardDescription>
-            Select a date to view all associated events, holidays, and exams.
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Academic Calendar</CardTitle>
+            <CardDescription>
+              Select a date to view all associated events, holidays, and exams.
+            </CardDescription>
+          </div>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+               <Button>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Event
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Event</DialogTitle>
+                <DialogDescription>
+                  Fill in the details for the new calendar event.
+                </DialogDescription>
+              </DialogHeader>
+               <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Annual Sports Day" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Event Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={'outline'}
+                                className={cn(
+                                  'w-full pl-3 text-left font-normal',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Event Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an event type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Event">Event</SelectItem>
+                            <SelectItem value="Holiday">Holiday</SelectItem>
+                            <SelectItem value="Exam">Exam</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <DialogFooter>
+                    <Button type="submit">Create Event</Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
       </Card>
       
