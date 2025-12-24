@@ -8,6 +8,7 @@ import {
   Calendar,
   Archive,
   Bus,
+  Users,
   Users2,
   Contact,
   CreditCard,
@@ -26,19 +27,25 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   {
-    href: '/students',
-    label: 'Students',
-    icon: Users2,
-  },
-  {
-    href: '/teachers',
-    label: 'Teachers',
-    icon: Briefcase,
-  },
-  {
-    href: '/parents',
-    label: 'Parents',
-    icon: Contact,
+    label: 'Users',
+    icon: Users,
+    subItems: [
+      {
+        href: '/students',
+        label: 'Students',
+        icon: Users2,
+      },
+      {
+        href: '/teachers',
+        label: 'Teachers',
+        icon: Briefcase,
+      },
+      {
+        href: '/parents',
+        label: 'Parents',
+        icon: Contact,
+      },
+    ],
   },
   {
     href: '/school',
