@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import { Badge } from '@/components/ui/badge';
 import { eventsData as initialEventsData } from '@/lib/data';
 import { format, isValid, parseISO } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
@@ -49,6 +48,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type CalendarEvent = (typeof initialEventsData)[0];
 
@@ -121,12 +121,6 @@ export default function CalendarPage() {
     return grouped;
   }, [events]);
 
-  const selectedDayEvents = useMemo(() => {
-    if (!selectedDate || !isValid(selectedDate)) return [];
-    const dateKey = format(selectedDate, 'yyyy-MM-dd');
-    return eventsByDate[dateKey] || [];
-  }, [selectedDate, eventsByDate]);
-
   function onSubmit(data: EventFormValues) {
     const newEvent: CalendarEvent = {
       ...data,
@@ -146,23 +140,41 @@ export default function CalendarPage() {
     setIsFormOpen(false);
   }
 
-  const DayWithDot = (props: DayProps) => {
+  const DayWithEvents = (props: DayProps) => {
     if (!isValid(props.date)) {
-      return <></>;
+      return null;
     }
     const dateKey = format(props.date, 'yyyy-MM-dd');
-    const dayEvents = eventsByDate[dateKey];
+    const dayEvents = eventsByDate[dateKey] || [];
     
     return (
-      <div className="relative h-full w-full flex items-center justify-center">
-        <span>{format(props.date, 'd')}</span>
-        {dayEvents && dayEvents.length > 0 && (
-          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex space-x-1">
-             {dayEvents.slice(0, 3).map((event, index) => (
-                <span key={index} className={`h-1.5 w-1.5 rounded-full ${eventTypeDetails[event.type].dotColor}`}></span>
-            ))}
+      <div className={cn("h-full min-h-[120px] p-2 flex flex-col", {
+        "bg-muted/50": props.date.getMonth() !== props.displayMonth.getMonth()
+      })}>
+        <div className="flex justify-between items-center">
+            <span className={cn("text-sm", {
+                "text-muted-foreground": props.date.getMonth() !== props.displayMonth.getMonth()
+            })}>
+                {format(props.date, 'd')}
+            </span>
+        </div>
+        <ScrollArea className="flex-1 mt-1">
+          <div className="space-y-1">
+            {dayEvents.map((event, index) => {
+              const details = eventTypeDetails[event.type];
+              return (
+                <div 
+                  key={index}
+                  className={cn("text-xs rounded-sm px-1 truncate", details.color)}
+                  title={event.title}
+                >
+                  <span className={`w-2 h-2 rounded-full inline-block mr-1 ${details.dotColor}`}></span>
+                  {event.title}
+                </div>
+              )
+            })}
           </div>
-        )}
+        </ScrollArea>
       </div>
     );
   };
@@ -174,7 +186,7 @@ export default function CalendarPage() {
           <div>
             <CardTitle>Academic Calendar</CardTitle>
             <CardDescription>
-              Select a date to view all associated events, holidays, and exams.
+              A full view of all scheduled events, holidays, and exams.
             </CardDescription>
           </div>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -267,67 +279,28 @@ export default function CalendarPage() {
         </CardHeader>
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 shadow-lg">
-          <CardContent className="p-0 flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="w-full max-w-lg"
-              components={{ Day: DayWithDot }}
-            />
-          </CardContent>
-        </Card>
-        
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle>
-                  Events for {selectedDate && isValid(selectedDate) ? format(selectedDate, 'MMMM d, yyyy') : '...'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedDayEvents.length > 0 ? (
-                  selectedDayEvents.map((event, index) => {
-                    const details = eventTypeDetails[event.type];
-                    const Icon = details.icon;
-                    return (
-                      <div key={index} className={`p-4 rounded-lg border ${details.color} flex items-center gap-4`}>
-                          <div className={`p-2 rounded-full ${details.color}`}>
-                            <Icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="font-semibold">{event.title}</p>
-                            <p className="text-sm">{event.type}</p>
-                          </div>
-                      </div>
-                    )
-                  })
-              ) : (
-                  <div className="py-10 text-center text-muted-foreground">
-                      <p>No events scheduled for this day.</p>
-                  </div>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Legend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  {Object.entries(eventTypeDetails).map(([type, { dotColor }]) => (
-                      <div key={type} className="flex items-center gap-2">
-                          <span className={`h-3 w-3 rounded-full ${dotColor}`}></span>
-                          <span className="text-sm text-muted-foreground">{type}</span>
-                      </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <Card className="shadow-lg">
+        <CardContent className="p-0">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            className="w-full"
+            classNames={{
+              months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+              month: 'space-y-4 w-full',
+              table: 'w-full border-collapse space-y-1',
+              head_row: 'flex border-b',
+              head_cell: 'text-muted-foreground rounded-md w-full font-normal text-[0.8rem] justify-center flex p-2',
+              row: 'flex w-full mt-2',
+              cell: 'h-auto text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 w-full border',
+              day: 'h-full w-full p-0 font-normal aria-selected:opacity-100',
+              day_selected: 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+            }}
+            components={{ Day: DayWithEvents }}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
