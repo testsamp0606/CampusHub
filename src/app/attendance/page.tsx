@@ -38,8 +38,9 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { attendanceData, students, classesData } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
-type AttendanceStatus = 'present' | 'absent' | 'leave';
+type AttendanceStatus = 'present' | 'absent' | 'leave' | 'unmarked';
 
 type AttendanceRecord = {
   studentId: string;
@@ -49,6 +50,7 @@ type AttendanceRecord = {
 
 export default function AttendancePage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedClass, setSelectedClass] = useState<string>('C001');
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
@@ -75,7 +77,7 @@ export default function AttendancePage() {
         return {
           studentId: student.id,
           studentName: student.name,
-          status: (existing?.status as AttendanceStatus) || 'present',
+          status: (existing?.status as AttendanceStatus) || 'unmarked',
         };
       });
 
@@ -123,8 +125,17 @@ export default function AttendancePage() {
           classesData.find((c) => c.id === selectedClass)?.name
         } on ${format(selectedDate, 'PPP')} has been finalized.`,
       });
+      router.push('/students');
     }
   };
+
+    const handleClearAll = () => {
+        setAttendance(prev => prev.map(rec => ({ ...rec, status: 'unmarked' })));
+        toast({
+            title: 'Selection Cleared',
+            description: 'All attendance statuses have been reset.',
+        });
+    };
 
   const filteredAttendance = useMemo(() => {
     return attendance.filter(
@@ -266,9 +277,14 @@ export default function AttendancePage() {
                 </div>
             )}
           </CardContent>
-           <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline" onClick={handleSaveAttendance}>Save as Draft</Button>
-                <Button onClick={handleSubmitAttendance}>Submit Attendance</Button>
+           <CardFooter className="flex justify-between gap-2">
+                <div>
+                     <Button variant="destructive" onClick={handleClearAll}>Clear All</Button>
+                </div>
+                <div className='flex gap-2'>
+                    <Button variant="outline" onClick={handleSaveAttendance}>Save as Draft</Button>
+                    <Button onClick={handleSubmitAttendance}>Submit Attendance</Button>
+                </div>
           </CardFooter>
         </Card>
       )}
