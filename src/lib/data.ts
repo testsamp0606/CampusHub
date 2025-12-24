@@ -175,6 +175,54 @@ export const students = [
 ];
 
 
+export const parents = [
+  {
+    id: 'P001',
+    name: 'Jane Doe',
+    studentName: 'John Doe',
+    studentId: 'S001',
+    occupation: 'Lawyer',
+    phone: '987-654-3210',
+    email: 'jane.doe@example.com',
+    address: '123 Main St, Anytown, USA',
+    profilePhoto: 'https://picsum.photos/seed/5/200/200',
+  },
+    {
+    id: 'P002',
+    name: 'John Smith',
+    studentName: 'Jane Smith',
+    studentId: 'S002',
+    occupation: 'Doctor',
+    phone: '987-654-3211',
+    email: 'john.smith@example.com',
+    address: '456 Oak Ave, Anytown, USA',
+    profilePhoto: 'https://picsum.photos/seed/6/200/200',
+  },
+  {
+    id: 'P003',
+    name: 'Mary Johnson',
+    studentName: 'Mike Johnson',
+    studentId: 'S003',
+    occupation: 'Teacher',
+    phone: '987-654-3212',
+    email: 'mary.johnson@example.com',
+    address: '789 Pine Ln, Anytown, USA',
+    profilePhoto: 'https://picsum.photos/seed/7/200/200',
+  },
+    {
+    id: 'P004',
+    name: 'David White',
+    studentName: 'Emily White',
+    studentId: 'S004',
+    occupation: 'Artist',
+    phone: '987-654-3213',
+    email: 'david.white@example.com',
+    address: '101 Maple Dr, Anytown, USA',
+    profilePhoto: 'https://picsum.photos/seed/8/200/200',
+  },
+];
+
+
 export const attendanceData = [
   { studentId: 'S001', date: '2024-07-01', status: 'present' },
   { studentId: 'S002', date: '2024-07-01', status: 'present' },
