@@ -10,13 +10,13 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookCheck, BookUp, QrCode } from 'lucide-react';
+import { ArrowLeft, BookCheck, BookUp, QrCode, DollarSign } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
-import { format, addDays } from 'date-fns';
+import { format, addDays, differenceInDays, parseISO } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Book = (typeof initialBooksData)[0];
@@ -40,7 +40,7 @@ export default function BookDetailsPage() {
 
     const storedIssues = localStorage.getItem('bookIssueData');
     const issues: BookIssue[] = storedIssues ? JSON.parse(storedIssues) : initialBookIssueData;
-    const bookIssues = issues.filter(issue => issue.bookId === bookId);
+    const bookIssues = issues.filter(issue => issue.bookId === bookId).sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
     setIssueHistory(bookIssues);
 
   }, [bookId]);
@@ -56,7 +56,8 @@ export default function BookDetailsPage() {
   };
 
   const updateAndStoreIssues = (issues: BookIssue[]) => {
-    setIssueHistory(issues.filter(issue => issue.bookId === bookId));
+    const sortedIssues = issues.filter(issue => issue.bookId === bookId).sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
+    setIssueHistory(sortedIssues);
     localStorage.setItem('bookIssueData', JSON.stringify(issues));
   };
 
@@ -94,6 +95,8 @@ export default function BookDetailsPage() {
         dueDate: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
         returnDate: null,
         status: 'Issued',
+        fineAmount: 0,
+        fineStatus: 'Unpaid',
     };
 
     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: (b.issued || 0) + 1 } : b);
@@ -120,16 +123,41 @@ export default function BookDetailsPage() {
          return;
      }
 
-     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd HH:mm') } : i);
+     const returnDate = new Date();
+     const dueDate = new Date(targetIssue.dueDate);
+     const overdueDays = differenceInDays(returnDate, dueDate);
+     let fineAmount = 0;
+     let fineStatus: 'Unpaid' | 'Paid' = 'Unpaid';
+
+     if (overdueDays > 0) {
+         fineAmount = overdueDays * 1; // $1 fine per day overdue
+         toast({
+             variant: 'destructive',
+             title: 'Book Overdue',
+             description: `A fine of $${fineAmount.toFixed(2)} has been applied for ${overdueDays} overdue day(s).`,
+         });
+     } else {
+         toast({
+            title: 'Book Returned',
+            description: `"${book?.title}" has been successfully returned on time.`,
+        });
+     }
+
+     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned' as const, returnDate: format(returnDate, 'yyyy-MM-dd HH:mm'), fineAmount, fineStatus } : i);
      const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, (b.issued || 0) - 1) } : b);
 
      updateAndStoreBooks(updatedBooks);
      updateAndStoreIssues(updatedIssues);
+  }
 
-     toast({
-      title: 'Book Returned',
-      description: `"${book?.title}" has been successfully returned.`,
-    });
+  const handlePayFine = (issueId: string) => {
+      const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
+      const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, fineStatus: 'Paid' as const } : i);
+      updateAndStoreIssues(updatedIssues);
+      toast({
+          title: 'Fine Paid',
+          description: 'The fine has been successfully marked as paid.',
+      });
   }
 
   if (!book) {
@@ -193,8 +221,8 @@ export default function BookDetailsPage() {
                 <div className="space-y-4">
                     <h3 className="font-semibold text-lg border-b pb-2">Inventory Details</h3>
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                        <p className="font-medium">Total Copies:</p><p>{book.quantity}</p>
-                        <p className="font-medium">Issued Copies:</p><p>{book.issued}</p>
+                        <p className="font-medium">Total Copies:</p><p>{book.quantity || 0}</p>
+                        <p className="font-medium">Issued Copies:</p><p>{book.issued || 0}</p>
                         <p className="font-medium">Lost Copies:</p><p>{book.lost || 0}</p>
                         <p className="font-medium">Available Copies:</p><p className="font-bold">{availableCopies}</p>
                     </div>
@@ -250,6 +278,7 @@ export default function BookDetailsPage() {
                             <TableHead>Due Date</TableHead>
                             <TableHead>Return Date</TableHead>
                             <TableHead>Status</TableHead>
+                             <TableHead>Fine</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -265,6 +294,15 @@ export default function BookDetailsPage() {
                                         {issue.status}
                                     </Badge>
                                 </TableCell>
+                                 <TableCell>
+                                    {issue.fineAmount > 0 ? (
+                                        <Badge variant={issue.fineStatus === 'Paid' ? 'success' : 'destructive'}>
+                                            ${issue.fineAmount.toFixed(2)} - {issue.fineStatus}
+                                        </Badge>
+                                    ) : (
+                                        'N/A'
+                                    )}
+                                </TableCell>
                                 <TableCell className="text-right">
                                     {issue.status === 'Issued' && (
                                         <Button size="sm" onClick={() => handleReturnBook(issue.issueId)}>
@@ -272,12 +310,18 @@ export default function BookDetailsPage() {
                                             Return
                                         </Button>
                                     )}
+                                    {issue.status === 'Returned' && issue.fineAmount > 0 && issue.fineStatus === 'Unpaid' && (
+                                        <Button size="sm" variant="outline" onClick={() => handlePayFine(issue.issueId)}>
+                                            <DollarSign className="mr-2 h-4 w-4" />
+                                            Pay Fine
+                                        </Button>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
                          {issueHistory.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center h-24">No issue history for this book.</TableCell>
+                                <TableCell colSpan={7} className="text-center h-24">No issue history for this book.</TableCell>
                             </TableRow>
                         )}
                     </TableBody>

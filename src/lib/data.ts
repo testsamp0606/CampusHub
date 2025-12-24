@@ -435,9 +435,9 @@ export const booksData = [
 ];
 
 export const bookIssueData = [
-    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10 10:30', dueDate: '2024-07-24', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
-    { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15 14:00', dueDate: '2024-07-29', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
-    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20 11:00', dueDate: '2024-07-04', returnDate: '2024-07-05 09:15', status: 'Returned' as 'Issued' | 'Returned' },
+    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10 10:30', dueDate: '2024-07-24', returnDate: null, status: 'Issued' as 'Issued' | 'Returned', fineAmount: 0, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
+    { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15 14:00', dueDate: '2024-07-29', returnDate: null, status: 'Issued' as 'Issued' | 'Returned', fineAmount: 0, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
+    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20 11:00', dueDate: '2024-07-04', returnDate: '2024-07-05 09:15', status: 'Returned' as 'Issued' | 'Returned', fineAmount: 1, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
 ];
 
 export const vehiclesData = [
