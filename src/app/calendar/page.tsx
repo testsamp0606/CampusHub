@@ -12,19 +12,26 @@ import { Badge } from '@/components/ui/badge';
 import { eventsData } from '@/lib/data';
 import { format, isValid } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
+import { BookOpen, Calendar as CalendarIcon, PartyPopper } from 'lucide-react';
 
 type CalendarEvent = (typeof eventsData)[0];
 
-const eventTypeColors: { [key in CalendarEvent['type']]: string } = {
-  Holiday: 'bg-red-200 text-red-800 border-red-300',
-  Event: 'bg-blue-200 text-blue-800 border-blue-300',
-  Exam: 'bg-yellow-200 text-yellow-800 border-yellow-300',
-};
-
-const eventDotColors: { [key in CalendarEvent['type']]: string } = {
-    Holiday: 'bg-red-500',
-    Event: 'bg-blue-500',
-    Exam: 'bg-yellow-500',
+const eventTypeDetails: { [key in CalendarEvent['type']]: { color: string; dotColor: string; icon: React.ElementType } } = {
+  Holiday: {
+    color: 'bg-red-100 text-red-800 border-red-200',
+    dotColor: 'bg-red-500',
+    icon: PartyPopper,
+  },
+  Event: {
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    dotColor: 'bg-blue-500',
+    icon: CalendarIcon,
+  },
+  Exam: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    dotColor: 'bg-yellow-500',
+    icon: BookOpen,
+  },
 };
 
 export default function CalendarPage() {
@@ -64,7 +71,7 @@ export default function CalendarPage() {
         {dayEvents && dayEvents.length > 0 && (
           <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex space-x-1">
              {dayEvents.slice(0, 3).map((event, index) => (
-                <span key={index} className={`h-1.5 w-1.5 rounded-full ${eventDotColors[event.type]}`}></span>
+                <span key={index} className={`h-1.5 w-1.5 rounded-full ${eventTypeDetails[event.type].dotColor}`}></span>
             ))}
           </div>
         )}
@@ -74,65 +81,76 @@ export default function CalendarPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">Academic Calendar</h1>
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 shadow-lg">
-          <CardContent className="p-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Academic Calendar</CardTitle>
+          <CardDescription>
+            Select a date to view all associated events, holidays, and exams.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 shadow-lg">
+          <CardContent className="p-0 flex justify-center">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="w-full"
-              components={{
-                Day: DayWithDot,
-              }}
-               modifiers={{
-                event: (date: Date) => {
-                  if (!isValid(date)) return false;
-                  const dateKey = format(date, 'yyyy-MM-dd');
-                  return !!eventsByDate[dateKey];
-                },
-              }}
+              className="w-full max-w-lg"
+              components={{ Day: DayWithDot }}
             />
           </CardContent>
         </Card>
-        <Card className="shadow-lg">
-           <CardHeader>
-            <CardTitle>
-                Events for {selectedDate && isValid(selectedDate) ? format(selectedDate, 'MMMM d, yyyy') : '...'}
-            </CardTitle>
-            <CardDescription>
-                A list of all events, holidays, and exams for the selected day.
-            </CardDescription>
-          </CardHeader>
-           <CardContent className="space-y-4">
-             {selectedDayEvents.length > 0 ? (
-                selectedDayEvents.map((event, index) => (
-                   <div key={index} className={`p-3 rounded-lg border ${eventTypeColors[event.type]}`}>
-                        <p className="font-semibold">{event.title}</p>
-                        <p className="text-sm">{event.type}</p>
-                   </div>
-                ))
-            ) : (
-                <div className="py-10 text-center text-muted-foreground">
-                    <p>No events scheduled for this day.</p>
-                </div>
-            )}
-
-            <div className="pt-6 space-y-2">
-                <h3 className="font-semibold">Legend</h3>
-                <div className="flex flex-wrap gap-4">
-                    {Object.entries(eventDotColors).map(([type, colorClass]) => (
-                        <div key={type} className="flex items-center gap-2">
-                            <span className={`h-3 w-3 rounded-full ${colorClass}`}></span>
-                            <span className="text-sm text-muted-foreground">{type}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-           </CardContent>
-        </Card>
-       </div>
+        
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>
+                  Events for {selectedDate && isValid(selectedDate) ? format(selectedDate, 'MMMM d, yyyy') : '...'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedDayEvents.length > 0 ? (
+                  selectedDayEvents.map((event, index) => {
+                    const details = eventTypeDetails[event.type];
+                    const Icon = details.icon;
+                    return (
+                      <div key={index} className={`p-4 rounded-lg border ${details.color} flex items-center gap-4`}>
+                          <div className={`p-2 rounded-full ${details.color}`}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">{event.title}</p>
+                            <p className="text-sm">{event.type}</p>
+                          </div>
+                      </div>
+                    )
+                  })
+              ) : (
+                  <div className="py-10 text-center text-muted-foreground">
+                      <p>No events scheduled for this day.</p>
+                  </div>
+              )}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Legend</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  {Object.entries(eventTypeDetails).map(([type, { dotColor }]) => (
+                      <div key={type} className="flex items-center gap-2">
+                          <span className={`h-3 w-3 rounded-full ${dotColor}`}></span>
+                          <span className="text-sm text-muted-foreground">{type}</span>
+                      </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
