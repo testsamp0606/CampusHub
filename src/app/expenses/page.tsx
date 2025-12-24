@@ -43,7 +43,7 @@ export default function ExpensesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [expensesData, setExpensesData] = useState<Expense[]>([]);
-  const [userRole] = useState<Role>('Accountant'); // Simulating user role
+  const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
 
   useEffect(() => {
     // In a real app, you'd fetch this data. For now, we use localStorage.

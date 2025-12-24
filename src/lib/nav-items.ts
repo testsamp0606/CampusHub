@@ -117,5 +117,5 @@ const filterNavItemsByRole = (items: NavItem[], role: string): NavItem[] => {
 
 
 // Simulate getting the current user's role
-const CURRENT_USER_ROLE = 'Accountant'; // Change this to 'Admin', 'Accountant', etc. to test
+const CURRENT_USER_ROLE = 'SuperAdmin'; // Change this to 'Admin', 'Accountant', etc. to test
 export const NAV_ITEMS = filterNavItemsByRole(ALL_NAV_ITEMS, CURRENT_USER_ROLE);

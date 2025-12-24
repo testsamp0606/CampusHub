@@ -38,7 +38,7 @@ export default function FeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [feesData, setFeesData] = useState<Fee[]>([]);
-  const [userRole] = useState<Role>('Accountant'); // Simulating user role
+  const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
 
   useEffect(() => {
     const storedFees = localStorage.getItem('feesData');
