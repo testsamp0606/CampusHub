@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, BookPlus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { booksData as initialBooksData } from '@/lib/data';
+import { booksData as initialBooksData, bookIssueData as initialBookIssueData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -43,6 +43,11 @@ export default function LibraryPage() {
     } else {
       setBooks(initialBooksData);
       localStorage.setItem('booksData', JSON.stringify(initialBooksData));
+    }
+
+    const storedIssues = localStorage.getItem('bookIssueData');
+    if (!storedIssues) {
+        localStorage.setItem('bookIssueData', JSON.stringify(initialBookIssueData));
     }
   }, []);
 

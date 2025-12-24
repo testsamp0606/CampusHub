@@ -1,6 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { booksData as initialBooksData } from '@/lib/data';
+import { booksData as initialBooksData, students, bookIssueData as initialBookIssueData } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -11,28 +11,124 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, BookCheck, BookX } from 'lucide-react';
+import { ArrowLeft, BookCheck, BookX, BookUp } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Combobox } from '@/components/ui/combobox';
+import { format, addDays } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Book = (typeof initialBooksData)[0];
+type BookIssue = (typeof initialBookIssueData)[0];
 
 export default function BookDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const bookId = params.id;
+  const bookId = params.id as string;
   
   const [book, setBook] = useState<Book | undefined>(undefined);
+  const [issueHistory, setIssueHistory] = useState<BookIssue[]>([]);
+  const [isIssueDialogOpen, setIsIssueDialogOpen] = useState(false);
+  const [issueStudentId, setIssueStudentId] = useState('');
 
   useEffect(() => {
     const storedBooks = localStorage.getItem('booksData');
     const books: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
     const currentBook = books.find((b) => b.id === bookId);
     setBook(currentBook);
+
+    const storedIssues = localStorage.getItem('bookIssueData');
+    const issues: BookIssue[] = storedIssues ? JSON.parse(storedIssues) : initialBookIssueData;
+    const bookIssues = issues.filter(issue => issue.bookId === bookId);
+    setIssueHistory(bookIssues);
+
   }, [bookId]);
 
+  const studentOptions = useMemo(() => students.map(s => ({ value: s.id, label: `${s.name} (${s.id})` })), []);
+
+  const updateAndStoreBooks = (books: Book[]) => {
+    setBook(books.find(b => b.id === bookId));
+    localStorage.setItem('booksData', JSON.stringify(books));
+  };
+
+  const updateAndStoreIssues = (issues: BookIssue[]) => {
+    setIssueHistory(issues.filter(issue => issue.bookId === bookId));
+    localStorage.setItem('bookIssueData', JSON.stringify(issues));
+  };
+
+  const handleIssueBook = () => {
+    if (!issueStudentId) {
+        toast({
+            variant: 'destructive',
+            title: 'Student not selected',
+            description: 'Please select a student to issue the book to.',
+        });
+        return;
+    }
+
+    const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || '[]');
+    const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
+
+    const targetBook = storedBooks.find(b => b.id === bookId);
+    if (!targetBook || targetBook.available <= 0) {
+         toast({
+            variant: 'destructive',
+            title: 'Book Unavailable',
+            description: 'This book is currently unavailable for issue.',
+        });
+        return;
+    }
+
+    const newIssue: BookIssue = {
+        issueId: `I${Date.now().toString().slice(-6)}`,
+        bookId: bookId,
+        studentId: issueStudentId,
+        issueDate: format(new Date(), 'yyyy-MM-dd'),
+        dueDate: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
+        returnDate: null,
+        status: 'Issued',
+    };
+
+    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, available: b.available - 1 } : b);
+    const updatedIssues = [...storedIssues, newIssue];
+
+    updateAndStoreBooks(updatedBooks);
+    updateAndStoreIssues(updatedIssues);
+    
+    toast({
+      title: 'Book Issued',
+      description: `"${targetBook.title}" has been issued to student ${issueStudentId}.`,
+    });
+    
+    setIssueStudentId('');
+    setIsIssueDialogOpen(false);
+  }
+
+  const handleReturnBook = (issueId: string) => {
+     const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || '[]');
+     const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
+
+     const targetIssue = storedIssues.find(i => i.issueId === issueId);
+     if (!targetIssue || targetIssue.status !== 'Issued') {
+         toast({ variant: 'destructive', title: 'Invalid Action', description: 'This book is not currently issued.' });
+         return;
+     }
+
+     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd') } : i);
+     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, available: b.available + 1 } : b);
+
+     updateAndStoreBooks(updatedBooks);
+     updateAndStoreIssues(updatedIssues);
+
+     toast({
+      title: 'Book Returned',
+      description: `"${book?.title}" has been successfully returned.`,
+    });
+  }
 
   if (!book) {
     return (
@@ -42,22 +138,8 @@ export default function BookDetailsPage() {
     );
   }
 
-  const handleIssueBook = () => {
-    toast({
-      title: 'Issue Book',
-      description: `Functionality to issue "${book.title}" is not yet implemented.`,
-    });
-  }
-
-  const handleReturnBook = () => {
-     toast({
-      title: 'Return Book',
-      description: `Functionality to return "${book.title}" is not yet implemented.`,
-    });
-  }
-
   return (
-    <div>
+    <div className="space-y-4">
         <div className="flex justify-end gap-2 mb-4">
             <Button variant="outline" onClick={() => router.push('/library')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -100,19 +182,87 @@ export default function BookDetailsPage() {
                 </div>
             </div>
           </CardHeader>
-          <CardContent>
-            {/* Future content like issue history can go here */}
-          </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button onClick={handleReturnBook} variant="outline">
-                <BookX className="mr-2 h-4 w-4" />
-                Return Book
-            </Button>
-            <Button onClick={handleIssueBook} disabled={book.available === 0}>
-                <BookCheck className="mr-2 h-4 w-4" />
-                Issue Book
-            </Button>
+             <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button disabled={book.available === 0}>
+                        <BookCheck className="mr-2 h-4 w-4" />
+                        Issue Book
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Issue "{book.title}"</DialogTitle>
+                        <DialogDescription>Select a student to issue this book to. The due date will be set to 14 days from today.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="student-id">Student</Label>
+                             <Combobox
+                                options={studentOptions}
+                                value={issueStudentId}
+                                onChange={setIssueStudentId}
+                                placeholder="Select a student..."
+                                searchPlaceholder="Search students..."
+                                emptyResultText="No student found."
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleIssueBook}>Confirm Issue</Button>
+                    </DialogFooter>
+                </DialogContent>
+             </Dialog>
           </CardFooter>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Issue History</CardTitle>
+                <CardDescription>A log of all times this book has been issued.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Student ID</TableHead>
+                            <TableHead>Issue Date</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Return Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {issueHistory.map(issue => (
+                            <TableRow key={issue.issueId}>
+                                <TableCell>{issue.studentId}</TableCell>
+                                <TableCell>{issue.issueDate}</TableCell>
+                                <TableCell>{issue.dueDate}</TableCell>
+                                <TableCell>{issue.returnDate || 'N/A'}</TableCell>
+                                <TableCell>
+                                    <Badge variant={issue.status === 'Issued' ? 'warning' : 'success'}>
+                                        {issue.status}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    {issue.status === 'Issued' && (
+                                        <Button size="sm" onClick={() => handleReturnBook(issue.issueId)}>
+                                            <BookUp className="mr-2 h-4 w-4" />
+                                            Return
+                                        </Button>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                         {issueHistory.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={6} className="text-center h-24">No issue history for this book.</TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
         </Card>
     </div>
   );

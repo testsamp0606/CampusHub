@@ -395,7 +395,7 @@ export const booksData = [
 ];
 
 export const bookIssueData = [
-    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10', dueDate: '2024-07-24', returnDate: null, status: 'Issued' },
-    { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15', dueDate: '2024-07-29', returnDate: null, status: 'Issued' },
-    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20', dueDate: '2024-07-04', returnDate: '2024-07-05', status: 'Returned' },
+    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10', dueDate: '2024-07-24', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
+    { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15', dueDate: '2024-07-29', returnDate: null, status: 'Issued' as 'Issued' | 'Returned' },
+    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20', dueDate: '2024-07-04', returnDate: '2024-07-05', status: 'Returned' as 'Issued' | 'Returned' },
 ];
