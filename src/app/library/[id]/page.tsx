@@ -76,7 +76,7 @@ export default function BookDetailsPage() {
     const targetBook = storedBooks.find(b => b.id === bookId);
     if (!targetBook) { return; }
 
-    const availableCopies = targetBook.quantity - targetBook.issued - targetBook.lost;
+    const availableCopies = targetBook.quantity - targetBook.issued - (targetBook.lost || 0);
     if (availableCopies <= 0) {
          toast({
             variant: 'destructive',
@@ -140,7 +140,7 @@ export default function BookDetailsPage() {
     );
   }
 
-  const availableCopies = book.quantity - book.issued - book.lost;
+  const availableCopies = book.quantity - book.issued - (book.lost || 0);
 
   return (
     <div className="space-y-4">
@@ -195,7 +195,7 @@ export default function BookDetailsPage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                         <p className="font-medium">Total Copies:</p><p>{book.quantity}</p>
                         <p className="font-medium">Issued Copies:</p><p>{book.issued}</p>
-                        <p className="font-medium">Lost Copies:</p><p>{book.lost}</p>
+                        <p className="font-medium">Lost Copies:</p><p>{book.lost || 0}</p>
                         <p className="font-medium">Available Copies:</p><p className="font-bold">{availableCopies}</p>
                     </div>
                 </div>
