@@ -1009,3 +1009,59 @@ export const permissionsData: {
     Parent: ['V'],
   },
 };
+
+export type Message = {
+    id: string;
+    conversationId: string;
+    senderId: string; // 'user' or a person's ID
+    senderName: string;
+    content: string;
+    timestamp: string;
+};
+
+export type Conversation = {
+    id: string;
+    subject: string;
+    participants: { id: string, name: string }[];
+    lastMessage: string;
+    lastMessageTimestamp: string;
+    read: boolean;
+};
+
+export const messagesData: Message[] = [
+    { id: 'm1', conversationId: 'c1', senderId: 'T002', senderName: 'Ms. Jane Smith', content: 'Hi Admin, I wanted to discuss the curriculum for the next semester. When would be a good time to connect?', timestamp: '2024-07-28T10:00:00Z' },
+    { id: 'm2', conversationId: 'c1', senderId: 'user', senderName: 'Admin', content: 'Hello Ms. Smith. I am available tomorrow at 11 AM. Does that work for you?', timestamp: '2024-07-28T10:05:00Z' },
+    { id: 'm3', conversationId: 'c1', senderId: 'T002', senderName: 'Ms. Jane Smith', content: 'Yes, that sounds perfect. I will send a calendar invite. Thank you!', timestamp: '2024-07-28T10:06:00Z' },
+    { id: 'm4', conversationId: 'c2', senderId: 'P001', senderName: 'Jane Doe', content: 'Dear Admin, I have a query regarding the fee payment for my son, John Doe.', timestamp: '2024-07-27T15:30:00Z' },
+    { id: 'm5', conversationId: 'c2', senderId: 'user', senderName: 'Admin', content: 'Hello Mrs. Doe, please let me know how I can assist you.', timestamp: '2024-07-27T15:32:00Z' },
+    { id: 'm6', conversationId: 'c3', senderId: 'T005', senderName: 'Mr. Michael Green', content: 'Requesting access to the updated software for the computer lab.', timestamp: '2024-07-26T09:00:00Z' },
+];
+
+export const conversationsData: Conversation[] = [
+    {
+        id: 'c1',
+        subject: 'Curriculum Discussion for Next Semester',
+        participants: [{ id: 'user', name: 'Admin'}, { id: 'T002', name: 'Ms. Jane Smith' }],
+        lastMessage: 'Yes, that sounds perfect. I will send a calendar invite. Thank you!',
+        lastMessageTimestamp: '2024-07-28T10:06:00Z',
+        read: false,
+    },
+    {
+        id: 'c2',
+        subject: 'Query Regarding Fee Payment',
+        participants: [{ id: 'user', name: 'Admin'}, { id: 'P001', name: 'Jane Doe' }],
+        lastMessage: 'Hello Mrs. Doe, please let me know how I can assist you.',
+        lastMessageTimestamp: '2024-07-27T15:32:00Z',
+        read: true,
+    },
+    {
+        id: 'c3',
+        subject: 'Access for Lab Software',
+        participants: [{ id: 'user', name: 'Admin'}, { id: 'T005', name: 'Mr. Michael Green' }],
+        lastMessage: 'Requesting access to the updated software for the computer lab.',
+        lastMessageTimestamp: '2024-07-26T09:00:00Z',
+        read: true,
+    },
+];
+
+export const allUsers = [...teachersData, ...parents, ...students];

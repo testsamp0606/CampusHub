@@ -20,6 +20,7 @@ import {
   Book,
   Megaphone,
   ShieldCheck,
+  MessageSquare,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -91,6 +92,12 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     label: 'Library',
     icon: Library,
     roles: ['SuperAdmin', 'Admin', 'Librarian'],
+  },
+  {
+    href: '/messages',
+    label: 'Messages',
+    icon: MessageSquare,
+    roles: ['SuperAdmin', 'Admin'],
   },
   {
     href: '/announcements',
