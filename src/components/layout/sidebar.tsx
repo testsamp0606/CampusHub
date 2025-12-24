@@ -97,7 +97,7 @@ export default function AppSidebar() {
       className="hidden border-r border-sidebar-border md:flex"
     >
       <SidebarRail>
-        <SidebarTrigger className="hidden md:flex" />
+        <SidebarTrigger />
       </SidebarRail>
       <SidebarHeader className="h-16 justify-start px-3">
         <Link
