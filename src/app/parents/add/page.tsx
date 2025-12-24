@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { students } from '@/lib/data';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Combobox } from '@/components/ui/combobox';
 
@@ -34,10 +34,11 @@ const parentFormSchema = z.object({
   fatherName: z.string().min(2, 'Father name must be at least 2 characters.'),
   fatherOccupation: z.string().min(2, 'Father occupation is required.'),
   fatherPhone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
+  fatherMonthlyIncome: z.coerce.number().min(0, 'Income must be a positive number.').optional(),
   motherName: z.string().min(2, 'Mother name must be at least 2 characters.'),
   motherOccupation: z.string().min(2, 'Mother occupation is required.'),
   motherPhone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
-  monthlyIncome: z.coerce.number().min(0, 'Monthly income must be a positive number.'),
+  motherMonthlyIncome: z.coerce.number().min(0, 'Income must be a positive number.').optional(),
   permanentAddress: z.string().min(10, 'Permanent address must be at least 10 characters.'),
   temporaryAddress: z.string().optional(),
   sameAsStudentAddress: z.boolean().default(false),
@@ -57,10 +58,11 @@ const defaultValues: Partial<ParentFormValues> = {
   fatherName: '',
   fatherOccupation: '',
   fatherPhone: '',
+  fatherMonthlyIncome: 0,
   motherName: '',
   motherOccupation: '',
   motherPhone: '',
-  monthlyIncome: 0,
+  motherMonthlyIncome: 0,
   permanentAddress: '',
   temporaryAddress: '',
   sameAsStudentAddress: false,
@@ -85,6 +87,11 @@ export default function AddParentPage() {
 
   const studentId = form.watch('studentId');
   const sameAsStudentAddress = form.watch('sameAsStudentAddress');
+  const fatherIncome = form.watch('fatherMonthlyIncome') || 0;
+  const motherIncome = form.watch('motherMonthlyIncome') || 0;
+
+  const familyIncome = useMemo(() => fatherIncome + motherIncome, [fatherIncome, motherIncome]);
+
 
   useEffect(() => {
     // Generate a unique parent ID when the component mounts
@@ -208,6 +215,19 @@ export default function AddParentPage() {
                         </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="fatherMonthlyIncome"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Father's Monthly Income</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="30000" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                 </div>
             </div>
 
@@ -253,23 +273,30 @@ export default function AddParentPage() {
                         </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="motherMonthlyIncome"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Mother's Monthly Income</FormLabel>
+                            <FormControl>
+                            <Input type="number" placeholder="20000" {...field} value={field.value || ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                 </div>
             </div>
             
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                 <FormField
-                    control={form.control}
-                    name="monthlyIncome"
-                    render={({ field }) => (
-                    <FormItem>
-                        <RequiredLabel>Monthly Income (Family)</RequiredLabel>
-                        <FormControl>
-                        <Input type="number" placeholder="50000" {...field} value={field.value || ''} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+                 <FormItem>
+                    <FormLabel>Total Family Income</FormLabel>
+                    <FormControl>
+                    <Input type="number" placeholder="50000" value={familyIncome} disabled />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
             </div>
             
              <FormField
@@ -425,3 +452,5 @@ export default function AddParentPage() {
     </Card>
   );
 }
+
+    
