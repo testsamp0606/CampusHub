@@ -4,7 +4,7 @@ import {
   UserCheck,
   Briefcase,
   UserCog,
-  UserShield,
+  ShieldCheck,
   ClipboardList,
   School2,
 } from 'lucide-react';
@@ -49,7 +49,7 @@ export const statCardsData: StatCardData[] = [
   {
     title: 'Admins',
     count: '07',
-    Icon: UserShield,
+    Icon: ShieldCheck,
     color: 'text-red-500',
     bgColor: 'bg-red-100',
   },
