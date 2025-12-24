@@ -74,7 +74,7 @@ export default function InvoiceDetailsPage() {
   };
 
   const handlePayNow = () => {
-    toast({ title: 'Redirecting to Payment', description: 'You will be redirected to the payment gateway.' });
+    router.push(`/payment/${invoice.invoiceId}`);
   };
 
   return (

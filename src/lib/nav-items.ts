@@ -12,6 +12,7 @@ import {
   Bus,
   Users2,
   Contact,
+  CreditCard,
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
@@ -46,6 +47,7 @@ export const NAV_ITEMS = [
     label: 'Student Fee',
     icon: CircleDollarSign,
   },
+  { href: '/payment', label: 'Payment', icon: CreditCard },
   { href: '/accounts', label: 'Accounts', icon: BookUser },
   { href: '/expenses', label: 'Expenses', icon: TrendingDown },
   { href: '/library', label: 'Library', icon: Library },
