@@ -15,82 +15,71 @@ import {
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, subItems: [
-      { href: '/dashboard/add', label: 'Add' },
-      { href: '/dashboard/view', label: 'View' },
-      { href: '/dashboard/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/students', label: 'Students', icon: Users2, subItems: [
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  {
+    href: '/students',
+    label: 'Students',
+    icon: Users2,
+    subItems: [
       { href: '/students/add', label: 'Add' },
       { href: '/students/view', label: 'View' },
       { href: '/students/edit', label: 'Edit' },
     ],
   },
-  { href: '/parents', label: 'Parents', icon: Contact, subItems: [
+  {
+    href: '/parents',
+    label: 'Parents',
+    icon: Contact,
+    subItems: [
       { href: '/parents/add', label: 'Add' },
       { href: '/parents/view', label: 'View' },
       { href: '/parents/edit', label: 'Edit' },
     ],
   },
-  { href: '/school', label: 'School', icon: School, subItems: [
+  {
+    href: '/school',
+    label: 'School',
+    icon: School,
+    subItems: [
       { href: '/school/add', label: 'Add' },
       { href: '/school/view', label: 'View' },
       { href: '/school/edit', label: 'Edit' },
     ],
   },
-  { href: '/attendance', label: 'Attendance', icon: ClipboardCheck, subItems: [
+  {
+    href: '/attendance',
+    label: 'Attendance',
+    icon: ClipboardCheck,
+    subItems: [
       { href: '/attendance/add', label: 'Add' },
       { href: '/attendance/view', label: 'View' },
       { href: '/attendance/edit', label: 'Edit' },
     ],
   },
-  { href: '/examinations', label: 'Examinations', icon: FileText, subItems: [
+  {
+    href: '/examinations',
+    label: 'Examinations',
+    icon: FileText,
+    subItems: [
       { href: '/examinations/add', label: 'Add' },
       { href: '/examinations/view', label: 'View' },
       { href: '/examinations/edit', label: 'Edit' },
     ],
   },
-  { href: '/fees', label: 'Student Fee', icon: CircleDollarSign, subItems: [
+  {
+    href: '/fees',
+    label: 'Student Fee',
+    icon: CircleDollarSign,
+    subItems: [
       { href: '/fees/add', label: 'Add' },
       { href: '/fees/view', label: 'View' },
       { href: '/fees/edit', label: 'Edit' },
     ],
   },
-  { href: '/accounts', label: 'Accounts', icon: BookUser, subItems: [
-      { href: '/accounts/add', label: 'Add' },
-      { href: '/accounts/view', label: 'View' },
-      { href: '/accounts/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/expenses', label: 'Expenses', icon: TrendingDown, subItems: [
-      { href: '/expenses/add', label: 'Add' },
-      { href: '/expenses/view', label: 'View' },
-      { href: '/expenses/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/library', label: 'Library', icon: Library, subItems: [
-      { href: '/library/add', label: 'Add' },
-      { href: '/library/view', label: 'View' },
-      { href: '/library/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/calendar', label: 'Calendar', icon: Calendar, subItems: [
-      { href: '/calendar/add', label: 'Add' },
-      { href: '/calendar/view', label: 'View' },
-      { href: '/calendar/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/assets', label: 'Assets', icon: Archive, subItems: [
-      { href: '/assets/add', label: 'Add' },
-      { href: '/assets/view', label: 'View' },
-      { href: '/assets/edit', label: 'Edit' },
-    ],
-  },
-  { href: '/transport', label: 'Transport', icon: Bus, subItems: [
-      { href: '/transport/add', label: 'Add' },
-      { href: '/transport/view', label: 'View' },
-      { href: '/transport/edit', label: 'Edit' },
-    ],
-  },
+  { href: '/accounts', label: 'Accounts', icon: BookUser },
+  { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+  { href: '/library', label: 'Library', icon: Library },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/assets', label: 'Assets', icon: Archive },
+  { href: '/transport', label: 'Transport', icon: Bus },
 ];
