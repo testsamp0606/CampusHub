@@ -100,7 +100,7 @@ export default function AppSidebar() {
       <SidebarHeader className="h-16 justify-between px-3">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-bold text-primary"
+          className="flex items-center gap-2 text-lg font-bold"
         >
           <GraduationCap className="h-7 w-7 text-primary" />
           <span className="text-primary-foreground group-data-[collapsible=icon]:hidden">
