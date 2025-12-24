@@ -226,7 +226,7 @@ export default function Header() {
             <DropdownMenuItem asChild>
                 <Link href="#">
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>Log Out</span>
                 </Link>
             </DropdownMenuItem>
             </DropdownMenuContent>
