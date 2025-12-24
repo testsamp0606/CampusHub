@@ -24,7 +24,6 @@ import {
   AlertCircle,
   FileWarning,
   MessageSquare,
-  GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { conversationsData } from '@/lib/data';
@@ -42,7 +41,7 @@ export default function Header() {
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
       <SidebarTrigger className="md:hidden" />
       <div className="flex-1">
-        {/* The Dashboard title was here and has been removed as per your request. */}
+        
       </div>
 
       <div className="flex-1 text-center">
