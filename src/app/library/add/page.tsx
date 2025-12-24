@@ -24,6 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { booksData } from '@/lib/data';
 
 const bookFormSchema = z.object({
   bookId: z.string(),
@@ -36,6 +37,8 @@ const bookFormSchema = z.object({
 });
 
 type BookFormValues = z.infer<typeof bookFormSchema>;
+type Book = (typeof booksData)[0];
+
 
 const defaultValues: Partial<BookFormValues> = {
   bookId: '',
@@ -67,7 +70,23 @@ export default function AddBookPage() {
   }, [form]);
 
   function onSubmit(data: BookFormValues) {
-    console.log(data);
+    const storedBooks = localStorage.getItem('booksData');
+    const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : [];
+
+    const newBook: Book = {
+        id: data.bookId,
+        title: data.title,
+        author: data.author,
+        isbn: data.isbn,
+        genre: data.genre,
+        quantity: data.quantity,
+        available: data.quantity, // Initially, all copies are available
+        coverImage: `https://picsum.photos/seed/${data.bookId}/200/300`, // Placeholder image
+    };
+
+    const updatedBooks = [...currentBooks, newBook];
+    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
+    
     toast({
       title: 'Book Added',
       description: `"${data.title}" has been successfully added to the library.`,
@@ -180,7 +199,7 @@ export default function AddBookPage() {
                       <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
                     </FormControl>
                     <FormDescription>
-                      Upload a cover image for the book.
+                      Upload a cover image for the book. This is currently for UI purposes only.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

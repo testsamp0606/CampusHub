@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -21,11 +21,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, BookPlus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { booksData } from '@/lib/data';
+import { booksData as initialBooksData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-type Book = (typeof booksData)[0];
+type Book = (typeof initialBooksData)[0];
 
 const BOOKS_PER_PAGE = 5;
 
@@ -34,6 +34,23 @@ export default function LibraryPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [books, setBooks] = useState<Book[]>([]);
+
+  useEffect(() => {
+    const storedBooks = localStorage.getItem('booksData');
+    if (storedBooks) {
+      setBooks(JSON.parse(storedBooks));
+    } else {
+      setBooks(initialBooksData);
+      localStorage.setItem('booksData', JSON.stringify(initialBooksData));
+    }
+  }, []);
+
+  const updateAndStoreBooks = (newBooks: Book[]) => {
+    setBooks(newBooks);
+    localStorage.setItem('booksData', JSON.stringify(newBooks));
+  };
+
 
   const handleDelete = (bookId: string) => {
     toast({
@@ -44,13 +61,13 @@ export default function LibraryPage() {
   };
 
   const filteredBooks = useMemo(() => {
-    return booksData.filter(
+    return books.filter(
       (book) =>
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.isbn.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, books]);
 
   const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
 

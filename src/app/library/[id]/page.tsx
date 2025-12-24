@@ -1,6 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { booksData } from '@/lib/data';
+import { booksData as initialBooksData } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -14,14 +14,25 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, BookCheck, BookX } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+
+type Book = (typeof initialBooksData)[0];
 
 export default function BookDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const bookId = params.id;
+  
+  const [book, setBook] = useState<Book | undefined>(undefined);
 
-  const book = booksData.find((b) => b.id === bookId);
+  useEffect(() => {
+    const storedBooks = localStorage.getItem('booksData');
+    const books: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
+    const currentBook = books.find((b) => b.id === bookId);
+    setBook(currentBook);
+  }, [bookId]);
+
 
   if (!book) {
     return (
