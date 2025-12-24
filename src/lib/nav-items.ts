@@ -10,10 +10,14 @@ import {
   Calendar,
   Archive,
   Bus,
+  Users2,
+  Contact,
 } from 'lucide-react';
 
 export const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/students', label: 'Students', icon: Users2 },
+  { href: '/parents', label: 'Parents', icon: Contact },
   { href: '/school', label: 'Manage School', icon: School },
   { href: '/attendance', label: 'Manage Attendance', icon: ClipboardCheck },
   { href: '/examinations', label: 'Manage Examinations', icon: FileText },

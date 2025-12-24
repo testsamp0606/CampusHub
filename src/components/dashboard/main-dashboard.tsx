@@ -11,8 +11,10 @@ export default function MainDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <Tabs defaultValue="information">
-        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 md:w-[600px]">
           <TabsTrigger value="information">Information</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="parents">Parents</TabsTrigger>
           <TabsTrigger value="status">AI Status</TabsTrigger>
         </TabsList>
         <TabsContent value="information">
@@ -28,6 +30,12 @@ export default function MainDashboard() {
             </div>
             <ClassesTable />
           </div>
+        </TabsContent>
+        <TabsContent value="students">
+          <div>This is the students tab content.</div>
+        </TabsContent>
+        <TabsContent value="parents">
+          <div>This is the parents tab content.</div>
         </TabsContent>
         <TabsContent value="status">
           <AnomalyDetector />
