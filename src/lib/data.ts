@@ -437,7 +437,7 @@ export const booksData = [
 export const bookIssueData = [
     { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-10 10:30', dueDate: '2024-07-24', returnDate: null, status: 'Issued' as 'Issued' | 'Returned', fineAmount: 0, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
     { issueId: 'I002', bookId: 'B004', studentId: 'S002', issueDate: '2024-07-15 14:00', dueDate: '2024-07-29', returnDate: null, status: 'Issued' as 'Issued' | 'Returned', fineAmount: 0, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
-    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20 11:00', dueDate: '2024-07-04', returnDate: '2024-07-05 09:15', status: 'Returned' as 'Issued' | 'Returned', fineAmount: 1, fineStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
+    { issueId: 'I003', bookId: 'B001', studentId: 'S003', issueDate: '2024-06-20 11:00', dueDate: '2024-07-04', returnDate: '2024-07-05 09:15', status: 'Returned' as 'Issued' | 'Returned', fineAmount: 1, fineStatus: 'Paid' as 'Paid' | 'Unpaid' },
 ];
 
 export const vehiclesData = [
@@ -613,4 +613,20 @@ export const expensesData = [
         department: 'HR',
         description: 'Monthly staff salaries'
     }
+];
+
+export const examsData = [
+    { id: 'EX001', name: 'Mid-Term Exam', classId: 'C001', date: '2024-09-15', status: 'Scheduled' as 'Scheduled' | 'Completed' | 'Published' },
+    { id: 'EX002', name: 'Unit Test 1', classId: 'C002', date: '2024-08-10', status: 'Completed' as 'Scheduled' | 'Completed' | 'Published' },
+    { id: 'EX003', name: 'Final Exam', classId: 'C003', date: '2024-12-05', status: 'Scheduled' as 'Scheduled' | 'Completed' | 'Published' },
+    { id: 'EX004', name: 'Mid-Term Exam', classId: 'C002', date: '2024-09-15', status: 'Published' as 'Scheduled' | 'Completed' | 'Published' },
+];
+
+export const marksData = [
+    { markId: 'M001', examId: 'EX002', studentId: 'S002', subject: 'Mathematics', marks: 85 },
+    { markId: 'M002', examId: 'EX002', studentId: 'S002', subject: 'Science', marks: 92 },
+    { markId: 'M003', examId: 'EX002', studentId: 'S005', subject: 'Mathematics', marks: 78 },
+    { markId: 'M004', examId: 'EX002', studentId: 'S005', subject: 'Science', marks: 81 },
+    { markId: 'M005', examId: 'EX004', studentId: 'S002', subject: 'English', marks: 95 },
+    { markId: 'M006', examId: 'EX004', studentId: 'S005', subject: 'English', marks: 88 },
 ];
