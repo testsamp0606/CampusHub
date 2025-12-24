@@ -97,6 +97,18 @@ export default function AddRoutePage() {
     router.push('/transport');
   }
 
+  const handleAddVehiclePopup = () => {
+    const width = 800;
+    const height = 700;
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+    window.open(
+        '/transport/vehicles/add',
+        'addVehicleWindow',
+        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+  };
+
   const vehicleOptions = vehicles.map(v => ({ value: v.id, label: `${v.vehicleNumber} (${v.type})`}));
 
   return (
@@ -161,10 +173,8 @@ export default function AddRoutePage() {
                       </FormItem>
                     )}
                   />
-                  <Button asChild variant="outline">
-                    <Link href="/transport/vehicles/add" target="_blank">
-                      <PlusCircle className="mr-2 h-4 w-4" /> Add Vehicle
-                    </Link>
+                  <Button type="button" variant="outline" onClick={handleAddVehiclePopup}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Vehicle
                   </Button>
                 </div>
               </div>
