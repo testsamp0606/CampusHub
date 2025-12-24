@@ -100,6 +100,9 @@ export default function PermissionsPage() {
             Manage permissions for each user role across different modules.
             Click a button to grant or revoke a permission.
           </CardDescription>
+          <div className="text-sm text-muted-foreground pt-2">
+            <span className="font-semibold">Legend:</span> V = View, C = Create, E = Edit, A = Approve
+          </div>
         </CardHeader>
         <CardContent>
           <TooltipProvider>
