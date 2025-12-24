@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 type Fee = (typeof initialFeesData)[0];
+type Role = 'Admin' | 'Accountant' | 'SuperAdmin';
 
 const FEES_PER_PAGE = 5;
 
@@ -37,6 +38,7 @@ export default function FeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [feesData, setFeesData] = useState<Fee[]>([]);
+  const [userRole] = useState<Role>('Admin'); // Simulating user role
 
   useEffect(() => {
     const storedFees = localStorage.getItem('feesData');
@@ -105,15 +107,19 @@ export default function FeesPage() {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  const canCreate = userRole === 'Accountant' || userRole === 'SuperAdmin';
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Student Fee Management</h1>
-        <Button asChild>
-          <Link href="/fees/add">
-            <FilePlus2 className="mr-2 h-4 w-4" /> Generate New Invoice
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button asChild>
+            <Link href="/fees/add">
+              <FilePlus2 className="mr-2 h-4 w-4" /> Generate New Invoice
+            </Link>
+          </Button>
+        )}
       </div>
       <Card>
         <CardHeader>
@@ -176,7 +182,7 @@ export default function FeesPage() {
                           <span className="sr-only">View</span>
                         </Link>
                       </Button>
-                      {fee.status !== 'Paid' && (
+                      {canCreate && fee.status !== 'Paid' && (
                         <>
                           <Button
                             variant="ghost"

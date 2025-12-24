@@ -34,6 +34,7 @@ import { expensesData as initialExpensesData } from '@/lib/data';
 import Link from 'next/link';
 
 type Expense = (typeof initialExpensesData)[0];
+type Role = 'Admin' | 'Accountant' | 'SuperAdmin';
 
 const EXPENSES_PER_PAGE = 7;
 
@@ -42,6 +43,7 @@ export default function ExpensesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [expensesData, setExpensesData] = useState<Expense[]>([]);
+  const [userRole] = useState<Role>('Admin'); // Simulating user role
 
   useEffect(() => {
     // In a real app, you'd fetch this data. For now, we use localStorage.
@@ -104,15 +106,20 @@ export default function ExpensesPage() {
     }
   }
 
+  const canCreate = userRole === 'Accountant' || userRole === 'SuperAdmin';
+  const canApprove = userRole === 'Admin' || userRole === 'SuperAdmin';
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Expense Management</h1>
-        <Button asChild>
-          <Link href="/expenses/add">
-            <PlusCircle className="mr-2 h-4 w-4" /> Add New Expense
-          </Link>
-        </Button>
+        {canCreate && (
+            <Button asChild>
+                <Link href="/expenses/add">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Expense
+                </Link>
+            </Button>
+        )}
       </div>
 
        <div className="grid gap-4 md:grid-cols-3">
@@ -206,7 +213,7 @@ export default function ExpensesPage() {
                             <Eye className="h-4 w-4" />
                             <span className="sr-only">View</span>
                         </Button>
-                        {expense.status === 'Pending' && (
+                        {canApprove && expense.status === 'Pending' && (
                             <>
                                  <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" title="Approve">
                                     <CheckCircle className="h-4 w-4" />
