@@ -34,25 +34,42 @@ export default function InvoiceDetailsPage() {
   }
 
   const handlePrint = () => {
-    toast({ title: 'Generating PDF...', description: 'Your invoice is being prepared.' });
+    toast({ title: 'Generating PDF...', description: 'Your invoice is being prepared for download.' });
     const input = document.getElementById('invoice-pdf');
     if (input) {
         // Hide elements not needed for the PDF before capture
-        const elementsToHide = input.querySelectorAll('.no-print');
-        elementsToHide.forEach(el => (el as HTMLElement).style.display = 'none');
+        const elementsToHide = document.querySelectorAll('.no-print');
+        elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
 
-        html2canvas(input, { scale: 2 })
-            .then((canvas) => {
-                // Restore hidden elements after capture
-                elementsToHide.forEach(el => (el as HTMLElement).style.display = '');
+        html2canvas(input, { 
+            scale: 2,
+            useCORS: true, 
+            logging: true,
+            onclone: (document) => {
+              // On the cloned document, we can be more aggressive with hiding
+              const clonedElementsToHide = document.querySelectorAll('.no-print');
+              clonedElementsToHide.forEach(el => (el as HTMLElement).style.display = 'none');
+            }
+        })
+        .then((canvas) => {
+            // Restore hidden elements after capture
+            elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.output('dataurlnewwindow');
-            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`${invoice.invoiceId}.pdf`);
+
+            toast({ title: 'PDF Downloaded', description: 'Your invoice has been downloaded.' });
+        })
+        .catch(err => {
+            console.error("Failed to generate PDF", err);
+            toast({ variant: 'destructive', title: 'PDF Generation Failed', description: 'Could not create the invoice PDF.' });
+             // Restore hidden elements on error as well
+            elementsToHide.forEach(el => (el as HTMLElement).style.visibility = 'visible');
+        });
     }
   };
 
