@@ -14,7 +14,7 @@ export default function MainDashboard() {
         <TabsList className="grid w-full grid-cols-4 md:w-[600px]">
           <TabsTrigger value="information">Information</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="parents">Parents</TabsTrigger>
+          <TabsTrigger value="teachers">Teachers</TabsTrigger>
           <TabsTrigger value="status">AI Status</TabsTrigger>
         </TabsList>
         <TabsContent value="information">
@@ -34,8 +34,8 @@ export default function MainDashboard() {
         <TabsContent value="students">
           <div>This is the students tab content.</div>
         </TabsContent>
-        <TabsContent value="parents">
-          <div>This is the parents tab content.</div>
+        <TabsContent value="teachers">
+          <div>This is the teachers tab content.</div>
         </TabsContent>
         <TabsContent value="status">
           <AnomalyDetector />
