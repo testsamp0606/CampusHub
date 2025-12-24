@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -42,22 +41,15 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
       <SidebarTrigger className="md:hidden" />
-      <div className="flex items-center gap-2">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-bold text-primary"
-        >
-          <GraduationCap className="h-7 w-7 text-primary" />
-        </Link>
+      <div className="flex-1">
+        {/* The Dashboard title was here and has been removed as per your request. */}
       </div>
 
-      <div className="flex-1 flex justify-center">
-        <div className="hidden text-center md:block">
-            <h1 className="font-headline font-semibold text-xl">St. Peter School</h1>
-            <p className="text-xs text-muted-foreground">
-            Academic Year: 2024-2025
-            </p>
-        </div>
+      <div className="hidden md:block">
+        <p className="font-headline font-semibold">St. Peter School</p>
+        <p className="text-xs text-muted-foreground">
+          Academic Year: 2024-2025
+        </p>
       </div>
       
       <div className="flex items-center gap-2">
