@@ -69,19 +69,18 @@ export default function EditClassPage() {
 
   useEffect(() => {
     const storedClasses = localStorage.getItem('classesData');
-    if (storedClasses) {
-      const classes: ClassInfo[] = JSON.parse(storedClasses);
-      const classToEdit = classes.find((c) => c.id === classId);
-      if (classToEdit) {
-        form.reset(classToEdit);
-      } else {
-        toast({
-          title: 'Error',
-          description: 'Class not found.',
-          variant: 'destructive',
-        });
-        router.push('/classes');
-      }
+    const classes: ClassInfo[] = storedClasses ? JSON.parse(storedClasses) : initialClassesData;
+    
+    const classToEdit = classes.find((c) => c.id === classId);
+    if (classToEdit) {
+      form.reset(classToEdit);
+    } else {
+      toast({
+        title: 'Error',
+        description: 'Class not found.',
+        variant: 'destructive',
+      });
+      router.push('/classes');
     }
   }, [classId, form, router, toast]);
 
@@ -89,7 +88,7 @@ export default function EditClassPage() {
     const storedClasses = localStorage.getItem('classesData');
     const currentClasses: ClassInfo[] = storedClasses
       ? JSON.parse(storedClasses)
-      : [];
+      : initialClassesData;
 
     const updatedClasses = currentClasses.map((cls) => {
       if (cls.id === classId) {
