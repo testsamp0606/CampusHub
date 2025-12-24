@@ -1,5 +1,5 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { parents } from '@/lib/data';
 import {
@@ -16,6 +16,7 @@ import Link from 'next/link';
 
 export default function ParentProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const parentId = params.id;
 
   const parent = parents.find((p) => p.id === parentId);
@@ -42,9 +43,11 @@ export default function ParentProfilePage() {
                     <CardDescription>Parent ID: {parent.id}</CardDescription>
                 </div>
             </div>
-            <Button>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Profile
+            <Button asChild>
+                <Link href={`/parents/${parentId}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Profile
+                </Link>
             </Button>
         </div>
       </CardHeader>
