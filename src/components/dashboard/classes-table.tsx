@@ -38,8 +38,8 @@ export default function ClassesTable() {
             </TableHeader>
             <TableBody>
               {classesData.map((item) => (
-                <TableRow key={item.class}>
-                  <TableCell className="font-medium">{item.class}</TableCell>
+                <TableRow key={item.name}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell className="text-center">
                     {item.studentCount}
                   </TableCell>
