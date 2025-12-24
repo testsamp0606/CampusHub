@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card';
 import {
   ChartContainer,
+  ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
