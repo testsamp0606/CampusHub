@@ -90,7 +90,7 @@ export default function BookDetailsPage() {
         issueId: `I${Date.now().toString().slice(-6)}`,
         bookId: bookId,
         studentId: issueStudentId,
-        issueDate: format(new Date(), 'yyyy-MM-dd'),
+        issueDate: format(new Date(), 'yyyy-MM-dd HH:mm'),
         dueDate: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
         returnDate: null,
         status: 'Issued',
@@ -120,7 +120,7 @@ export default function BookDetailsPage() {
          return;
      }
 
-     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd') } : i);
+     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned', returnDate: format(new Date(), 'yyyy-MM-dd HH:mm') } : i);
      const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, (b.issued || 0) - 1) } : b);
 
      updateAndStoreBooks(updatedBooks);
