@@ -29,6 +29,9 @@ export default function PermissionsPage() {
     const handlePermissionChange = (module: string, role: string, permission: Permission) => {
         setPermissions(prev => {
             const newPermissions = { ...prev };
+            if (!newPermissions[module]) {
+                newPermissions[module] = {};
+            }
             const currentPermissions = newPermissions[module]?.[role] || [];
             if (currentPermissions.includes(permission)) {
                 newPermissions[module][role] = currentPermissions.filter(p => p !== permission);
@@ -93,13 +96,13 @@ export default function PermissionsPage() {
                                     <TableRow key={module}>
                                         <TableCell className="font-semibold">{module}</TableCell>
                                         {roles.map(role => (
-                                            <TableCell key={`${module}-${role}`} className="text-center">
+                                            <TableCell key={`${module}-${role}`}>
                                                 <div className="flex justify-center gap-2 md:gap-4 flex-wrap">
                                                     {permissionTypes.map(pType => {
                                                         const currentPermissions = permissions[module]?.[role] || [];
                                                         const hasPermission = currentPermissions.includes(pType);
                                                         return (
-                                                            <div key={pType} className="flex items-center gap-1.5" title={`${permissionLabels[pType]}`}>
+                                                            <div key={pType} className="flex items-center gap-1.5 p-2" title={`${permissionLabels[pType]}`}>
                                                                 <Checkbox
                                                                     id={`${module}-${role}-${pType}`}
                                                                     checked={hasPermission}
