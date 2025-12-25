@@ -79,6 +79,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
       },
     ],
   },
+    { href: '/attendance', label: 'Attendance', icon: ClipboardCheck },
   {
     label: 'Examinations',
     icon: BookA,
@@ -87,7 +88,6 @@ export const ALL_NAV_ITEMS: NavItem[] = [
       { href: '/examinations', label: 'Exam Schedule', icon: FileText },
       { href: '/assessments', label: 'Assessments', icon: Notebook },
       { href: '/results', label: 'Results', icon: ResultsIcon },
-      { href: '/attendance', label: 'Attendance', icon: ClipboardCheck },
     ],
   },
   {
