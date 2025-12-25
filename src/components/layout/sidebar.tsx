@@ -122,16 +122,11 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
 
             return (
               <AccordionItem value={item.label} key={item.label} className="border-none">
-                <AccordionTrigger asChild>
-                  <SidebarMenuButton
-                    isActive={isParentActive}
-                    className="w-full justify-between"
-                  >
+                <AccordionTrigger>
                     <div className="flex items-center gap-3">
                       <item.icon />
                       <span>{item.label}</span>
                     </div>
-                  </SidebarMenuButton>
                 </AccordionTrigger>
                 <AccordionContent className="p-0 pl-4">
                   <SidebarMenu>
