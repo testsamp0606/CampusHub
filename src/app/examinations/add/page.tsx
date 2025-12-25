@@ -44,6 +44,7 @@ const examFormSchema = z.object({
   name: z.string().min(3, 'Exam name must be at least 3 characters.'),
   classId: z.string({ required_error: 'Please select a class.' }),
   date: z.date({ required_error: 'Exam date is required.'}),
+  type: z.enum(['Unit Test', 'Assignment', 'Project', 'Practical', 'Oral']),
   startTime: z.string().optional(),
   endTime: z.string().optional(),
   maxMarks: z.coerce.number().min(1, 'Max marks must be greater than 0.'),
@@ -56,6 +57,7 @@ const defaultValues: Partial<ExamFormValues> = {
   id: '',
   name: '',
   classId: '',
+  type: 'Unit Test',
   maxMarks: 100,
 };
 
@@ -79,7 +81,7 @@ export default function AddExamPage() {
   });
 
   useEffect(() => {
-    const uniqueId = `EX${Date.now().toString().slice(-6)}`;
+    const uniqueId = `EXAM${Date.now().toString().slice(-6)}`;
     form.setValue('id', uniqueId);
   }, [form]);
 
@@ -96,21 +98,22 @@ export default function AddExamPage() {
     addDocumentNonBlocking(examsCollection, newExam, data.id);
     
     toast({
-      title: 'Exam Scheduled',
-      description: `Exam "${data.name}" has been successfully created.`,
+      title: 'Assessment Scheduled',
+      description: `Assessment "${data.name}" has been successfully created.`,
     });
     form.reset();
     router.push('/examinations');
   }
 
   const classOptions = classesData?.map(c => ({ value: c.id, label: c.name })) || [];
+  const assessmentTypes = ['Unit Test', 'Assignment', 'Project', 'Practical', 'Oral'];
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Schedule New Exam</CardTitle>
+        <CardTitle>Schedule New Assessment</CardTitle>
         <CardDescription>
-          Fill out the form to create a new exam. Fields marked with <span className="text-destructive">*</span> are required.
+          Fill out the form to create a new assessment. Fields marked with <span className="text-destructive">*</span> are required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -122,7 +125,7 @@ export default function AddExamPage() {
                 name="id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Exam ID</FormLabel>
+                    <FormLabel>Assessment ID</FormLabel>
                     <FormControl>
                       <Input {...field} disabled value={field.value || ''} />
                     </FormControl>
@@ -135,7 +138,7 @@ export default function AddExamPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>Exam Name</RequiredLabel>
+                    <RequiredLabel>Assessment Name</RequiredLabel>
                     <FormControl>
                       <Input placeholder="e.g., Mid-Term Mathematics" {...field} value={field.value || ''} />
                     </FormControl>
@@ -163,12 +166,32 @@ export default function AddExamPage() {
                   </FormItem>
                 )}
               />
+                <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>Type</RequiredLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {assessmentTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                     <RequiredLabel>Exam Date</RequiredLabel>
+                     <RequiredLabel>Date</RequiredLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -239,7 +262,7 @@ export default function AddExamPage() {
                      <FormLabel>Description / Syllabus</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Any additional instructions or syllabus details for the exam."
+                        placeholder="Any additional instructions or syllabus details for the assessment."
                         className="resize-none"
                         {...field}
                         value={field.value || ''}
@@ -251,7 +274,7 @@ export default function AddExamPage() {
               />
             </div>
             <div className="flex gap-4">
-              <Button type="submit">Schedule Exam</Button>
+              <Button type="submit">Schedule Assessment</Button>
                <Button
                 type="button"
                 variant="outline"

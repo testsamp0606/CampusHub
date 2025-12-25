@@ -316,6 +316,35 @@
         "schoolId": { "type": "string" }
       },
       "required": ["role", "module", "permissions", "schoolId"]
+    },
+    "Exam": {
+        "title": "Exam",
+        "description": "Represents an exam or assessment for a class.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "classId": { "type": "string" },
+            "date": { "type": "string", "format": "date" },
+            "type": { "type": "string", "enum": ["Unit Test", "Assignment", "Project", "Practical", "Oral"] },
+            "maxMarks": { "type": "number" },
+            "status": { "type": "string", "enum": ["Scheduled", "Completed", "Published"] },
+            "schoolId": { "type": "string" }
+        },
+        "required": ["id", "name", "classId", "date", "type", "maxMarks", "status", "schoolId"]
+    },
+    "Mark": {
+        "title": "Mark",
+        "description": "Represents a student's mark in an exam.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "examId": { "type": "string" },
+            "studentId": { "type": "string" },
+            "marks": { "type": "number" },
+            "schoolId": { "type": "string" }
+        },
+        "required": ["id", "examId", "studentId", "marks", "schoolId"]
     }
   },
   "auth": {
@@ -549,6 +578,30 @@
           "params": [
             { "name": "schoolId", "description": "The unique ID of the school." },
             { "name": "roleName", "description": "The name of the role (e.g., Admin, Teacher)." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/exams/{examId}",
+        "definition": {
+          "entityName": "Exam",
+          "schema": { "$ref": "#/backend/entities/Exam" },
+          "description": "Stores exam and assessment information.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "examId", "description": "The unique ID of the exam." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/marks/{markId}",
+        "definition": {
+          "entityName": "Mark",
+          "schema": { "$ref": "#/backend/entities/Mark" },
+          "description": "Stores student marks for an exam.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "markId", "description": "The unique ID for the mark record." }
           ]
         }
       }

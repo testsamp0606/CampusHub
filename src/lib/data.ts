@@ -207,6 +207,23 @@ export type StudentSubmission = {
   feedback?: string;
 };
 
+export type Exam = {
+  id: string;
+  name: string;
+  classId: string;
+  date: string;
+  type: 'Unit Test' | 'Assignment' | 'Project' | 'Practical' | 'Oral';
+  maxMarks: number;
+  status: 'Scheduled' | 'Completed' | 'Published';
+};
+
+export type Mark = {
+  id: string;
+  examId: string;
+  studentId: string;
+  marks: number;
+};
+
 export const students: Student[] = [
   {
     id: 'S001',
@@ -512,6 +529,17 @@ export const courseContentData: CourseContent[] = [
 export const courseAssignmentsData: CourseAssignment[] = [
   { id: 'ASG001', courseId: 'CRS001', title: 'Essay on E=mc^2', description: 'Write a 1000-word essay on the implications of the mass-energy equivalence formula.', dueDate: '2024-09-15', maxMarks: 100 },
   { id: 'ASG002', courseId: 'CRS003', title: 'Sonnet Analysis', description: 'Analyze the structure and themes of two of Shakespeare\'s sonnets.', dueDate: '2024-09-20', maxMarks: 50 },
+];
+
+export const examsData: Exam[] = [
+    { id: 'EXAM001', name: 'Mathematics Unit Test 1', classId: 'C001', date: '2024-08-15', type: 'Unit Test', maxMarks: 50, status: 'Scheduled' },
+    { id: 'EXAM002', name: 'Physics Practical Assessment', classId: 'C001', date: '2024-08-20', type: 'Practical', maxMarks: 30, status: 'Scheduled' },
+    { id: 'EXAM003', name: 'History Project Submission', classId: 'C002', date: '2024-09-01', type: 'Project', maxMarks: 100, status: 'Scheduled' },
+];
+
+export const marksData: Mark[] = [
+    { id: 'MARK001', examId: 'EXAM001', studentId: 'S001', marks: 45 },
+    { id: 'MARK002', examId: 'EXAM001', studentId: 'S003', marks: 48 },
 ];
 
 
