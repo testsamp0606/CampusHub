@@ -24,10 +24,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { students } from '@/lib/data';
 import { useEffect, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Combobox } from '@/components/ui/combobox';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 const parentFormSchema = z.object({
   parentId: z.string(),
@@ -80,6 +81,14 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddParentPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const studentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
+    [firestore]
+  );
+  const { data: studentsData } = useCollection<{id: string, name: string, address: string}>(studentsQuery);
+
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
     defaultValues,
@@ -100,18 +109,18 @@ export default function AddParentPage() {
   }, [form]);
   
   useEffect(() => {
-    if (sameAsStudentAddress && studentId) {
-      const student = students.find((s) => s.id === studentId);
+    if (sameAsStudentAddress && studentId && studentsData) {
+      const student = studentsData.find((s) => s.id === studentId);
       if (student) {
         form.setValue('permanentAddress', student.address);
       }
     }
-  }, [sameAsStudentAddress, studentId, form]);
+  }, [sameAsStudentAddress, studentId, form, studentsData]);
 
   function onSubmit(data: ParentFormValues) {
-    console.log(data);
+    if (!studentsData) return;
     const studentName =
-      students.find((s) => s.id === data.studentId)?.name || 'a student';
+      studentsData.find((s) => s.id === data.studentId)?.name || 'a student';
     toast({
       title: 'Parent Registered',
       description: `Parents of ${studentName} have been successfully registered.`,
@@ -120,10 +129,13 @@ export default function AddParentPage() {
     router.push('/parents');
   }
 
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: `${student.name} (${student.id})`,
-  }));
+  const studentOptions = useMemo(() => {
+    if (!studentsData) return [];
+    return studentsData.map((student) => ({
+      value: student.id,
+      label: `${student.name} (${student.id})`,
+    }))
+  }, [studentsData]);
 
   return (
     <Card className="shadow-lg">
