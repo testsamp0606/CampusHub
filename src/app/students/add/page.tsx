@@ -157,13 +157,19 @@ export default function AddStudentPage() {
       });
       return;
     }
+
+    // Convert undefined to null before sending to Firestore
+    const sanitizedData = Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [key, value === undefined ? null : value])
+    );
+    
     const studentsCollection = collection(
       firestore,
       'schools/school-1/students'
     );
 
     const newStudentData = {
-      ...data,
+      ...sanitizedData,
       name: `${data.title || ''} ${data.name}`.trim(),
       schoolId: 'school-1',
       dateOfBirth: format(
