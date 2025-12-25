@@ -14,8 +14,6 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase, setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 type Participant = { id: string; name: string };
 type Conversation = {
@@ -34,87 +32,123 @@ type Message = {
     timestamp: any; // Can be Date or server timestamp
 };
 
+const conversationsData = [
+    {
+        id: "CONV001",
+        subject: "Mid-term exam schedule",
+        participantIds: ["user", "T001"],
+        lastMessage: "Sounds good, thank you for the update!",
+        lastMessageTimestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        readBy: ["user"],
+    },
+    {
+        id: "CONV002",
+        subject: "Question about physics homework",
+        participantIds: ["user", "T001"],
+        lastMessage: "I will check it and get back to you.",
+        lastMessageTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        readBy: [],
+    }
+];
+
+const messagesData: Omit<Message, 'senderName'>[] = [
+    { id: "MSG001", conversationId: "CONV001", senderId: "T001", content: "Dear Admin, the mid-term exams are scheduled for the second week of September.", timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString() },
+    { id: "MSG002", conversationId: "CONV001", senderId: "user", content: "Sounds good, thank you for the update!", timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
+    { id: "MSG003", conversationId: "CONV002", senderId: "user", content: "I have a question about the derivation in chapter 3.", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString() },
+    { id: "MSG004", conversationId: "CONV002", senderId: "T001", content: "I will check it and get back to you.", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+];
+
+const usersData = [
+    { id: "user", username: "Admin" },
+    { id: "T001", username: "Dr. Evelyn Reed" }
+];
+
+
 export default function ConversationPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const { user } = useUser();
+  const user = { uid: 'user', displayName: 'Admin' };
   const conversationId = params.id as string;
   
   const [reply, setReply] = useState('');
+  const [conversation, setConversation] = useState<Conversation | undefined>();
+  const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const conversationDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `schools/school-1/conversations/${conversationId}`) : null), [firestore, conversationId]);
-  const { data: conversationData } = useDoc<Conversation>(conversationDocRef);
-  
-  const messagesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, `schools/school-1/conversations/${conversationId}/messages`), orderBy('timestamp', 'asc')) : null), [firestore, conversationId]);
-  const { data: messagesData } = useCollection<Message>(messagesQuery);
-  
-  const usersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/users') : null), [firestore]);
-  const { data: usersData } = useCollection<{id: string, username: string}>(usersQuery);
-
-  const enrichedConversation = useMemo(() => {
-    if (!conversationData || !usersData) return undefined;
-    const usersMap = new Map(usersData.map(u => [u.id, u.username]));
-    return {
-        ...conversationData,
-        participants: conversationData.participantIds.map(id => ({
-            id,
-            name: usersMap.get(id) || 'Unknown User'
-        }))
-    }
-  }, [conversationData, usersData]);
-
-  const enrichedMessages = useMemo(() => {
-      if (!messagesData || !usersData) return [];
-      const usersMap = new Map(usersData.map(u => [u.id, u.username]));
-      return messagesData.map(msg => ({
-          ...msg,
-          senderName: usersMap.get(msg.senderId) || 'Unknown User'
-      }));
-  }, [messagesData, usersData]);
 
   useEffect(() => {
-    // Mark as read
-    if (conversationDocRef && user && conversationData && !conversationData.readBy?.includes(user.uid)) {
-        setDocumentNonBlocking(conversationDocRef, {
-            readBy: [...(conversationData.readBy || []), user.uid]
-        }, { merge: true });
+    const allConversations = JSON.parse(localStorage.getItem('conversationsData') || JSON.stringify(conversationsData));
+    const currentConvo = allConversations.find((c: Conversation) => c.id === conversationId);
+    
+    if (currentConvo) {
+        const allMessages = JSON.parse(localStorage.getItem('messagesData') || JSON.stringify(messagesData));
+        const convoMessages = allMessages.filter((m: Message) => m.conversationId === conversationId);
+        
+        const usersMap = new Map(usersData.map(u => [u.id, u.username]));
+
+        setConversation({
+            ...currentConvo,
+            participants: currentConvo.participantIds.map((id: string) => ({
+                id,
+                name: usersMap.get(id) || 'Unknown User'
+            }))
+        });
+
+        setMessages(convoMessages.map((msg: Message) => ({
+            ...msg,
+            senderName: usersMap.get(msg.senderId) || 'Unknown User',
+            timestamp: new Date(msg.timestamp)
+        })));
+
+         // Mark as read
+        if (user && !currentConvo.readBy?.includes(user.uid)) {
+            const updatedConvos = allConversations.map((c: Conversation) => 
+                c.id === conversationId ? { ...c, readBy: [...(c.readBy || []), user.uid] } : c
+            );
+            localStorage.setItem('conversationsData', JSON.stringify(updatedConvos));
+        }
+
     }
-  }, [conversationDocRef, user, conversationData]);
+  }, [conversationId, user]);
   
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [enrichedMessages]);
+  }, [messages]);
 
   const handleSendReply = () => {
-    if (reply.trim() === '' || !firestore || !user) return;
+    if (reply.trim() === '' || !user || !conversation) return;
 
-    const messagesCollection = collection(firestore, `schools/school-1/conversations/${conversationId}/messages`);
-    const newMessage = {
+    const allMessages = JSON.parse(localStorage.getItem('messagesData') || JSON.stringify(messagesData));
+
+    const newMessage: Omit<Message, 'senderName'> = {
+      id: `MSG${Date.now()}`,
       conversationId: conversationId,
       senderId: user.uid,
       content: reply,
-      timestamp: serverTimestamp(),
-      schoolId: 'school-1',
+      timestamp: new Date().toISOString(),
     };
-    addDocumentNonBlocking(messagesCollection, newMessage);
+    
+    const updatedMessages = [...allMessages, newMessage];
+    localStorage.setItem('messagesData', JSON.stringify(updatedMessages));
+    
+    const usersMap = new Map(usersData.map(u => [u.id, u.username]));
+    setMessages(prev => [...prev, { ...newMessage, senderName: usersMap.get(newMessage.senderId) || 'Unknown', timestamp: new Date(newMessage.timestamp)} ]);
 
     // Update conversation's last message
-    if (conversationDocRef) {
-        setDocumentNonBlocking(conversationDocRef, {
-            lastMessage: reply,
-            lastMessageTimestamp: serverTimestamp(),
-            readBy: [user.uid] // The sender has read it
-        }, { merge: true });
-    }
-
+    const allConversations = JSON.parse(localStorage.getItem('conversationsData') || JSON.stringify(conversationsData));
+    const updatedConvos = allConversations.map((c: any) => 
+        c.id === conversationId 
+        ? { ...c, lastMessage: reply, lastMessageTimestamp: newMessage.timestamp, readBy: [user.uid] } 
+        : c
+    );
+    localStorage.setItem('conversationsData', JSON.stringify(updatedConvos));
+    
     setReply('');
     toast({ title: 'Reply Sent' });
   };
 
-  if (!enrichedConversation) {
+  if (!conversation) {
     return (
       <div className="flex items-center justify-center h-full">
         <p>Loading conversation...</p>
@@ -126,9 +160,9 @@ export default function ConversationPage() {
     <div className="flex flex-col h-[calc(100vh-10rem)]">
         <div className="flex justify-between items-center mb-4">
             <div className='flex-1 overflow-hidden'>
-                 <h1 className="text-xl font-bold truncate">{enrichedConversation.subject}</h1>
+                 <h1 className="text-xl font-bold truncate">{conversation.subject}</h1>
                  <p className="text-sm text-muted-foreground truncate">
-                    Participants: {enrichedConversation.participants.map(p => p.name).join(', ')}
+                    Participants: {conversation.participants.map(p => p.name).join(', ')}
                 </p>
             </div>
             <Button variant="outline" onClick={() => router.push('/messages')}>
@@ -138,7 +172,7 @@ export default function ConversationPage() {
         </div>
         <Card className="flex-1 flex flex-col">
             <CardContent className="flex-1 p-4 overflow-y-auto space-y-4">
-                 {enrichedMessages.map((msg) => {
+                 {messages.map((msg) => {
                     const isUser = msg.senderId === user?.uid;
                     return (
                         <div key={msg.id} className={cn("flex items-end gap-2", isUser ? 'justify-end' : 'justify-start')}>
@@ -153,7 +187,7 @@ export default function ConversationPage() {
                             )}>
                                 <p className="text-sm">{msg.content}</p>
                                 <p className={cn("text-xs mt-1", isUser ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-                                    {msg.timestamp?.toDate ? format(msg.timestamp.toDate(), 'MMM d, h:mm a') : 'sending...'}
+                                    {format(msg.timestamp, 'MMM d, h:mm a')}
                                 </p>
                             </div>
                              {isUser && (
@@ -190,5 +224,3 @@ export default function ConversationPage() {
     </div>
   );
 }
-
-    

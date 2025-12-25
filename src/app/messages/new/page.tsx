@@ -25,9 +25,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
-import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection, serverTimestamp, doc } from 'firebase/firestore';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
+import { teachersData as initialTeachersData } from '@/lib/data';
+
+const usersData = [
+    { id: "user", username: "Admin" },
+    ...initialTeachersData.map(t => ({id: t.id, username: t.name}))
+];
 
 const messageFormSchema = z.object({
   recipientId: z.string({ required_error: 'Please select a recipient.' }),
@@ -51,63 +55,50 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function NewMessagePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
-  const { user } = useUser();
-
-  const usersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/users') : null), [firestore]);
-  const { data: usersData } = useCollection<{id: string; username: string}>(usersQuery);
+  const user = { uid: 'user' };
 
   const form = useForm<MessageFormValues>({
     resolver: zodResolver(messageFormSchema),
     defaultValues,
   });
 
-  async function onSubmit(data: MessageFormValues) {
-    if (!firestore || !user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'User or database not available.' });
-        return;
-    }
-    
+  function onSubmit(data: MessageFormValues) {
     const recipient = usersData?.find(u => u.id === data.recipientId);
     if (!recipient) {
         toast({ variant: 'destructive', title: 'Error', description: 'Recipient not found.' });
         return;
     }
 
-    try {
-        const conversationsCollection = collection(firestore, 'schools/school-1/conversations');
-        const newConversationRef = doc(conversationsCollection); // Create a new doc ref with an auto-generated ID
+    const conversationsData = JSON.parse(localStorage.getItem('conversationsData') || '[]');
+    const messagesData = JSON.parse(localStorage.getItem('messagesData') || '[]');
+    
+    const newConversationId = `CONV${Date.now()}`;
 
-        const newConversation = {
-            id: newConversationRef.id,
-            subject: data.subject,
-            participantIds: [user.uid, data.recipientId],
-            lastMessage: data.content,
-            lastMessageTimestamp: serverTimestamp(),
-            readBy: [user.uid],
-            schoolId: 'school-1',
-        };
-        addDocumentNonBlocking(conversationsCollection, newConversation);
+    const newConversation = {
+        id: newConversationId,
+        subject: data.subject,
+        participantIds: [user.uid, data.recipientId],
+        lastMessage: data.content,
+        lastMessageTimestamp: new Date().toISOString(),
+        readBy: [user.uid],
+    };
 
-        const messagesCollection = collection(firestore, `schools/school-1/conversations/${newConversation.id}/messages`);
-        const newMessage = {
-            conversationId: newConversation.id,
-            senderId: user.uid,
-            content: data.content,
-            timestamp: serverTimestamp(),
-            schoolId: 'school-1',
-        };
-        addDocumentNonBlocking(messagesCollection, newMessage);
+    const newMessage = {
+        id: `MSG${Date.now()}`,
+        conversationId: newConversationId,
+        senderId: user.uid,
+        content: data.content,
+        timestamp: new Date().toISOString(),
+    };
 
-        toast({
-          title: 'Message Sent',
-          description: `Your message has been sent to ${recipient.username}.`,
-        });
-        router.push(`/messages/${newConversation.id}`);
-    } catch (error) {
-        console.error("Error creating conversation:", error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to send message.' });
-    }
+    localStorage.setItem('conversationsData', JSON.stringify([...conversationsData, newConversation]));
+    localStorage.setItem('messagesData', JSON.stringify([...messagesData, newMessage]));
+
+    toast({
+      title: 'Message Sent',
+      description: `Your message has been sent to ${recipient.username}.`,
+    });
+    router.push(`/messages/${newConversation.id}`);
   }
 
   const userOptions = useMemo(() => {
@@ -118,7 +109,7 @@ export default function NewMessagePage() {
             value: u.id,
             label: `${u.username} (${u.id})`,
         }));
-  }, [usersData, user]);
+  }, [user]);
 
   return (
     <Card className="shadow-lg">
@@ -198,5 +189,3 @@ export default function NewMessagePage() {
     </Card>
   );
 }
-
-    

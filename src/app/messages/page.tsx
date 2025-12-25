@@ -1,6 +1,6 @@
 
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -22,8 +22,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where, orderBy } from 'firebase/firestore';
 
 type Participant = { id: string; name: string };
 type Conversation = {
@@ -37,48 +35,62 @@ type Conversation = {
     read: boolean; // This will be enriched
 };
 
+const conversationsData = [
+    {
+        id: "CONV001",
+        subject: "Mid-term exam schedule",
+        participantIds: ["user", "T001"],
+        lastMessage: "Sounds good, thank you for the update!",
+        lastMessageTimestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        readBy: ["user"],
+    },
+    {
+        id: "CONV002",
+        subject: "Question about physics homework",
+        participantIds: ["user", "T001"],
+        lastMessage: "I will check it and get back to you.",
+        lastMessageTimestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        readBy: [],
+    }
+];
+
+const usersData = [
+    { id: "user", username: "Admin" },
+    { id: "T001", username: "Dr. Evelyn Reed" }
+];
+
+
 export default function MessagesPage() {
   const router = useRouter();
-  const firestore = useFirestore();
-  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const user = { uid: 'user' }; // Simulated user
 
-  const conversationsQuery = useMemoFirebase(
-    () =>
-      firestore && user
-        ? query(
-            collection(firestore, 'schools/school-1/conversations'),
-            where('participantIds', 'array-contains', user.uid),
-            orderBy('lastMessageTimestamp', 'desc')
-          )
-        : null,
-    [firestore, user]
-  );
-  const { data: conversationsData, isLoading: conversationsLoading } = useCollection<Conversation>(conversationsQuery);
-  
-  const usersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/users') : null),
-    [firestore]
-  );
-  const { data: usersData } = useCollection<{id: string, username: string}>(usersQuery);
+  useEffect(() => {
+    const storedConversations = localStorage.getItem('conversationsData');
+    if (storedConversations) {
+        setConversations(JSON.parse(storedConversations));
+    } else {
+        setConversations(conversationsData as any[]);
+    }
+  }, []);
 
 
   const enrichedConversations = useMemo(() => {
-    if (!conversationsData || !usersData || !user) return [];
+    if (!conversations || !usersData || !user) return [];
     
     const usersMap = new Map(usersData.map(u => [u.id, u.username]));
 
-    return conversationsData.map(convo => ({
+    return conversations.map(convo => ({
         ...convo,
         participants: convo.participantIds.map(id => ({
             id,
             name: usersMap.get(id) || 'Unknown User'
         })),
         read: convo.readBy?.includes(user.uid),
-        // Ensure timestamp is a Date object for formatDistanceToNow
-        lastMessageTimestamp: convo.lastMessageTimestamp?.toDate ? convo.lastMessageTimestamp.toDate() : new Date(),
+        lastMessageTimestamp: new Date(convo.lastMessageTimestamp),
     }));
-  }, [conversationsData, usersData, user]);
+  }, [conversations, user]);
 
 
   const filteredConversations = useMemo(() => {
@@ -120,15 +132,14 @@ export default function MessagesPage() {
         <CardContent className="p-0">
           <TooltipProvider>
             <div className="divide-y">
-              {conversationsLoading && <div className="py-10 text-center text-muted-foreground">Loading conversations...</div>}
-              {!conversationsLoading && filteredConversations.map((convo) => {
+              {filteredConversations.map((convo) => {
                 const participant = convo.participants.find(p => p.id !== user?.uid);
                 return (
                 <div
                   key={convo.id}
                   className={cn(
                       "flex items-start gap-4 p-4 cursor-pointer hover:bg-muted/50 transition-colors",
-                      !convo.read && "bg-blue-50"
+                      !convo.read && "bg-blue-50 dark:bg-blue-900/20"
                   )}
                   onClick={() => router.push(`/messages/${convo.id}`)}
                 >
@@ -159,7 +170,7 @@ export default function MessagesPage() {
                   {!convo.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5"></div>}
                 </div>
               )})}
-              {!conversationsLoading && filteredConversations.length === 0 && (
+              {filteredConversations.length === 0 && (
                   <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
                       <Inbox className="h-10 w-10" />
                       <p>No messages found.</p>
