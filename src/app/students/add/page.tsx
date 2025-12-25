@@ -36,7 +36,12 @@ import { useEffect } from 'react';
 import { useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const studentFormSchema = z
   .object({
@@ -182,17 +187,10 @@ export default function AddStudentPage() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="student_details" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="student_details">Student Details</TabsTrigger>
-                <TabsTrigger value="academic_details">Academic Details</TabsTrigger>
-                <TabsTrigger value="parent_details">Parent / Guardian Details</TabsTrigger>
-                <TabsTrigger value="address_details">Address & Contact</TabsTrigger>
-                <TabsTrigger value="documents">Document Uploads</TabsTrigger>
-              </TabsList>
-              
-              {/* Student Details */}
-              <TabsContent value="student_details" className="mt-4">
+            <Accordion type="single" collapsible defaultValue="student_details" className="w-full">
+              <AccordionItem value="student_details">
+                <AccordionTrigger>Student Details</AccordionTrigger>
+                <AccordionContent>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-4">
                     <FormField
                       control={form.control}
@@ -307,10 +305,11 @@ export default function AddStudentPage() {
                     <FormField control={form.control} name="aadhaar" render={({ field }) => (<FormItem><FormLabel>Aadhaar Number</FormLabel><FormControl><Input placeholder="1234 5678 9012" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="studentPhoto" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Student Photo</FormLabel><FormControl><Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files?.[0])} {...field} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
-              </TabsContent>
-
-              {/* Academic Details */}
-              <TabsContent value="academic_details" className="mt-4">
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="academic_details">
+                <AccordionTrigger>Academic Details</AccordionTrigger>
+                <AccordionContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
                     <FormField control={form.control} name="academicYear" render={({ field }) => (<FormItem><RequiredLabel>Academic Year</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="classId" render={({ field }) => (<FormItem><RequiredLabel>Class</RequiredLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a class" /></SelectTrigger></FormControl><SelectContent><SelectItem value="C001">Class X</SelectItem><SelectItem value="C002">Class IX</SelectItem><SelectItem value="C003">Class VIII</SelectItem></SelectContent></Select><FormMessage /></FormItem>)} />
@@ -320,10 +319,11 @@ export default function AddStudentPage() {
                     <FormField control={form.control} name="previousSchool" render={({ field }) => (<FormItem><FormLabel>Previous School</FormLabel><FormControl><Input placeholder="Name of previous school" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="previousBoard" render={({ field }) => (<FormItem><FormLabel>Previous Board</FormLabel><FormControl><Input placeholder="e.g., CBSE" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
-              </TabsContent>
-
-              {/* Parent/Guardian Details */}
-              <TabsContent value="parent_details" className="mt-4">
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="parent_details">
+                <AccordionTrigger>Parent / Guardian Details</AccordionTrigger>
+                <AccordionContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
                     <FormField control={form.control} name="fatherName" render={({ field }) => (<FormItem><RequiredLabel>Father's Name</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="motherName" render={({ field }) => (<FormItem><RequiredLabel>Mother's Name</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
@@ -335,19 +335,21 @@ export default function AddStudentPage() {
                     <FormField control={form.control} name="fatherAnnualIncome" render={({ field }) => (<FormItem><FormLabel>Father's Annual Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="motherAnnualIncome" render={({ field }) => (<FormItem><FormLabel>Mother's Annual Income</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
-              </TabsContent>
-
-               {/* Address & Contact */}
-              <TabsContent value="address_details" className="mt-4">
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="address_details">
+                <AccordionTrigger>Address & Contact</AccordionTrigger>
+                <AccordionContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
                     <FormField control={form.control} name="currentAddress" render={({ field }) => (<FormItem className="md:col-span-2"><RequiredLabel>Current Address</RequiredLabel><FormControl><Textarea className="resize-none" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="permanentAddress" render={({ field }) => (<FormItem className="md:col-span-2"><RequiredLabel>Permanent Address</RequiredLabel><FormControl><Textarea className="resize-none" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="emergencyContact" render={({ field }) => (<FormItem><RequiredLabel>Emergency Contact</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                   </div>
-              </TabsContent>
-
-              {/* Document Uploads */}
-              <TabsContent value="documents" className="mt-4">
+                </AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="documents">
+                <AccordionTrigger>Document Uploads</AccordionTrigger>
+                <AccordionContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
                     <FormField control={form.control} name="birthCertificate" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Birth Certificate</FormLabel><FormControl><Input type="file" onChange={(e) => onChange(e.target.files?.[0])} {...field} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="transferCertificate" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Transfer Certificate</FormLabel><FormControl><Input type="file" onChange={(e) => onChange(e.target.files?.[0])} {...field} /></FormControl><FormMessage /></FormItem>)} />
@@ -355,9 +357,9 @@ export default function AddStudentPage() {
                     <FormField control={form.control} name="aadhaarCard" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Aadhaar Card</FormLabel><FormControl><Input type="file" onChange={(e) => onChange(e.target.files?.[0].name)} {...field} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="casteCertificate" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Caste Certificate</FormLabel><FormControl><Input type="file" onChange={(e) => onChange(e.target.files?.[0])} {...field} /></FormControl><FormDescription>(If applicable)</FormDescription><FormMessage /></FormItem>)} />
                   </div>
-              </TabsContent>
-            </Tabs>
-
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <div className="flex gap-4 pt-6">
               <Button type="submit">Register Student</Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
