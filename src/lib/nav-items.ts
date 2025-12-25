@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -22,6 +23,10 @@ import {
   ShieldCheck,
   MessageSquare,
   Building,
+  Video,
+  File,
+  ClipboardList,
+  AreaChart,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -76,6 +81,17 @@ export const ALL_NAV_ITEMS: NavItem[] = [
         icon: ClipboardCheck,
       },
       { href: '/calendar', label: 'Calendar', icon: Calendar },
+    ],
+  },
+  {
+    label: 'E-Learning',
+    icon: Video,
+    roles: ['SuperAdmin', 'Admin'],
+    subItems: [
+      { href: '/lms/courses', label: 'Courses', icon: BookCopy },
+      { href: '/lms/content', label: 'Content', icon: File },
+      { href: '/lms/assignments', label: 'Assignments', icon: ClipboardList },
+      { href: '/lms/reports', label: 'Reports', icon: AreaChart },
     ],
   },
   {

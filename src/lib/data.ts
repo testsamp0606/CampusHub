@@ -168,6 +168,44 @@ export type Department = {
     subjectIds?: string[];
 };
 
+export type Course = {
+  id: string;
+  title: string;
+  description: string;
+  teacherId: string;
+  classId: string;
+  subjectId: string;
+  status: 'Draft' | 'Published';
+  coverImage?: string;
+};
+
+export type CourseContent = {
+  id: string;
+  courseId: string;
+  title: string;
+  type: 'Video' | 'Document' | 'Link';
+  url: string;
+  duration?: number; // in minutes
+};
+
+export type CourseAssignment = {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  maxMarks: number;
+};
+
+export type StudentSubmission = {
+  id: string;
+  assignmentId: string;
+  studentId: string;
+  submissionDate: string;
+  status: 'Submitted' | 'Late' | 'Not Submitted';
+  marks?: number;
+  feedback?: string;
+};
 
 export const students: Student[] = [
   {
@@ -457,6 +495,25 @@ export const departmentsData: Department[] = [
   { id: 'DEPT02', name: 'Mathematics', description: 'Department of Mathematics', hodId: 'T002', type: 'Academic', budget: 40000, teacherIds: ['T002'], subjectIds: ['SUB002'] },
   { id: 'DEPT03', name: 'Administration', description: 'General school administration', hodId: '', type: 'Non-Academic', budget: 100000 },
 ];
+
+export const coursesData: Course[] = [
+  { id: 'CRS001', title: 'Introduction to Modern Physics', description: 'A course on the fundamentals of modern physics, including relativity and quantum mechanics.', teacherId: 'T001', classId: 'C001', subjectId: 'SUB001', status: 'Published', coverImage: 'https://picsum.photos/seed/CRS001/600/400' },
+  { id: 'CRS002', title: 'Advanced Calculus', description: 'Exploring advanced topics in differential and integral calculus.', teacherId: 'T002', classId: 'C001', subjectId: 'SUB002', status: 'Draft', coverImage: 'https://picsum.photos/seed/CRS002/600/400' },
+  { id: 'CRS003', title: 'Shakespearean Literature', description: 'An in-depth study of William Shakespeare\'s major works.', teacherId: 'T003', classId: 'C002', subjectId: 'SUB003', status: 'Published', coverImage: 'https://picsum.photos/seed/CRS003/600/400' },
+];
+
+export const courseContentData: CourseContent[] = [
+  { id: 'CC001', courseId: 'CRS001', title: 'Lecture 1: Special Relativity', type: 'Video', url: 'https://www.youtube.com/watch?v=some-video-id', duration: 45 },
+  { id: 'CC002', courseId: 'CRS001', title: 'Chapter 1 Notes', type: 'Document', url: '/documents/physics_notes_ch1.pdf' },
+  { id: 'CC003', courseId: 'CRS002', title: 'Practice Problems: Derivatives', type: 'Document', url: '/documents/calculus_problems_ch1.pdf' },
+  { id: 'CC004', courseId: 'CRS003', title: 'Hamlet Act I Reading', type: 'Link', url: 'https://example.com/hamlet-act1' },
+];
+
+export const courseAssignmentsData: CourseAssignment[] = [
+  { id: 'ASG001', courseId: 'CRS001', title: 'Essay on E=mc^2', description: 'Write a 1000-word essay on the implications of the mass-energy equivalence formula.', dueDate: '2024-09-15', maxMarks: 100 },
+  { id: 'ASG002', courseId: 'CRS003', title: 'Sonnet Analysis', description: 'Analyze the structure and themes of two of Shakespeare\'s sonnets.', dueDate: '2024-09-20', maxMarks: 50 },
+];
+
 
 export type Permission = 'V' | 'C' | 'E' | 'A';
 
