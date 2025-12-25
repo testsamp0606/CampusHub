@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -21,40 +21,40 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, BookPlus, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { booksData as initialBooksData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-type Book = (typeof initialBooksData)[0];
+type Book = {
+    id: string;
+    title: string;
+    author: string;
+    isbn: string;
+    category: string;
+    quantity: number;
+    issued: number;
+    lost: number;
+};
 
 const BOOKS_PER_PAGE = 5;
 
 export default function LibraryPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [books, setBooks] = useState<Book[]>([]);
 
-  useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    if (storedBooks) {
-      setBooks(JSON.parse(storedBooks));
-    } else {
-      setBooks(initialBooksData);
-      localStorage.setItem('booksData', JSON.stringify(initialBooksData));
-    }
-  }, []);
-
-  const updateAndStoreBooks = (newBooks: Book[]) => {
-    setBooks(newBooks);
-    localStorage.setItem('booksData', JSON.stringify(newBooks));
-  };
-
+  const booksQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/books') : null), [firestore]);
+  const { data: books, isLoading } = useCollection<Book>(booksQuery);
 
   const handleDelete = (bookId: string) => {
-    const updatedBooks = books.filter(book => book.id !== bookId);
-    updateAndStoreBooks(updatedBooks);
+    if(!firestore) return;
+    const bookDocRef = doc(firestore, 'schools/school-1/books', bookId);
+    deleteDocumentNonBlocking(bookDocRef);
+    
     toast({
       title: 'Book Deleted',
       variant: 'destructive',
@@ -67,6 +67,7 @@ export default function LibraryPage() {
   };
 
   const filteredBooks = useMemo(() => {
+    if (!books) return [];
     return books.filter(
       (book) =>
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -134,8 +135,13 @@ export default function LibraryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedBooks.map((book) => {
-                const available = book.quantity - book.issued - book.lost;
+              {isLoading && (
+                <TableRow>
+                    <TableCell colSpan={6} className="text-center">Loading books...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && paginatedBooks.map((book) => {
+                const available = book.quantity - (book.issued || 0) - (book.lost || 0);
                 return (
                   <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.id}</TableCell>
@@ -174,13 +180,15 @@ export default function LibraryPage() {
                   </TableRow>
                 )
               })}
+              {!isLoading && paginatedBooks.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    No books found.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-           {paginatedBooks.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No books found.
-            </div>
-          )}
         </CardContent>
          <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
@@ -215,3 +223,5 @@ export default function LibraryPage() {
     </div>
   );
 }
+
+    

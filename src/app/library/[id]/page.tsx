@@ -1,6 +1,5 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { booksData as initialBooksData, students, bookIssueData as initialBookIssueData } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -13,53 +12,70 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, BookCheck, BookUp, QrCode, DollarSign } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
-import { format, addDays, differenceInDays, parseISO } from 'date-fns';
+import { format, addDays, differenceInDays } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc, query, where, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-type Book = (typeof initialBooksData)[0];
-type BookIssue = (typeof initialBookIssueData)[0];
+type Book = {
+    id: string;
+    title: string;
+    author: string;
+    isbn: string;
+    publisher: string;
+    edition?: string;
+    category: string;
+    language: string;
+    quantity: number;
+    issued: number;
+    lost: number;
+    resourceType: string;
+    barcode?: string;
+    shelf?: string;
+    rack?: string;
+    coverImage: string;
+};
+
+type BookIssue = {
+    issueId: string;
+    bookId: string;
+    studentId: string;
+    issueDate: any;
+    dueDate: string;
+    returnDate: any;
+    status: 'Issued' | 'Returned';
+    fineAmount: number;
+    fineStatus: 'Paid' | 'Unpaid';
+};
+
+type Student = {
+    id: string;
+    name: string;
+}
 
 export default function BookDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const bookId = params.id as string;
   
-  const [book, setBook] = useState<Book | undefined>(undefined);
-  const [issueHistory, setIssueHistory] = useState<BookIssue[]>([]);
   const [issueStudentId, setIssueStudentId] = useState('');
 
-  useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    const books: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
-    const currentBook = books.find((b) => b.id === bookId);
-    setBook(currentBook);
+  const bookDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `schools/school-1/books/${bookId}`) : null), [firestore, bookId]);
+  const { data: book, isLoading: bookLoading } = useDoc<Book>(bookDocRef);
 
-    const storedIssues = localStorage.getItem('bookIssueData');
-    const issues: BookIssue[] = storedIssues ? JSON.parse(storedIssues) : initialBookIssueData;
-    const bookIssues = issues.filter(issue => issue.bookId === bookId).sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
-    setIssueHistory(bookIssues);
+  const issuesQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, `schools/school-1/bookIssues`), where('bookId', '==', bookId)) : null), [firestore, bookId]);
+  const { data: issueHistory, isLoading: issuesLoading } = useCollection<BookIssue>(issuesQuery);
 
-  }, [bookId]);
+  const studentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, `schools/school-1/students`) : null), [firestore]);
+  const { data: students, isLoading: studentsLoading } = useCollection<Student>(studentsQuery);
 
-  const studentOptions = useMemo(() => students.map(s => ({ value: s.id, label: `${s.name} (${s.id})` })), []);
-
-  const updateAndStoreBooks = (books: Book[]) => {
-    const updatedBook = books.find(b => b.id === bookId);
-    if (updatedBook) {
-      setBook(updatedBook);
-      localStorage.setItem('booksData', JSON.stringify(books));
-    }
-  };
-
-  const updateAndStoreIssues = (issues: BookIssue[]) => {
-    const sortedIssues = issues.filter(issue => issue.bookId === bookId).sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime());
-    setIssueHistory(sortedIssues);
-    localStorage.setItem('bookIssueData', JSON.stringify(issues));
-  };
+  const studentOptions = useMemo(() => students?.map(s => ({ value: s.id, label: `${s.name} (${s.id})` })) || [], [students]);
 
   const handleIssueBook = () => {
     if (!issueStudentId) {
@@ -71,13 +87,9 @@ export default function BookDetailsPage() {
         return;
     }
 
-    const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || JSON.stringify(initialBooksData));
-    const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || JSON.stringify(initialBookIssueData));
+    if(!firestore || !book) return;
 
-    const targetBook = storedBooks.find(b => b.id === bookId);
-    if (!targetBook) { return; }
-
-    const availableCopies = (targetBook.quantity || 0) - (targetBook.issued || 0) - (targetBook.lost || 0);
+    const availableCopies = (book.quantity || 0) - (book.issued || 0) - (book.lost || 0);
     if (availableCopies <= 0) {
          toast({
             variant: 'destructive',
@@ -87,37 +99,38 @@ export default function BookDetailsPage() {
         return;
     }
 
-    const newIssue: BookIssue = {
-        issueId: `I${Date.now().toString().slice(-6)}`,
+    const issueId = `I${Date.now().toString().slice(-6)}`;
+    const newIssue = {
+        issueId,
         bookId: bookId,
         studentId: issueStudentId,
-        issueDate: format(new Date(), 'yyyy-MM-dd HH:mm'),
+        issueDate: serverTimestamp(),
         dueDate: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
         returnDate: null,
-        status: 'Issued',
+        status: 'Issued' as 'Issued',
         fineAmount: 0,
-        fineStatus: 'Unpaid',
+        fineStatus: 'Unpaid' as 'Unpaid',
+        schoolId: 'school-1'
     };
 
-    const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: (b.issued || 0) + 1 } : b);
-    const updatedIssues = [...storedIssues, newIssue];
+    const issuesCollection = collection(firestore, `schools/school-1/bookIssues`);
+    addDocumentNonBlocking(issuesCollection, newIssue, issueId);
 
-    updateAndStoreBooks(updatedBooks);
-    updateAndStoreIssues(updatedIssues);
-    
+    const bookRef = doc(firestore, `schools/school-1/books/${bookId}`);
+    setDocumentNonBlocking(bookRef, { issued: (book.issued || 0) + 1}, { merge: true });
+
     toast({
       title: 'Book Issued',
-      description: `"${targetBook.title}" has been issued to student ${issueStudentId}.`,
+      description: `"${book.title}" has been issued to student ${issueStudentId}.`,
     });
     
     setIssueStudentId('');
   }
 
   const handleReturnBook = (issueId: string) => {
-     const storedBooks: Book[] = JSON.parse(localStorage.getItem('booksData') || '[]');
-     const storedIssues: BookIssue[] = JSON.parse(localStorage.getItem('bookIssueData') || '[]');
+     if(!firestore || !issueHistory || !book) return;
 
-     const targetIssue = storedIssues.find(i => i.issueId === issueId);
+     const targetIssue = issueHistory.find(i => i.issueId === issueId);
      if (!targetIssue || targetIssue.status !== 'Issued') {
          toast({ variant: 'destructive', title: 'Invalid Action', description: 'This book is not currently issued.' });
          return;
@@ -127,7 +140,6 @@ export default function BookDetailsPage() {
      const dueDate = new Date(targetIssue.dueDate);
      const overdueDays = differenceInDays(returnDate, dueDate);
      let fineAmount = 0;
-     let fineStatus: 'Unpaid' | 'Paid' = 'Unpaid';
 
      if (overdueDays > 0) {
          fineAmount = overdueDays * 1; // $1 fine per day overdue
@@ -143,15 +155,26 @@ export default function BookDetailsPage() {
         });
      }
 
-     const updatedIssues = storedIssues.map(i => i.issueId === issueId ? { ...i, status: 'Returned' as const, returnDate: format(returnDate, 'yyyy-MM-dd HH:mm'), fineAmount, fineStatus } : i);
-     const updatedBooks = storedBooks.map(b => b.id === bookId ? { ...b, issued: Math.max(0, (b.issued || 0) - 1) } : b);
-
-     updateAndStoreBooks(updatedBooks);
-     updateAndStoreIssues(updatedIssues);
+     const issueRef = doc(firestore, `schools/school-1/bookIssues/${issueId}`);
+     setDocumentNonBlocking(issueRef, { 
+         status: 'Returned',
+         returnDate: serverTimestamp(),
+         fineAmount: fineAmount,
+         fineStatus: fineAmount > 0 ? 'Unpaid' : 'Paid',
+     }, { merge: true });
+     
+     const bookRef = doc(firestore, `schools/school-1/books/${bookId}`);
+     setDocumentNonBlocking(bookRef, { issued: Math.max(0, (book.issued || 0) - 1) }, { merge: true });
   }
 
   const handlePayFine = (issueId: string) => {
       router.push(`/library/fine/${issueId}/pay`);
+  }
+
+  const isLoading = bookLoading || issuesLoading || studentsLoading;
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-full">Loading...</div>
   }
 
   if (!book) {
@@ -277,12 +300,12 @@ export default function BookDetailsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {issueHistory.map(issue => (
+                        {issueHistory?.map(issue => (
                             <TableRow key={issue.issueId}>
                                 <TableCell>{issue.studentId}</TableCell>
-                                <TableCell>{issue.issueDate}</TableCell>
+                                <TableCell>{issue.issueDate?.toDate().toLocaleDateString()}</TableCell>
                                 <TableCell>{issue.dueDate}</TableCell>
-                                <TableCell>{issue.returnDate || 'N/A'}</TableCell>
+                                <TableCell>{issue.returnDate?.toDate().toLocaleDateString() || 'N/A'}</TableCell>
                                 <TableCell>
                                     <Badge variant={issue.status === 'Issued' ? 'warning' : 'success'}>
                                         {issue.status}
@@ -313,7 +336,7 @@ export default function BookDetailsPage() {
                                 </TableCell>
                             </TableRow>
                         ))}
-                         {issueHistory.length === 0 && (
+                         {!issuesLoading && issueHistory?.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center h-24">No issue history for this book.</TableCell>
                             </TableRow>
@@ -325,3 +348,5 @@ export default function BookDetailsPage() {
     </div>
   );
 }
+
+    

@@ -24,8 +24,10 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect } from 'react';
-import { booksData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const bookFormSchema = z.object({
   id: z.string(),
@@ -46,7 +48,10 @@ const bookFormSchema = z.object({
 });
 
 type BookFormValues = z.infer<typeof bookFormSchema>;
-type Book = (typeof booksData)[0];
+
+type Book = BookFormValues & {
+    issued: number;
+}
 
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
   <FormLabel>
@@ -59,47 +64,44 @@ export default function EditBookPage() {
   const router = useRouter();
   const params = useParams();
   const bookId = params.id as string;
+  const firestore = useFirestore();
+
+  const bookDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `schools/school-1/books/${bookId}`) : null), [firestore, bookId]);
+  const { data: bookToEdit, isLoading } = useDoc<Book>(bookDocRef);
   
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
   });
 
   useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    if (storedBooks) {
-        const books: Book[] = JSON.parse(storedBooks);
-        const bookToEdit = books.find(b => b.id === bookId);
-        if (bookToEdit) {
-            form.reset(bookToEdit);
-        } else {
-            router.push('/library');
-        }
+    if (bookToEdit) {
+        form.reset(bookToEdit);
+    } else if (!isLoading && bookId) {
+        toast({ title: "Error", description: "Book not found.", variant: "destructive"});
+        router.push('/library');
     }
-  }, [bookId, form, router]);
+  }, [bookId, form, router, toast, bookToEdit, isLoading]);
 
   function onSubmit(data: BookFormValues) {
-    const storedBooks = localStorage.getItem('booksData');
-    const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : [];
-
-    const bookToUpdate = currentBooks.find(b => b.id === bookId);
-    if (!bookToUpdate) {
-        toast({ title: "Error", description: "Book not found for updating.", variant: "destructive"});
-        return;
-    }
-
-    const updatedBook: Book = {
-        ...bookToUpdate, // preserve issued count and other fields not in form
+    if (!firestore || !bookToEdit) return;
+    
+    const updatedBook = {
+        ...bookToEdit,
         ...data,
     };
-
-    const updatedBooks = currentBooks.map(b => b.id === bookId ? updatedBook : b);
-    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
+    
+    const bookRef = doc(firestore, 'schools/school-1/books', bookId);
+    setDocumentNonBlocking(bookRef, updatedBook, { merge: true });
     
     toast({
       title: 'Book Updated',
       description: `"${data.title}" has been successfully updated.`,
     });
     router.push('/library');
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
   }
 
   return (
@@ -345,3 +347,5 @@ export default function EditBookPage() {
     </Card>
   );
 }
+
+    

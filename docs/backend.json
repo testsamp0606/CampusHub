@@ -178,6 +178,49 @@
         "schoolId": { "type": "string" }
       },
       "required": ["id", "conversationId", "senderId", "content", "timestamp", "schoolId"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Represents a book or resource in the library.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "isbn": { "type": "string" },
+        "publisher": { "type": "string" },
+        "edition": { "type": "string" },
+        "category": { "type": "string" },
+        "language": { "type": "string" },
+        "quantity": { "type": "number" },
+        "issued": { "type": "number" },
+        "lost": { "type": "number" },
+        "resourceType": { "type": "string" },
+        "barcode": { "type": "string" },
+        "shelf": { "type": "string" },
+        "rack": { "type": "string" },
+        "coverImage": { "type": "string", "format": "uri" },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "title", "author", "isbn", "quantity", "schoolId"]
+    },
+    "BookIssue": {
+      "title": "Book Issue",
+      "description": "Represents a record of a book being issued to a student.",
+      "type": "object",
+      "properties": {
+        "issueId": { "type": "string" },
+        "bookId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "issueDate": { "type": "string", "format": "date-time" },
+        "dueDate": { "type": "string", "format": "date" },
+        "returnDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Issued", "Returned"] },
+        "fineAmount": { "type": "number" },
+        "fineStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["issueId", "bookId", "studentId", "issueDate", "dueDate", "status", "schoolId"]
     }
   },
   "auth": {
@@ -315,6 +358,30 @@
             { "name": "schoolId", "description": "The unique ID of the school." },
             { "name": "conversationId", "description": "The unique ID of the conversation." },
             { "name": "messageId", "description": "The unique ID of the message." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/books/{bookId}",
+        "definition": {
+          "entityName": "Book",
+          "schema": { "$ref": "#/backend/entities/Book" },
+          "description": "Stores library book information.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "bookId", "description": "The unique ID of the book." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/bookIssues/{issueId}",
+        "definition": {
+          "entityName": "BookIssue",
+          "schema": { "$ref": "#/backend/entities/BookIssue" },
+          "description": "Stores book issue records.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "issueId", "description": "The unique ID of the issue record." }
           ]
         }
       }

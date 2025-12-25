@@ -12,38 +12,50 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { bookIssueData as initialBookIssueData } from '@/lib/data';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
-type BookIssue = (typeof initialBookIssueData)[0];
+type BookIssue = {
+    issueId: string;
+    bookId: string;
+    studentId: string;
+    issueDate: any;
+    dueDate: string;
+    returnDate: any;
+    status: 'Issued' | 'Returned';
+    fineAmount: number;
+    fineStatus: 'Paid' | 'Unpaid';
+};
+
 
 export default function FinePaymentPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const issueId = params.issueId as string;
   const [isLoading, setIsLoading] = useState(false);
-  const [issue, setIssue] = useState<BookIssue | undefined>(undefined);
+  
+  const issueDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `schools/school-1/bookIssues/${issueId}`) : null), [firestore, issueId]);
+  const { data: issue, isLoading: issueLoading } = useDoc<BookIssue>(issueDocRef);
+
 
   useEffect(() => {
-    const storedIssues = localStorage.getItem('bookIssueData');
-    const issues: BookIssue[] = storedIssues ? JSON.parse(storedIssues) : initialBookIssueData;
-    const currentIssue = issues.find(i => i.issueId === issueId);
-    
-    if (currentIssue && currentIssue.fineStatus === 'Unpaid' && currentIssue.fineAmount > 0) {
-      setIssue(currentIssue);
-    } else {
-       toast({
-        variant: "destructive",
-        title: "Invalid Fine",
-        description: "This fine is not available for payment or has already been paid.",
-      });
-      router.back();
+    if (!issueLoading && issue) {
+        if(issue.fineStatus !== 'Unpaid' || issue.fineAmount <= 0) {
+            toast({
+                variant: "destructive",
+                title: "Invalid Fine",
+                description: "This fine is not available for payment or has already been paid.",
+            });
+            router.back();
+        }
     }
-  }, [issueId, router, toast]);
+  }, [issueId, router, toast, issue, issueLoading]);
 
-  if (!issue) {
+  if (issueLoading || !issue) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -120,3 +132,5 @@ export default function FinePaymentPage() {
     </div>
   );
 }
+
+    

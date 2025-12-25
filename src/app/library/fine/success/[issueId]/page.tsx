@@ -12,50 +12,41 @@ import {
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { bookIssueData as initialBookIssueData } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-type BookIssue = (typeof initialBookIssueData)[0];
+type BookIssue = {
+    issueId: string;
+    bookId: string;
+    fineStatus: 'Paid' | 'Unpaid';
+};
+
 
 export default function FinePaymentSuccessPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const issueId = params.issueId as string;
   const [bookId, setBookId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const storedIssues = localStorage.getItem('bookIssueData');
-    const issues: BookIssue[] = storedIssues ? JSON.parse(storedIssues) : initialBookIssueData;
-    
-    let targetBookId: string | null = null;
-    const updatedIssues = issues.map(issue => {
-      if (issue.issueId === issueId) {
-        targetBookId = issue.bookId;
-        return {
-          ...issue,
-          fineStatus: 'Paid' as const,
-        };
-      }
-      return issue;
-    });
+  const issueDocRef = useMemoFirebase(() => (firestore ? doc(firestore, `schools/school-1/bookIssues/${issueId}`) : null), [firestore, issueId]);
+  const { data: issue } = useDoc<BookIssue>(issueDocRef);
 
-    if(targetBookId) {
-        setBookId(targetBookId);
-        localStorage.setItem('bookIssueData', JSON.stringify(updatedIssues));
+
+  useEffect(() => {
+    if(firestore && issue && issue.fineStatus === 'Unpaid') {
+        const issueRef = doc(firestore, `schools/school-1/bookIssues/${issueId}`);
+        setDocumentNonBlocking(issueRef, { fineStatus: 'Paid' }, { merge: true });
+        setBookId(issue.bookId);
         toast({
             title: "Fine Paid",
             description: "The fine payment was successful.",
         });
-    } else {
-         toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Could not find the issue record to update.",
-        });
     }
-
-  }, [issueId, toast]);
+  }, [issueId, toast, firestore, issue]);
 
   return (
     <div className="flex justify-center items-center min-h-[70vh]">
@@ -89,3 +80,5 @@ export default function FinePaymentSuccessPage() {
     </div>
   );
 }
+
+    

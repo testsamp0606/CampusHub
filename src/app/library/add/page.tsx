@@ -24,8 +24,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { booksData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 const bookFormSchema = z.object({
   id: z.string(),
@@ -46,8 +49,6 @@ const bookFormSchema = z.object({
 });
 
 type BookFormValues = z.infer<typeof bookFormSchema>;
-type Book = (typeof booksData)[0];
-
 
 const defaultValues: Partial<BookFormValues> = {
   id: '',
@@ -75,6 +76,8 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddBookPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
     defaultValues,
@@ -87,17 +90,17 @@ export default function AddBookPage() {
   }, [form]);
 
   function onSubmit(data: BookFormValues) {
-    const storedBooks = localStorage.getItem('booksData');
-    const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : [];
-
-    const newBook: Book = {
+    if (!firestore) return;
+    
+    const booksCollection = collection(firestore, 'schools/school-1/books');
+    const newBook = {
         ...data,
-        issued: 0, // new books have 0 issued
+        issued: 0,
+        lost: data.lost || 0,
+        schoolId: 'school-1',
         coverImage: `https://picsum.photos/seed/${data.id}/200/300`, // Placeholder image
     };
-
-    const updatedBooks = [...currentBooks, newBook];
-    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
+    addDocumentNonBlocking(booksCollection, newBook, data.id);
     
     toast({
       title: 'Book Added',
@@ -350,3 +353,5 @@ export default function AddBookPage() {
     </Card>
   );
 }
+
+    
