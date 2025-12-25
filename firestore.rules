@@ -1,0 +1,225 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict multi-tenant security model where all data is partitioned by a school.
+ * A user's access to any resource is contingent on their verified membership within a specific school, which is
+ * determined by their user profile located at /schools/{schoolId}/users/{userId}.
+ *
+ * Data Structure: All application data is nested under the top-level `schools` collection. Each school document,
+ * identified by a unique `schoolId`, serves as the root for all related data, including users, students, classes,
+ * and financial records. This hierarchical structure ensures strong data isolation between different schools.
+ *
+ * Key Security Decisions:
+ * - School Segregation: The primary security boundary is the school. A user authenticated for one school cannot read,
+ *   write, or even see data belonging to another school. This is enforced by the `isSchoolMember(schoolId)` function.
+ * - Role-Based Writes: While any member of a school has broad read access within their school's data, write permissions
+ *   (create, update, delete) for most collections are restricted to users with an 'admin' role. This provides a secure
+ *   default for managing school-wide data.
+ * - User Profile Management: Users are empowered to create and manage their own profiles within a school, allowing for a
+ *   self-service "join" or "onboarding" flow. However, only school admins can remove users or modify other users' profiles.
+ *
+ * Denormalization for Authorization: To ensure fast and secure authorization checks, all documents within a school's
+ * subcollections (e.g., students, classes, expenses) must contain a denormalized `schoolId` field. Security rules
+ * validate this field on all write operations to maintain relational integrity and prevent data from being associated
+ * with the wrong school. This avoids slow and costly cross-document `get()` calls in most rules.
+ *
+ * Structural Segregation: Each data type (students, teachers, assets, etc.) is stored in its own dedicated collection.
+ * This ensures that security rules are simple and specific to the data they protect, and allows for secure and
+ * performant list operations for clients.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * =====================================================================
+     *    HELPER FUNCTIONS
+     * =====================================================================
+     */
+
+    // Checks if the user is authenticated via Firebase Auth.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the requesting user's UID matches the given userId wildcard from the path.
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Constructs the path to a user's profile document for a given school and user ID.
+    function getUserDataPath(schoolId, userId) {
+      return /databases/$(database)/documents/schools/$(schoolId)/users/$(userId);
+    }
+
+    // Checks if the requesting user is a registered member of the specified school.
+    // This is the foundational check for almost all data access. It performs a single document read.
+    function isSchoolMember(schoolId) {
+      return isSignedIn() && get(getUserDataPath(schoolId, request.auth.uid)).data.schoolId == schoolId;
+    }
+
+    // Checks if the requesting user has the 'admin' role within the specified school.
+    function isSchoolAdmin(schoolId) {
+      return isSchoolMember(schoolId) && get(getUserDataPath(schoolId, request.auth.uid)).data.role == 'admin';
+    }
+
+    /**
+     * Common validation functions for write operations within any school subcollection.
+     * These functions ensure that data is correctly linked to its parent school.
+     */
+    // On create, ensures the new document's schoolId field matches the path.
+    function schoolIdMatchesPath(schoolId) {
+      return request.resource.data.schoolId == schoolId;
+    }
+
+    // On update, ensures the schoolId field is immutable, preventing re-association.
+    function schoolIdIsImmutable() {
+      return request.resource.data.schoolId == resource.data.schoolId;
+    }
+
+    /**
+     * Common access control rule sets for most school subcollections.
+     * These bundle common logic for readability.
+     */
+    // Grants read access to any verified member of the school.
+    function canReadSchoolData(schoolId) {
+      return isSchoolMember(schoolId);
+    }
+
+    // Grants create access to school admins and validates data integrity.
+    function canCreateSchoolData(schoolId) {
+      return isSchoolAdmin(schoolId) && schoolIdMatchesPath(schoolId);
+    }
+
+    // Grants update/delete access to school admins and ensures document existence.
+    function canModifySchoolData(schoolId) {
+      return resource != null && isSchoolAdmin(schoolId) && schoolIdIsImmutable();
+    }
+
+
+    /**
+     * @description Controls access to the main school documents.
+     * @path /schools/{schoolId}
+     * @allow A logged-in member of "school-abc" can read the school's public info (get).
+     * @deny A user from "school-xyz" cannot read any information about "school-abc" (get).
+     * @principle Enforces school-level data segregation. School creation and deletion are disallowed from the client.
+     */
+    match /schools/{schoolId} {
+      allow get, list: if isSchoolMember(schoolId);
+      allow create: if false;
+      allow update: if resource != null && isSchoolAdmin(schoolId);
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to user profiles within a school.
+     * @path /schools/{schoolId}/users/{userId}
+     * @allow A user can create their own profile to join a school (create).
+     * @allow An admin can delete a user's profile from the school (delete).
+     * @deny A user cannot update another non-admin user's profile (update).
+     * @principle Implements self-service profile management combined with admin oversight.
+     */
+    match /schools/{schoolId}/users/{userId} {
+      allow get, list: if isSchoolMember(schoolId);
+      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.schoolId == schoolId;
+      allow update: if resource != null && (isOwner(userId) || isSchoolAdmin(schoolId)) && request.resource.data.id == resource.data.id && request.resource.data.schoolId == resource.data.schoolId;
+      allow delete: if resource != null && isSchoolAdmin(schoolId);
+    }
+
+    /**
+     * @description Controls access to student records within a school.
+     * @path /schools/{schoolId}/students/{studentId}
+     * @allow A logged-in admin of "school-abc" can create a new student record (create).
+     * @deny A non-admin teacher from "school-abc" cannot create a new student record (create).
+     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/students/{studentId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to teacher records within a school.
+     * @path /schools/{schoolId}/teachers/{teacherId}
+     * @allow A logged-in member of "school-abc" can view a list of all teachers (list).
+     * @deny A user from "school-xyz" cannot view any teacher records from "school-abc" (list).
+     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/teachers/{teacherId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to class records within a school.
+     * @path /schools/{schoolId}/classes/{classId}
+     * @allow A logged-in admin of "school-abc" can update a class record (update).
+     * @deny A non-admin teacher from "school-abc" cannot delete a class record (delete).
+     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/classes/{classId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to attendance records within a school.
+     * @path /schools/{schoolId}/attendances/{attendanceId}
+     * @allow A logged-in member of "school-abc" can view an attendance record (get).
+     * @deny An admin from "school-xyz" cannot create an attendance record for "school-abc" (create).
+     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/attendances/{attendanceId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to expense records within a school.
+     * @path /schools/{schoolId}/expenses/{expenseId}
+     * @allow A logged-in admin of "school-abc" can delete an expense record (delete).
+     * @deny A non-admin accountant from "school-abc" cannot create an expense record (create).
+     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/expenses/{expenseId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to account records within a school.
+     * @path /schools/{schoolId}/accounts/{accountId}
+     * @allow A logged-in admin of "school-abc" can create a new account (create).
+     * @deny A logged-in teacher from "school-abc" cannot update an account (update).
+     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/accounts/{accountId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to asset records within a school.
+     * @path /schools/{schoolId}/assets/{assetId}
+     * @allow A logged-in member of "school-abc" can view asset details (get).
+     * @deny A logged-in admin of "school-xyz" cannot view assets from "school-abc" (get).
+     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
+     */
+    match /schools/{schoolId}/assets/{assetId} {
+      allow get, list: if canReadSchoolData(schoolId);
+      allow create: if canCreateSchoolData(schoolId);
+      allow update: if canModifySchoolData(schoolId);
+      allow delete: if canModifySchoolData(schoolId);
+    }
+  }
+}
