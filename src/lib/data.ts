@@ -1,5 +1,4 @@
 
-
 export type Student = {
   id: string;
   name: string;
@@ -21,16 +20,47 @@ export type Student = {
 
 export type Teacher = {
   id: string;
-  name: string;
-  department: string;
-  subjects: string[];
+  firstName: string;
+  lastName: string;
+  gender: 'Male' | 'Female' | 'Other';
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  maritalStatus?: 'Single' | 'Married' | 'Divorced' | 'Widowed';
+  nationality?: string;
+  aadhaar?: string;
+  profilePhoto?: any;
+  mobileNumber: string;
+  alternateMobileNumber?: string;
+  email: string;
+  emergencyContactName?: string;
+  emergencyContactNumber?: string;
+  currentAddress?: string;
+  permanentAddress?: string;
+  highestQualification?: string;
+  subjectSpecialization?: string;
+  university?: string;
+  yearOfPassing?: number;
+  teachingExperience?: number;
+  previousSchool?: string;
+  certifications?: string;
+  academicYear?: string;
+  isClassTeacher: boolean;
+  assignedClassId?: string;
+  assignedSubjects?: string[];
+  department?: 'Primary' | 'Secondary' | 'Higher Secondary';
+  employmentType: 'Permanent' | 'Contract' | 'Guest';
+  joiningDate?: string;
+  staffCategory: 'Teaching' | 'Non-Teaching';
+  bankAccountNumber?: string;
+  ifscCode?: string;
+  panNumber?: string;
+  name: string; // for compatibility
   role: string;
-  qualification: string;
   experience: string;
   phone: string;
-  email: string;
+  subjects: string[];
+  qualification: string;
   status: 'Active' | 'On Leave' | 'Inactive';
-  profilePhoto: string;
 };
 
 export type ClassInfo = {
@@ -221,10 +251,17 @@ export const teachersData: Teacher[] = [
         role: 'HOD',
         qualification: 'Ph.D. in Physics',
         experience: '15 years',
-        phone: '123-456-7890',
+        phone: '1234567890',
         email: 'e.reed@school.edu',
         status: 'Active',
-        profilePhoto: 'https://picsum.photos/seed/T001/200/200'
+        profilePhoto: 'https://picsum.photos/seed/T001/200/200',
+        firstName: 'Evelyn',
+        lastName: 'Reed',
+        gender: 'Female',
+        mobileNumber: '1234567890',
+        isClassTeacher: true,
+        employmentType: 'Permanent',
+        staffCategory: 'Teaching'
     },
     {
         id: 'T002',
@@ -234,10 +271,17 @@ export const teachersData: Teacher[] = [
         role: 'Class Teacher',
         qualification: 'M.Sc. in Mathematics',
         experience: '10 years',
-        phone: '123-456-7891',
+        phone: '1234567891',
         email: 's.green@school.edu',
         status: 'Active',
-        profilePhoto: 'https://picsum.photos/seed/T002/200/200'
+        profilePhoto: 'https://picsum.photos/seed/T002/200/200',
+        firstName: 'Samuel',
+        lastName: 'Green',
+        gender: 'Male',
+        mobileNumber: '1234567891',
+        isClassTeacher: true,
+        employmentType: 'Permanent',
+        staffCategory: 'Teaching'
     },
     {
         id: 'T003',
@@ -247,10 +291,17 @@ export const teachersData: Teacher[] = [
         role: 'Teacher',
         qualification: 'M.A. in English',
         experience: '8 years',
-        phone: '123-456-7892',
+        phone: '1234567892',
         email: 'c.oswald@school.edu',
         status: 'On Leave',
-        profilePhoto: 'https://picsum.photos/seed/T003/200/200'
+        profilePhoto: 'https://picsum.photos/seed/T003/200/200',
+        firstName: 'Clara',
+        lastName: 'Oswald',
+        gender: 'Female',
+        mobileNumber: '1234567892',
+        isClassTeacher: false,
+        employmentType: 'Permanent',
+        staffCategory: 'Teaching'
     },
     {
         id: 'T004',
@@ -260,10 +311,17 @@ export const teachersData: Teacher[] = [
         role: 'Professor',
         qualification: 'Order of Merlin, First Class',
         experience: '100+ years',
-        phone: '123-456-7893',
+        phone: '1234567893',
         email: 'a.dumbledore@school.edu',
         status: 'Active',
-        profilePhoto: 'https://picsum.photos/seed/T004/200/200'
+        profilePhoto: 'https://picsum.photos/seed/T004/200/200',
+        firstName: 'Albus',
+        lastName: 'Dumbledore',
+        gender: 'Male',
+        mobileNumber: '1234567893',
+        isClassTeacher: false,
+        employmentType: 'Permanent',
+        staffCategory: 'Teaching'
     },
 ];
 

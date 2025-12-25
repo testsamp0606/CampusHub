@@ -1,6 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { teachersData as initialTeachersData } from '@/lib/data';
+import { teachersData as initialTeachersData, Teacher } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -12,11 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Edit } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-type Teacher = (typeof initialTeachersData)[0];
 
 export default function TeacherDetailsPage() {
   const params = useParams();
@@ -67,7 +64,7 @@ export default function TeacherDetailsPage() {
           <CardHeader>
             <div className="flex flex-col md:flex-row items-center gap-6">
                 <Avatar className="h-24 w-24">
-                    <AvatarImage src={teacher.profilePhoto} alt={teacher.name} />
+                    <AvatarImage src={teacher.profilePhoto as string} alt={teacher.name} />
                     <AvatarFallback>{teacher.name.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 text-center md:text-left">
@@ -80,27 +77,38 @@ export default function TeacherDetailsPage() {
                 </div>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-8">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg border-b pb-2">Professional Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <p className="font-medium">Qualification</p><p>{teacher.qualification}</p>
-                        <p className="font-medium">Experience</p><p>{teacher.experience}</p>
-                        <p className="font-medium">Subjects</p>
-                        <div className="flex flex-wrap gap-1">
-                            {teacher.subjects.map(sub => <Badge key={sub} variant="outline">{sub}</Badge>)}
-                        </div>
+          <CardContent className="space-y-8">
+            <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b pb-2">Personal Information</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <p className="font-medium">Gender</p><p>{teacher.gender}</p>
+                    <p className="font-medium">Date of Birth</p><p>{teacher.dateOfBirth ? teacher.dateOfBirth : 'N/A'}</p>
+                    <p className="font-medium">Marital Status</p><p>{teacher.maritalStatus || 'N/A'}</p>
+                    <p className="font-medium">Nationality</p><p>{teacher.nationality || 'N/A'}</p>
+                </div>
+            </div>
+             <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b pb-2">Contact Information</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <p className="font-medium">Email</p><p className="md:col-span-1">{teacher.email}</p>
+                    <p className="font-medium">Phone</p><p>{teacher.mobileNumber}</p>
+                    <p className="font-medium">Current Address</p><p className="md:col-span-3">{teacher.currentAddress || 'N/A'}</p>
+                    <p className="font-medium">Permanent Address</p><p className="md:col-span-3">{teacher.permanentAddress || 'N/A'}</p>
+                </div>
+            </div>
+             <div className="space-y-4">
+                <h3 className="font-semibold text-lg border-b pb-2">Professional Information</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <p className="font-medium">Qualification</p><p>{teacher.highestQualification || teacher.qualification}</p>
+                    <p className="font-medium">Experience</p><p>{teacher.teachingExperience || teacher.experience}</p>
+                    <p className="font-medium">Department</p><p>{teacher.department}</p>
+                    <p className="font-medium">Joining Date</p><p>{teacher.joiningDate ? teacher.joiningDate : 'N/A'}</p>
+                    <p className="font-medium">Subjects</p>
+                    <div className="flex flex-wrap gap-1 md:col-span-3">
+                        {(teacher.assignedSubjects || teacher.subjects).map(sub => <Badge key={sub} variant="outline">{sub}</Badge>)}
                     </div>
                 </div>
-                 <div className="space-y-4">
-                    <h3 className="font-semibold text-lg border-b pb-2">Contact Information</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <p className="font-medium">Email</p><p>{teacher.email}</p>
-                        <p className="font-medium">Phone</p><p>{teacher.phone}</p>
-                    </div>
-                </div>
-             </div>
+            </div>
           </CardContent>
         </Card>
     </div>
