@@ -47,6 +47,7 @@ import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const studentFormSchema = z.object({
   id: z.string(),
+  title: z.enum(['Mr', 'Mrs', 'Miss']),
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   email: z.string().email('Invalid email address.'),
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
@@ -64,6 +65,7 @@ type StudentFormValues = z.infer<typeof studentFormSchema>;
 
 const defaultValues: Partial<StudentFormValues> = {
   id: '',
+  title: 'Mr',
   name: '',
   email: '',
   phone: '',
@@ -104,13 +106,14 @@ export default function AddStudentPage() {
 
     const newStudentData = {
       ...data,
+      name: `${data.title} ${data.name}`,
       schoolId: 'school-1',
       dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
     };
     
     // We use the non-blocking version to let the UI update immediately.
     // The security rule error handling is managed centrally.
-    await addDocumentNonBlocking(studentsCollection, newStudentData);
+    addDocumentNonBlocking(studentsCollection, newStudentData, data.id);
 
     toast({
       title: 'Student Registered',
@@ -151,23 +154,49 @@ export default function AddStudentPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>Full Name</RequiredLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="John Doe"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="md:col-span-1"></div>
+              
+              <div className="grid grid-cols-4 gap-4 md:col-span-2 items-end">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <RequiredLabel>Title</RequiredLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a title" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Mr">Mr</SelectItem>
+                          <SelectItem value="Mrs">Mrs</SelectItem>
+                          <SelectItem value="Miss">Miss</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="col-span-3">
+                      <RequiredLabel>Full Name</RequiredLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="John Doe"
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
