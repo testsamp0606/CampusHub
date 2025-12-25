@@ -116,7 +116,7 @@ export default function EditDepartmentPage() {
                   <FormItem>
                     <RequiredLabel>Department Name</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Science Department" {...field} />
+                      <Input placeholder="e.g., Science Department" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,7 +170,7 @@ export default function EditDepartmentPage() {
                   <FormItem>
                     <RequiredLabel>Annual Budget</RequiredLabel>
                     <FormControl>
-                      <Input type="number" placeholder="50000" {...field} />
+                      <Input type="number" placeholder="50000" {...field} value={field.value || 0} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -183,7 +183,7 @@ export default function EditDepartmentPage() {
                   <FormItem className="md:col-span-2">
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="A brief description of the department's role and responsibilities." {...field} />
+                      <Textarea placeholder="A brief description of the department's role and responsibilities." {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
