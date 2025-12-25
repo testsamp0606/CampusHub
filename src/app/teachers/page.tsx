@@ -145,7 +145,7 @@ export default function TeachersPage() {
                   <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                 </TableRow>
               )}
-              {paginatedTeachers.map((teacher) => (
+              {!isLoading && paginatedTeachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell>{teacher.id}</TableCell>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
