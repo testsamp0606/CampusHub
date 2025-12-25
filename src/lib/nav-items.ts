@@ -30,6 +30,8 @@ import {
   Notebook,
   GraduationCap as ResultsIcon,
   BookA,
+  DollarSign,
+  Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -43,6 +45,17 @@ export type NavItem = {
 
 export const ALL_NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  {
+    label: 'Academics',
+    icon: School,
+    roles: ['SuperAdmin', 'Admin'],
+    subItems: [
+      { href: '/classes', label: 'Classes', icon: BookCopy },
+      { href: '/subjects', label: 'Subjects', icon: Book },
+      { href: '/departments', label: 'Departments', icon: Building },
+      { href: '/calendar', label: 'Calendar', icon: Calendar },
+    ],
+  },
   {
     label: 'Users',
     icon: Users,
@@ -66,29 +79,24 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: 'Academics',
-    icon: School,
-    roles: ['SuperAdmin', 'Admin'],
-    subItems: [
-      { href: '/classes', label: 'Classes', icon: BookCopy },
-      { href: '/subjects', label: 'Subjects', icon: Book },
-      { href: '/departments', label: 'Departments', icon: Building },
-      {
-        href: '/attendance',
-        label: 'Attendance',
-        icon: ClipboardCheck,
-      },
-      { href: '/calendar', label: 'Calendar', icon: Calendar },
-    ],
-  },
-   {
-    label: 'Scholastics',
+    label: 'Examinations',
     icon: BookA,
     roles: ['SuperAdmin', 'Admin'],
     subItems: [
-      { href: '/examinations', label: 'Examinations', icon: FileText },
+      { href: '/examinations', label: 'Exam Schedule', icon: FileText },
       { href: '/assessments', label: 'Assessments', icon: Notebook },
       { href: '/results', label: 'Results', icon: ResultsIcon },
+      { href: '/attendance', label: 'Attendance', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Finance',
+    icon: DollarSign,
+    roles: ['SuperAdmin', 'Admin', 'Accountant'],
+    subItems: [
+      { href: '/fees', label: 'Fee Collection', icon: CreditCard },
+      { href: '/expenses', label: 'Expenses', icon: TrendingDown },
+      { href: '/accounts', label: 'Ledger', icon: BookUser },
     ],
   },
   {
@@ -99,55 +107,35 @@ export const ALL_NAV_ITEMS: NavItem[] = [
       { href: '/lms/courses', label: 'Courses', icon: BookCopy },
       { href: '/lms/content', label: 'Content', icon: File },
       { href: '/lms/assignments', label: 'Assignments', icon: ClipboardList },
-      { href: '/lms/reports', label: 'Reports', icon: AreaChart },
     ],
   },
   {
-    label: 'Accounts',
-    icon: BookUser,
-    roles: ['SuperAdmin', 'Admin', 'Accountant'],
-    subItems: [
-      { href: '/fees', label: 'Fee Collection', icon: CreditCard },
-      { href: '/payment', label: 'Payments', icon: CreditCard },
-      { href: '/expenses', label: 'Expenses', icon: TrendingDown },
-      { href: '/accounts', label: 'Ledger', icon: BookUser },
-    ],
-  },
-  {
-    href: '/library',
-    label: 'Library',
-    icon: Library,
-    roles: ['SuperAdmin', 'Admin', 'Librarian'],
-  },
-  {
-    href: '/messages',
-    label: 'Messages',
-    icon: MessageSquare,
+    label: 'Facilities',
+    icon: Building,
     roles: ['SuperAdmin', 'Admin'],
+    subItems: [
+      { href: '/library', label: 'Library', icon: Library },
+      { href: '/transport', label: 'Transport', icon: Bus },
+      { href: '/assets', label: 'Assets', icon: Archive },
+    ],
   },
   {
-    href: '/announcements',
-    label: 'Announcements',
+    label: 'Communication',
     icon: Megaphone,
     roles: ['SuperAdmin', 'Admin'],
+    subItems: [
+      { href: '/messages', label: 'Messages', icon: MessageSquare },
+      { href: '/announcements', label: 'Announcements', icon: Megaphone },
+    ],
   },
   {
-    href: '/assets',
-    label: 'Assets',
-    icon: Archive,
-    roles: ['SuperAdmin', 'Admin'],
-  },
-  {
-    href: '/transport',
-    label: 'Transport',
-    icon: Bus,
-    roles: ['SuperAdmin', 'Admin', 'Transport Manager'],
-  },
-   {
-    href: '/permissions',
-    label: 'Permissions',
+    label: 'Admin',
     icon: ShieldCheck,
     roles: ['SuperAdmin'],
+    subItems: [
+      { href: '/permissions', label: 'Permissions', icon: ShieldCheck },
+      { href: '/school', label: 'School Settings', icon: Settings },
+    ],
   },
 ];
 
