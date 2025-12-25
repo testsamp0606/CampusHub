@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useMemo } from 'react';
 import {
@@ -22,11 +21,18 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Eye, Trash2, Search, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { teachersData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Teacher = (typeof teachersData)[0];
+type Teacher = {
+  id: string;
+  name: string;
+  department: string;
+  role: string;
+  status: 'Active' | 'On Leave' | 'Inactive';
+};
 
 const TEACHERS_PER_PAGE = 5;
 
@@ -35,6 +41,13 @@ export default function TeachersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const firestore = useFirestore();
+
+  const teachersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
+    [firestore]
+  );
+  const { data: teachersData, isLoading } = useCollection<Teacher>(teachersQuery);
 
   const handleDelete = (teacherId: string) => {
     toast({
@@ -44,16 +57,21 @@ export default function TeachersPage() {
     });
   };
 
-   const getStatusBadgeVariant = (status: Teacher['status']) => {
+  const getStatusBadgeVariant = (status: Teacher['status']) => {
     switch (status) {
-        case 'Active': return 'success';
-        case 'On Leave': return 'warning';
-        case 'Inactive': return 'destructive';
-        default: return 'outline';
+      case 'Active':
+        return 'success';
+      case 'On Leave':
+        return 'warning';
+      case 'Inactive':
+        return 'destructive';
+      default:
+        return 'outline';
     }
-  }
+  };
 
   const filteredTeachers = useMemo(() => {
+    if (!teachersData) return [];
     return teachersData.filter(
       (teacher) =>
         teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -61,7 +79,7 @@ export default function TeachersPage() {
         teacher.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
         teacher.role.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, teachersData]);
 
   const totalPages = Math.ceil(filteredTeachers.length / TEACHERS_PER_PAGE);
 
@@ -122,20 +140,25 @@ export default function TeachersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {isLoading && (
+                 <TableRow>
+                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                </TableRow>
+              )}
               {paginatedTeachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell>{teacher.id}</TableCell>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
                   <TableCell>{teacher.department}</TableCell>
-                   <TableCell>{teacher.role}</TableCell>
+                  <TableCell>{teacher.role}</TableCell>
                   <TableCell>
-                     <Badge variant={getStatusBadgeVariant(teacher.status)}>
-                        {teacher.status}
-                      </Badge>
+                    <Badge variant={getStatusBadgeVariant(teacher.status)}>
+                      {teacher.status}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                       <Button asChild variant="ghost" size="icon" title="View Details">
+                      <Button asChild variant="ghost" size="icon" title="View Details">
                         <Link href={`/teachers/${teacher.id}`}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">View</span>
@@ -161,19 +184,21 @@ export default function TeachersPage() {
                   </TableCell>
                 </TableRow>
               ))}
+               {!isLoading && paginatedTeachers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                    No teachers found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-           {paginatedTeachers.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No teachers found.
-            </div>
-          )}
         </CardContent>
-         <CardFooter className="flex items-center justify-between">
+        <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing{' '}
             <strong>
-              {Math.min((currentPage - 1) * TEACHERS_PER_PAGE + 1, filteredTeachers.length)}
+              {filteredTeachers.length > 0 ? Math.min((currentPage - 1) * TEACHERS_PER_PAGE + 1, filteredTeachers.length) : 0}
             </strong>{' '}
             to{' '}
             <strong>
@@ -202,4 +227,3 @@ export default function TeachersPage() {
     </div>
   );
 }
-
