@@ -115,17 +115,17 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
 
           return (
             <SidebarCollapsible key={item.label}>
-                <SidebarCollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                        isActive={isParentActive}
-                        className="justify-between w-full"
-                        >
-                        <div className="flex items-center gap-3">
-                            <item.icon />
-                            <span>{item.label}</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                    </SidebarMenuButton>
+              <SidebarCollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  isActive={isParentActive}
+                  className="w-full justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                </SidebarMenuButton>
               </SidebarCollapsibleTrigger>
               <SidebarCollapsibleContent>
                 <SidebarMenu>
