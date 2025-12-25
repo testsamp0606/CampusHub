@@ -4,7 +4,7 @@ import * as React from "react"
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { PanelLeft } from "lucide-react"
+import { ChevronLeft, PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -272,7 +272,7 @@ const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("md:hidden h-7 w-7", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -301,13 +301,13 @@ const SidebarRail = React.forwardRef<
       onClick={toggleSidebar}
       title="Toggle Sidebar"
       className={cn(
-        "absolute inset-y-0 z-20 hidden h-full w-4 -translate-x-1/2 cursor-pointer items-center justify-center bg-transparent transition-all ease-linear after:h-8 after:w-1 after:rounded-full after:bg-sidebar-border after:opacity-0 after:transition-opacity after:duration-200 hover:after:opacity-100 group-data-[collapsible=icon]:flex",
+        "absolute z-20 hidden h-8 w-8 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground transition-all ease-linear hover:bg-sidebar-primary hover:text-sidebar-primary-foreground group-data-[collapsible=icon]:flex top-1/2 -translate-y-1/2",
         "group-data-[side=left]:-right-2 group-data-[side=right]:-left-2",
         className
       )}
       {...props}
     >
-       <div className="absolute top-1/2 -translate-y-1/2 h-8 w-1 rounded-full bg-sidebar-border opacity-0 transition-opacity group-hover/sidebar:opacity-100" />
+       <ChevronLeft className="h-4 w-4 transition-transform group-data-[state=collapsed]:rotate-180" />
     </button>
   )
 })
@@ -771,3 +771,5 @@ export {
   SidebarCollapsibleTrigger,
   SidebarCollapsibleContent
 }
+
+    
