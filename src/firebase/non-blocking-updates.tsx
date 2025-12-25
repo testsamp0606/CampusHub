@@ -5,6 +5,7 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  doc,
   CollectionReference,
   DocumentReference,
   SetOptions,
