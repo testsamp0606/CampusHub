@@ -29,6 +29,7 @@ import {
   AreaChart,
   Notebook,
   GraduationCap as ResultsIcon,
+  BookA,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -65,7 +66,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: 'Scholastics',
+    label: 'Academics',
     icon: School,
     roles: ['SuperAdmin', 'Admin'],
     subItems: [
@@ -78,6 +79,13 @@ export const ALL_NAV_ITEMS: NavItem[] = [
         icon: ClipboardCheck,
       },
       { href: '/calendar', label: 'Calendar', icon: Calendar },
+    ],
+  },
+   {
+    label: 'Scholastics',
+    icon: BookA,
+    roles: ['SuperAdmin', 'Admin'],
+    subItems: [
       { href: '/examinations', label: 'Examinations', icon: FileText },
       { href: '/assessments', label: 'Assessments', icon: Notebook },
       { href: '/results', label: 'Results', icon: ResultsIcon },
