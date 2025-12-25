@@ -1,4 +1,5 @@
 
+
 export type Student = {
   id: string;
   name: string;
@@ -532,14 +533,20 @@ export const courseAssignmentsData: CourseAssignment[] = [
 ];
 
 export const examsData: Exam[] = [
-    { id: 'EXAM001', name: 'Mathematics Unit Test 1', classId: 'C001', date: '2024-08-15', type: 'Unit Test', maxMarks: 50, status: 'Scheduled' },
-    { id: 'EXAM002', name: 'Physics Practical Assessment', classId: 'C001', date: '2024-08-20', type: 'Practical', maxMarks: 30, status: 'Scheduled' },
-    { id: 'EXAM003', name: 'History Project Submission', classId: 'C002', date: '2024-09-01', type: 'Project', maxMarks: 100, status: 'Scheduled' },
+  { id: 'EXAM001', name: 'Mathematics Unit Test 1', classId: 'C001', date: '2024-08-15', type: 'Unit Test', maxMarks: 50, status: 'Published' },
+  { id: 'EXAM002', name: 'Physics Practical Assessment', classId: 'C001', date: '2024-08-20', type: 'Practical', maxMarks: 30, status: 'Published' },
+  { id: 'EXAM003', name: 'History Project Submission', classId: 'C002', date: '2024-09-01', type: 'Project', maxMarks: 100, status: 'Completed' },
+  { id: 'EXAM004', name: 'English Mid-Term Paper', classId: 'C001', date: '2024-09-10', type: 'Unit Test', maxMarks: 100, status: 'Published' },
 ];
 
 export const marksData: Mark[] = [
-    { id: 'MARK001', examId: 'EXAM001', studentId: 'S001', marks: 45 },
-    { id: 'MARK002', examId: 'EXAM001', studentId: 'S003', marks: 48 },
+  { id: 'MARK001', examId: 'EXAM001', studentId: 'S001', marks: 45 },
+  { id: 'MARK002', examId: 'EXAM001', studentId: 'S003', marks: 48 },
+  { id: 'MARK003', examId: 'EXAM002', studentId: 'S001', marks: 28 },
+  { id: 'MARK004', examId: 'EXAM002', studentId: 'S003', marks: 25 },
+  { id: 'MARK005', examId: 'EXAM004', studentId: 'S001', marks: 88 },
+  { id: 'MARK006', examId: 'EXAM004', studentId: 'S003', marks: 75 },
+  { id: 'MARK007', examId: 'EXAM003', studentId: 'S002', marks: 92 },
 ];
 
 
