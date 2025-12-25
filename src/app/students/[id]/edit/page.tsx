@@ -35,6 +35,7 @@ import { useEffect, useState } from 'react';
 import { Student, students as initialStudentsData } from '@/lib/data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { format } from 'date-fns';
 
 const studentFormSchema = z
   .object({
@@ -150,6 +151,13 @@ export default function EditStudentPage() {
   }
   
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1).padStart(2, '0'),
+    label: format(new Date(0, i), 'MMMM'),
+  }));
+  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
 
   return (
     <Card className="shadow-lg">
@@ -207,23 +215,23 @@ export default function EditStudentPage() {
                         )}
                       />
                     
-                     <FormField
-                        control={form.control}
-                        name="dateOfBirth"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Date of Birth</FormLabel>
-                            <FormControl>
-                                <Input
-                                type="date"
-                                {...field}
-                                value={field.value || ''}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                    <div className="md:col-span-4">
+                      <FormLabel>Date of Birth</FormLabel>
+                      <div className="grid grid-cols-3 gap-4">
+                          <Select>
+                              <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
+                              <SelectContent>{days.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select>
+                              <SelectTrigger><SelectValue placeholder="Month" /></SelectTrigger>
+                              <SelectContent>{months.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                          </Select>
+                          <Select>
+                              <SelectTrigger><SelectValue placeholder="Year" /></SelectTrigger>
+                              <SelectContent>{years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+                          </Select>
+                      </div>
+                    </div>
 
                     <FormField
                       control={form.control}
