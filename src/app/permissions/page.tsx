@@ -16,12 +16,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  roles,
-  modules,
-  permissionsData as initialPermissionsData,
-  Permission,
-} from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
 import {
@@ -31,9 +25,55 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+// --- Data moved from @/lib/data ---
+type Permission = 'V' | 'C' | 'E' | 'A';
+
+const roles: string[] = [
+  'SuperAdmin',
+  'Admin',
+  'Accountant',
+  'Teacher',
+  'Student',
+  'Parent',
+];
+
+const modules: string[] = [
+  'Dashboard',
+  'Students',
+  'Teachers',
+  'Parents',
+  'Classes',
+  'Subjects',
+  'Attendance',
+  'Examinations',
+  'Fees',
+  'Expenses',
+  'Library',
+  'Transport',
+  'Assets',
+  'Messages',
+  'Announcements',
+];
+
+const permissionsData: { [key: string]: { [key: string]: Permission[] } } = {
+  Dashboard: { SuperAdmin: ['V'], Admin: ['V'] },
+  Students: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Teachers: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Parents: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Classes: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Subjects: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Attendance: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'C', 'E'], Teacher: ['V', 'C'] },
+  Examinations: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'C', 'E'], Teacher: ['V'] },
+  Fees: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'], Accountant: ['V', 'C'] },
+  Expenses: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'A'], Accountant: ['V', 'C'] },
+  Library: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Transport: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+};
+// --- End of moved data ---
+
 export default function PermissionsPage() {
   const { toast } = useToast();
-  const [permissions, setPermissions] = useState(initialPermissionsData);
+  const [permissions, setPermissions] = useState(permissionsData);
   const [hasChanges, setHasChanges] = useState(false);
 
   const handlePermissionChange = useCallback(
