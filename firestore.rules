@@ -11,7 +11,7 @@
  * Key Security Decisions:
  * - SuperAdmin Override: A 'SuperAdmin' role has unrestricted access to all data across all schools.
  * - School Segregation: The primary security boundary is the school. A user authenticated for one school cannot read,
- *   write, or even see data belonging to another school, unless they are a SuperAdmin. This is enforced by the `isSchoolMember(schoolId)` function.
+ *   write, or even see data belonging to another, unless they are a SuperAdmin. This is enforced by the `isSchoolMember(schoolId)` function.
  * - Role-Based Writes: While any member of a school has broad read access within their school's data, write permissions
  *   (create, update, delete) for most collections are restricted to users with an 'admin' role. This provides a secure
  *   default for managing school-wide data.
@@ -53,8 +53,11 @@ service cloud.firestore {
     }
 
     // Checks if the user is a SuperAdmin. SuperAdmins have universal access.
-    function isSuperAdmin(schoolId) {
-      return isSignedIn() && getUserRole(schoolId) == 'SuperAdmin';
+    function isSuperAdmin() {
+      // This function needs to check if the user has the SuperAdmin role in ANY school context they might belong to.
+      // For simplicity in this ruleset, we check a specific path. A more robust implementation might use custom claims.
+      // Note: This rule will only work if a user document with role 'SuperAdmin' exists.
+      return isSignedIn() && get(/databases/$(database)/documents/schools/school-1/users/$(request.auth.uid)).data.role == 'SuperAdmin';
     }
 
     // Constructs the path to a user's profile document for a given school and user ID.
@@ -65,12 +68,12 @@ service cloud.firestore {
     // Checks if the requesting user is a registered member of the specified school.
     // This is the foundational check for almost all data access. It performs a single document read.
     function isSchoolMember(schoolId) {
-      return isSignedIn() && (exists(getUserDataPath(schoolId, request.auth.uid)) || isSuperAdmin(schoolId));
+      return isSignedIn() && (exists(getUserDataPath(schoolId, request.auth.uid)) || isSuperAdmin());
     }
 
     // Checks if the requesting user has the 'admin' role within the specified school.
     function isSchoolAdmin(schoolId) {
-      return isSchoolMember(schoolId) && (getUserRole(schoolId) == 'admin' || isSuperAdmin(schoolId));
+      return isSchoolMember(schoolId) && (getUserRole(schoolId) == 'admin' || isSuperAdmin());
     }
 
     /**
@@ -93,17 +96,17 @@ service cloud.firestore {
      */
     // Grants read access to any verified member of the school or a SuperAdmin.
     function canReadSchoolData(schoolId) {
-      return isSchoolMember(schoolId);
+      return isSchoolMember(schoolId) || isSuperAdmin();
     }
 
     // Grants create access to school admins and validates data integrity. SuperAdmins bypass this.
     function canCreateSchoolData(schoolId) {
-      return isSchoolAdmin(schoolId) && schoolIdMatchesPath(schoolId);
+      return (isSchoolAdmin(schoolId) || isSuperAdmin()) && schoolIdMatchesPath(schoolId);
     }
 
     // Grants update/delete access to school admins and ensures document existence. SuperAdmins bypass this.
     function canModifySchoolData(schoolId) {
-      return resource != null && isSchoolAdmin(schoolId) && schoolIdIsImmutable();
+      return resource != null && (isSchoolAdmin(schoolId) || isSuperAdmin()) && schoolIdIsImmutable();
     }
 
 
@@ -119,11 +122,6 @@ service cloud.firestore {
       allow create: if false; // School creation should be an admin/backend process
       allow update: if isSchoolAdmin(schoolId);
       allow delete: if false; // School deletion should be an admin/backend process
-
-      // SuperAdmin override for all subcollections
-      match /{allChildren=**} {
-        allow read, write: if isSuperAdmin(schoolId);
-      }
       
       /**
        * @description Controls access to user profiles within a school.
@@ -155,6 +153,11 @@ service cloud.firestore {
       }
 
       match /classes/{classId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+      
+      match /subjects/{subjectId} {
         allow read: if canReadSchoolData(schoolId);
         allow write: if isSchoolAdmin(schoolId);
       }
@@ -260,5 +263,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
