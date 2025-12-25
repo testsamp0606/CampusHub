@@ -149,6 +149,35 @@
         "value": { "type": "number", "description": "Current value of the asset." }
       },
       "required": ["id", "schoolId", "name", "description", "purchaseDate", "value"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A conversation thread between multiple users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "subject": { "type": "string" },
+        "participantIds": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastMessageTimestamp": { "type": "string", "format": "date-time" },
+        "readBy": { "type": "array", "items": { "type": "string" } },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "subject", "participantIds", "lastMessageTimestamp", "schoolId"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message within a conversation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "conversationId", "senderId", "content", "timestamp", "schoolId"]
     }
   },
   "auth": {
@@ -263,8 +292,35 @@
             { "name": "assetId", "description": "The unique ID of the asset." }
           ]
         }
+      },
+      {
+        "path": "/schools/{schoolId}/conversations/{conversationId}",
+        "definition": {
+          "entityName": "Conversation",
+          "schema": { "$ref": "#/backend/entities/Conversation" },
+          "description": "Stores conversation threads.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "conversationId", "description": "The unique ID of the conversation." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/conversations/{conversationId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores messages within a conversation.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "conversationId", "description": "The unique ID of the conversation." },
+            { "name": "messageId", "description": "The unique ID of the message." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to follow best practices for security, scalability, and debuggability, focusing on Authorization Independence and Structural Segregation. Authorization Independence is achieved through denormalization: schoolId is included in all subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation ensures that each collection has a homogeneous security posture. Path-based ownership is used where appropriate (e.g., `/schools/{schoolId}/users/{userId}`). The design facilitates secure `list` operations by segregating data based on access requirements. It supports integrity by providing explicit state modeling and predictable schemas."
   }
 }
+
+    

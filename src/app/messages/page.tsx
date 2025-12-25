@@ -1,6 +1,6 @@
 
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -10,9 +10,8 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, PlusCircle, Inbox } from 'lucide-react';
-import { conversationsData as initialConversationsData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -23,26 +22,71 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 
-type Conversation = (typeof initialConversationsData)[0];
+type Participant = { id: string; name: string };
+type Conversation = {
+    id: string;
+    subject: string;
+    participantIds: string[];
+    participants: Participant[]; // This will be enriched
+    lastMessage: string;
+    lastMessageTimestamp: string;
+    readBy: string[];
+    read: boolean; // This will be enriched
+};
 
 export default function MessagesPage() {
   const router = useRouter();
+  const firestore = useFirestore();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
-  const [conversations, setConversations] = useState<Conversation[]>([]);
 
-  useEffect(() => {
-    const storedConversations = localStorage.getItem('conversationsData');
-    const convos = storedConversations ? JSON.parse(storedConversations) : initialConversationsData;
-    const sortedConvos = convos.sort((a: Conversation, b: Conversation) => new Date(b.lastMessageTimestamp).getTime() - new Date(a.lastMessageTimestamp).getTime());
-    setConversations(sortedConvos);
-  }, []);
-
-  const filteredConversations = conversations.filter(
-    (convo) =>
-      convo.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      convo.participants.some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const conversationsQuery = useMemoFirebase(
+    () =>
+      firestore && user
+        ? query(
+            collection(firestore, 'schools/school-1/conversations'),
+            where('participantIds', 'array-contains', user.uid),
+            orderBy('lastMessageTimestamp', 'desc')
+          )
+        : null,
+    [firestore, user]
   );
+  const { data: conversationsData, isLoading: conversationsLoading } = useCollection<Conversation>(conversationsQuery);
+  
+  const usersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/users') : null),
+    [firestore]
+  );
+  const { data: usersData } = useCollection<{id: string, username: string}>(usersQuery);
+
+
+  const enrichedConversations = useMemo(() => {
+    if (!conversationsData || !usersData || !user) return [];
+    
+    const usersMap = new Map(usersData.map(u => [u.id, u.username]));
+
+    return conversationsData.map(convo => ({
+        ...convo,
+        participants: convo.participantIds.map(id => ({
+            id,
+            name: usersMap.get(id) || 'Unknown User'
+        })),
+        read: convo.readBy?.includes(user.uid),
+    }));
+  }, [conversationsData, usersData, user]);
+
+
+  const filteredConversations = useMemo(() => {
+      if (!enrichedConversations) return [];
+      return enrichedConversations.filter(
+        (convo) =>
+          convo.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          convo.participants.some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+  }, [enrichedConversations, searchQuery]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,8 +118,9 @@ export default function MessagesPage() {
         <CardContent className="p-0">
           <TooltipProvider>
             <div className="divide-y">
-              {filteredConversations.map((convo) => {
-                const participant = convo.participants.find(p => p.id !== 'user');
+              {conversationsLoading && <div className="py-10 text-center text-muted-foreground">Loading conversations...</div>}
+              {!conversationsLoading && filteredConversations.map((convo) => {
+                const participant = convo.participants.find(p => p.id !== user?.uid);
                 return (
                 <div
                   key={convo.id}
@@ -95,11 +140,11 @@ export default function MessagesPage() {
                       <p>{participant?.name} ({participant?.id})</p>
                     </TooltipContent>
                   </Tooltip>
-                  <div className="flex-1">
+                  <div className="flex-1 overflow-hidden">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold">{convo.subject}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-semibold truncate">{convo.subject}</p>
+                        <p className="text-sm text-muted-foreground truncate">
                           {convo.participants.map(p => p.name).join(', ')}
                         </p>
                       </div>
@@ -112,7 +157,7 @@ export default function MessagesPage() {
                   {!convo.read && <div className="h-2 w-2 rounded-full bg-primary mt-1.5"></div>}
                 </div>
               )})}
-              {filteredConversations.length === 0 && (
+              {!conversationsLoading && filteredConversations.length === 0 && (
                   <div className="py-20 text-center text-muted-foreground flex flex-col items-center gap-2">
                       <Inbox className="h-10 w-10" />
                       <p>No messages found.</p>
@@ -125,3 +170,5 @@ export default function MessagesPage() {
     </div>
   );
 }
+
+    
