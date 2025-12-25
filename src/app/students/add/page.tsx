@@ -41,42 +41,33 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 const studentFormSchema = z.object({
-  studentId: z.string(),
-  firstName: z.string().min(2, 'First name must be at least 2 characters.'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters.'),
+  id: z.string(),
+  name: z.string().min(2, 'Name must be at least 2 characters.'),
   email: z.string().email('Invalid email address.'),
   phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
-  countryCode: z.enum(['+91'], { required_error: 'Country code is required.' }),
-  permanentAddress: z.string().min(10, 'Permanent Address must be at least 10 characters.'),
-  temporaryAddress: z.string().min(10, 'Temporary Address must be at least 10 characters.').optional(),
-  aadhar: z
-    .string()
-    .regex(/^\d{12}$/, 'Aadhar number must be 12 digits.'),
-  joiningDate: z.date({
-    required_error: 'A date of joining is required.',
+  dateOfBirth: z.date({
+    required_error: 'A date of birth is required.',
   }),
-  academicBackground: z.string().min(10, 'Academic background is required.'),
-  hobbies: z.string().optional(),
-  profilePhoto: z.any().optional(),
+  gender: z.enum(['Male', 'Female', 'Other']),
+  permanentAddress: z
+    .string()
+    .min(10, 'Permanent Address must be at least 10 characters.'),
   classId: z.string({ required_error: 'Please select a class.' }),
 });
 
 type StudentFormValues = z.infer<typeof studentFormSchema>;
 
 const defaultValues: Partial<StudentFormValues> = {
-  studentId: '',
-  firstName: '',
-  lastName: '',
+  id: '',
+  name: '',
   email: '',
   phone: '',
-  countryCode: '+91',
-  permanentAddress: '',
-  temporaryAddress: '',
-  aadhar: '',
-  academicBackground: '',
-  hobbies: '',
+  gender: 'Male',
 };
 
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
@@ -88,6 +79,7 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddStudentPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues,
@@ -96,15 +88,33 @@ export default function AddStudentPage() {
   useEffect(() => {
     // Generate a unique student ID when the component mounts
     const uniqueId = `S${Date.now().toString().slice(-6)}`;
-    form.setValue('studentId', uniqueId);
+    form.setValue('id', uniqueId);
   }, [form]);
 
+  async function onSubmit(data: StudentFormValues) {
+    if (!firestore) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Firestore is not available. Please try again later.',
+      });
+      return;
+    }
+    const studentsCollection = collection(firestore, 'schools/school-1/students');
 
-  function onSubmit(data: StudentFormValues) {
-    console.log(data);
+    const newStudentData = {
+      ...data,
+      schoolId: 'school-1',
+      dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
+    };
+    
+    // We use the non-blocking version to let the UI update immediately.
+    // The security rule error handling is managed centrally.
+    await addDocumentNonBlocking(studentsCollection, newStudentData);
+
     toast({
       title: 'Student Registered',
-      description: `${data.firstName} ${data.lastName} has been successfully registered.`,
+      description: `${data.name} has been successfully registered.`,
     });
     form.reset();
     router.push('/students');
@@ -115,35 +125,27 @@ export default function AddStudentPage() {
       <CardHeader>
         <CardTitle>Add New Student</CardTitle>
         <CardDescription>
-          Fill out the form below to add a new student. Fields marked with <span className="text-destructive">*</span> are required.
+          Fill out the form below to add a new student. Fields marked with{' '}
+          <span className="text-destructive">*</span> are required.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-               <FormField
+              <FormField
                 control={form.control}
-                name="studentId"
+                name="id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Student ID</FormLabel>
                     <FormControl>
-                      <Input placeholder="S123456" {...field} disabled value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div /> 
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <RequiredLabel>First Name</RequiredLabel>
-                    <FormControl>
-                      <Input placeholder="John" {...field} value={field.value || ''} />
+                      <Input
+                        placeholder="S123456"
+                        {...field}
+                        disabled
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,17 +153,22 @@ export default function AddStudentPage() {
               />
               <FormField
                 control={form.control}
-                name="lastName"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>Last Name</RequiredLabel>
+                    <RequiredLabel>Full Name</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} value={field.value || ''} />
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -169,79 +176,8 @@ export default function AddStudentPage() {
                   <FormItem>
                     <RequiredLabel>Email</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="student@example.com" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex gap-4">
-                <FormField
-                  control={form.control}
-                  name="countryCode"
-                  render={({ field }) => (
-                    <FormItem className="w-1/4">
-                       <RequiredLabel>Code</RequiredLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Code" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="+91">IN +91</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                       <RequiredLabel>Phone Number</RequiredLabel>
-                      <FormControl>
-                        <Input placeholder="9876543210" {...field} value={field.value || ''} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="permanentAddress"
-                render={({ field }) => (
-                  <FormItem>
-                     <RequiredLabel>Permanent Address</RequiredLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="123 Main St, Anytown, USA"
-                        className="resize-none"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="temporaryAddress"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Temporary Address</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="456 Park Ave, Anytown, USA"
-                        className="resize-none"
+                      <Input
+                        placeholder="student@example.com"
                         {...field}
                         value={field.value || ''}
                       />
@@ -252,12 +188,16 @@ export default function AddStudentPage() {
               />
               <FormField
                 control={form.control}
-                name="aadhar"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <RequiredLabel>Aadhar Number</RequiredLabel>
+                    <RequiredLabel>Phone Number</RequiredLabel>
                     <FormControl>
-                      <Input placeholder="1234 5678 9012" {...field} value={field.value || ''} />
+                      <Input
+                        placeholder="9876543210"
+                        {...field}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,10 +205,10 @@ export default function AddStudentPage() {
               />
               <FormField
                 control={form.control}
-                name="joiningDate"
+                name="dateOfBirth"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                     <RequiredLabel>Joining Date</RequiredLabel>
+                    <RequiredLabel>Date of Birth</RequiredLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -306,6 +246,49 @@ export default function AddStudentPage() {
               />
               <FormField
                 control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>Gender</RequiredLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permanentAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <RequiredLabel>Permanent Address</RequiredLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="123 Main St, Anytown, USA"
+                        className="resize-none"
+                        {...field}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="classId"
                 render={({ field }) => (
                   <FormItem>
@@ -325,53 +308,6 @@ export default function AddStudentPage() {
                         <SelectItem value="C003">Class VIII</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="academicBackground"
-                render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                     <RequiredLabel>Academic Background</RequiredLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Tell us about the student's previous schooling..."
-                        className="resize-none"
-                        {...field}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="hobbies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Hobbies</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Reading, Painting, Sports" {...field} value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="profilePhoto"
-                render={({ field: { value, onChange, ...field } }) => (
-                  <FormItem>
-                    <FormLabel>Profile Photo</FormLabel>
-                    <FormControl>
-                      <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Upload a profile picture for the student.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
