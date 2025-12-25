@@ -19,7 +19,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, PlusCircle, User, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
@@ -42,7 +41,6 @@ type Teacher = {
 };
 
 export default function ClassesPage() {
-  const { toast } = useToast();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const firestore = useFirestore();

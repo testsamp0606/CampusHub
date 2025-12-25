@@ -92,7 +92,7 @@ export default function AddClassPage() {
       studentCount: 0, // New classes start with 0 students
       schoolId: 'school-1',
     };
-    addDocumentNonBlocking(classesCollection, newClassData);
+    addDocumentNonBlocking(classesCollection, newClassData, data.id);
 
     toast({
       title: 'Class Created',
