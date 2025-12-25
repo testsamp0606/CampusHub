@@ -20,11 +20,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { students } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Student = (typeof students)[0];
+type Student = {
+  id: string;
+  name: string;
+  class: string;
+  parentName: string;
+  admissionDate: string;
+  email: string;
+};
 
 const STUDENTS_PER_PAGE = 5;
 
@@ -33,6 +41,14 @@ export default function StudentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const firestore = useFirestore();
+
+  const studentsQuery = useMemoFirebase(
+    () =>
+      firestore ? collection(firestore, 'schools/school-1/students') : null,
+    [firestore]
+  );
+  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
 
   const handleEdit = (studentId: string) => {
     router.push(`/students/${studentId}/edit`);
@@ -47,13 +63,14 @@ export default function StudentsPage() {
   };
 
   const filteredStudents = useMemo(() => {
-    return students.filter(
+    if (!studentsData) return [];
+    return studentsData.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, studentsData]);
 
   const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
 
@@ -112,59 +129,73 @@ export default function StudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.id}</TableCell>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.class}</TableCell>
-                  <TableCell>{student.parentName}</TableCell>
-                  <TableCell>{student.admissionDate}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                       <Button asChild variant="ghost" size="icon">
-                        <Link href={`/students/${student.id}`}>
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(student.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(student.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">
+                    Loading students...
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
+              {!isLoading &&
+                paginatedStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>{student.id}</TableCell>
+                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>{student.class}</TableCell>
+                    <TableCell>{student.parentName}</TableCell>
+                    <TableCell>{student.admissionDate}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button asChild variant="ghost" size="icon">
+                          <Link href={`/students/${student.id}`}>
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View</span>
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(student.id)}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(student.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
-           {paginatedStudents.length === 0 && (
+          {!isLoading && paginatedStudents.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">
               No students found.
             </div>
           )}
         </CardContent>
-         <CardFooter className="flex items-center justify-between">
+        <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             Showing{' '}
             <strong>
-              {Math.min((currentPage - 1) * STUDENTS_PER_PAGE + 1, filteredStudents.length)}
+              {filteredStudents.length > 0 ? Math.min(
+                (currentPage - 1) * STUDENTS_PER_PAGE + 1,
+                filteredStudents.length
+              ) : 0}
             </strong>{' '}
             to{' '}
             <strong>
-              {Math.min(currentPage * STUDENTS_PER_PAGE, filteredStudents.length)}
+              {Math.min(
+                currentPage * STUDENTS_PER_PAGE,
+                filteredStudents.length
+              )}
             </strong>{' '}
             of <strong>{filteredStudents.length}</strong> students
           </div>
