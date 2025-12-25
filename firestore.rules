@@ -232,7 +232,10 @@ service cloud.firestore {
      */
     match /schools/{schoolId}/conversations/{conversationId} {
       allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-      allow list: if isSchoolMember(schoolId) && request.query.where.participantIds.includes(request.auth.uid);
+      // This rule ensures that any query on the 'conversations' collection *must* include a 'where' clause
+      // that filters for conversations where the user is a participant. This is a secure way to allow
+      // users to list only their own conversations without exposing all conversations.
+      allow list: if isSchoolMember(schoolId) && request.query.where.participantIds == request.auth.uid;
       allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
       allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
       allow delete: if false;
@@ -278,9 +281,9 @@ service cloud.firestore {
      */
     match /schools/{schoolId}/bookIssues/{issueId} {
       allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
+      allow create: if isSchoolAdmin(schoolId) || (isSchoolMember(schoolId) && request.resource.data.studentId == request.auth.uid);
+      allow update: if isSchoolAdmin(schoolId);
+      allow delete: if isSchoolAdmin(schoolId);
     }
   }
 }
