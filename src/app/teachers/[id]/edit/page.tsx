@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -184,15 +185,15 @@ export default function EditTeacherPage() {
               <AccordionItem value="personal_details">
                 <AccordionTrigger>1. Teacher Personal Details</AccordionTrigger>
                 <AccordionContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                   <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Teacher ID</FormLabel><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem> )}/>
-                   <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><RequiredLabel>First Name</RequiredLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                   <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><RequiredLabel>Last Name</RequiredLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                   <FormField control={form.control} name="id" render={({ field }) => ( <FormItem><FormLabel>Teacher ID</FormLabel><FormControl><Input {...field} disabled value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                   <FormField control={form.control} name="firstName" render={({ field }) => ( <FormItem><RequiredLabel>First Name</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                   <FormField control={form.control} name="lastName" render={({ field }) => ( <FormItem><RequiredLabel>Last Name</RequiredLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
                    <FormField control={form.control} name="gender" render={({ field }) => ( <FormItem><RequiredLabel>Gender</RequiredLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl><SelectContent><SelectItem value="Male">Male</SelectItem><SelectItem value="Female">Female</SelectItem><SelectItem value="Other">Other</SelectItem></SelectContent></Select><FormMessage/></FormItem> )}/>
                    <FormField control={form.control} name="dateOfBirth" render={({ field }) => (<FormItem className="flex flex-col"><FormLabel>Date of Birth</FormLabel><Popover><PopoverTrigger asChild><FormControl><Button variant="outline" className={cn('font-normal', !field.value && 'text-muted-foreground')}>{field.value ? format(field.value, "PPP") : <span>Pick a date</span>}<CalendarIcon className="ml-auto h-4 w-4 opacity-50" /></Button></FormControl></PopoverTrigger><PopoverContent className="w-auto p-0" align="start"><Calendar mode="single" selected={field.value} onSelect={field.onChange} captionLayout="dropdown-buttons" fromYear={1960} toYear={2010} initialFocus/></PopoverContent></Popover><FormMessage /></FormItem>)}/>
                    <FormField control={form.control} name="bloodGroup" render={({ field }) => ( <FormItem><FormLabel>Blood Group</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select blood group"/></SelectTrigger></FormControl><SelectContent>{bloodGroups.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
                    <FormField control={form.control} name="maritalStatus" render={({ field }) => ( <FormItem><FormLabel>Marital Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select status"/></SelectTrigger></FormControl><SelectContent><SelectItem value="Single">Single</SelectItem><SelectItem value="Married">Married</SelectItem><SelectItem value="Divorced">Divorced</SelectItem><SelectItem value="Widowed">Widowed</SelectItem></SelectContent></Select><FormMessage/></FormItem> )}/>
-                   <FormField control={form.control} name="nationality" render={({ field }) => ( <FormItem><FormLabel>Nationality</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                   <FormField control={form.control} name="aadhaar" render={({ field }) => ( <FormItem><FormLabel>Aadhaar / National ID</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                   <FormField control={form.control} name="nationality" render={({ field }) => ( <FormItem><FormLabel>Nationality</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                   <FormField control={form.control} name="aadhaar" render={({ field }) => ( <FormItem><FormLabel>Aadhaar / National ID</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
                    <FormField control={form.control} name="profilePhoto" render={({ field }) => (<FormItem><FormLabel>Teacher Photograph</FormLabel><FormControl><Input type="file" accept="image/*"/></FormControl><FormMessage /></FormItem>)}/>
                 </AccordionContent>
               </AccordionItem>
@@ -201,13 +202,13 @@ export default function EditTeacherPage() {
               <AccordionItem value="contact_details">
                 <AccordionTrigger>2. Contact Details</AccordionTrigger>
                 <AccordionContent className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="mobileNumber" render={({ field }) => ( <FormItem><RequiredLabel>Mobile Number</RequiredLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="alternateMobileNumber" render={({ field }) => ( <FormItem><FormLabel>Alternate Mobile Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><RequiredLabel>Email ID (Login)</RequiredLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="emergencyContactName" render={({ field }) => ( <FormItem><FormLabel>Emergency Contact Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="emergencyContactNumber" render={({ field }) => ( <FormItem><FormLabel>Emergency Contact Number</FormLabel><FormControl><Input type="tel" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="currentAddress" render={({ field }) => ( <FormItem><FormLabel>Current Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <div className="space-y-2"><FormField control={form.control} name="permanentAddress" render={({ field }) => ( <FormItem><FormLabel>Permanent Address</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/><FormField control={form.control} name="sameAsCurrent" render={({ field }) => ( <FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Same as Current Address</FormLabel></div></FormItem> )}/></div>
+                    <FormField control={form.control} name="mobileNumber" render={({ field }) => ( <FormItem><RequiredLabel>Mobile Number</RequiredLabel><FormControl><Input type="tel" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="alternateMobileNumber" render={({ field }) => ( <FormItem><FormLabel>Alternate Mobile Number</FormLabel><FormControl><Input type="tel" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="email" render={({ field }) => ( <FormItem><RequiredLabel>Email ID (Login)</RequiredLabel><FormControl><Input type="email" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="emergencyContactName" render={({ field }) => ( <FormItem><FormLabel>Emergency Contact Name</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="emergencyContactNumber" render={({ field }) => ( <FormItem><FormLabel>Emergency Contact Number</FormLabel><FormControl><Input type="tel" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="currentAddress" render={({ field }) => ( <FormItem><FormLabel>Current Address</FormLabel><FormControl><Textarea {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <div className="space-y-2"><FormField control={form.control} name="permanentAddress" render={({ field }) => ( <FormItem><FormLabel>Permanent Address</FormLabel><FormControl><Textarea {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/><FormField control={form.control} name="sameAsCurrent" render={({ field }) => ( <FormItem className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><div className="space-y-1 leading-none"><FormLabel>Same as Current Address</FormLabel></div></FormItem> )}/></div>
                 </AccordionContent>
               </AccordionItem>
               
@@ -215,13 +216,13 @@ export default function EditTeacherPage() {
               <AccordionItem value="qualification_experience">
                  <AccordionTrigger>3. Qualification & Experience</AccordionTrigger>
                  <AccordionContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField control={form.control} name="highestQualification" render={({ field }) => ( <FormItem><FormLabel>Highest Qualification</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="subjectSpecialization" render={({ field }) => ( <FormItem><FormLabel>Subject Specialization</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="university" render={({ field }) => ( <FormItem><FormLabel>University / Board</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="yearOfPassing" render={({ field }) => ( <FormItem><FormLabel>Year of Passing</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="teachingExperience" render={({ field }) => ( <FormItem><FormLabel>Teaching Experience (Years)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="previousSchool" render={({ field }) => ( <FormItem><FormLabel>Previous School</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="certifications" render={({ field }) => ( <FormItem className="md:col-span-3"><FormLabel>Certifications (if any)</FormLabel><FormControl><Textarea {...field} /></FormControl></FormItem> )}/>
+                    <FormField control={form.control} name="highestQualification" render={({ field }) => ( <FormItem><FormLabel>Highest Qualification</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="subjectSpecialization" render={({ field }) => ( <FormItem><FormLabel>Subject Specialization</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="university" render={({ field }) => ( <FormItem><FormLabel>University / Board</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="yearOfPassing" render={({ field }) => ( <FormItem><FormLabel>Year of Passing</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="teachingExperience" render={({ field }) => ( <FormItem><FormLabel>Teaching Experience (Years)</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="previousSchool" render={({ field }) => ( <FormItem><FormLabel>Previous School</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="certifications" render={({ field }) => ( <FormItem className="md:col-span-3"><FormLabel>Certifications (if any)</FormLabel><FormControl><Textarea {...field} value={field.value || ''} /></FormControl></FormItem> )}/>
                  </AccordionContent>
               </AccordionItem>
 
@@ -229,7 +230,7 @@ export default function EditTeacherPage() {
               <AccordionItem value="academic_assignment">
                  <AccordionTrigger>4. School Academic Assignment</AccordionTrigger>
                  <AccordionContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField control={form.control} name="academicYear" render={({ field }) => ( <FormItem><FormLabel>Academic Year</FormLabel><FormControl><Input {...field} defaultValue="2024-2025" /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="academicYear" render={({ field }) => ( <FormItem><FormLabel>Academic Year</FormLabel><FormControl><Input {...field} defaultValue="2024-2025" value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
                     <FormField control={form.control} name="isClassTeacher" render={({ field }) => ( <FormItem className="flex items-center space-x-2 pt-8"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormLabel>Is Class Teacher?</FormLabel></FormItem> )}/>
                     <FormField control={form.control} name="assignedClassId" render={({ field }) => ( <FormItem><FormLabel>Assigned Class & Section</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Class"/></SelectTrigger></FormControl><SelectContent>{classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem> )}/>
                     <FormField control={form.control} name="department" render={({ field }) => ( <FormItem><FormLabel>Department / Grade Level</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Department"/></SelectTrigger></FormControl><SelectContent><SelectItem value="Primary">Primary</SelectItem><SelectItem value="Secondary">Secondary</SelectItem><SelectItem value="Higher Secondary">Higher Secondary</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
@@ -307,9 +308,9 @@ export default function EditTeacherPage() {
                         </FormItem>
                         )}
                     />
-                    <FormField control={form.control} name="bankAccountNumber" render={({ field }) => ( <FormItem><FormLabel>Bank Account Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="ifscCode" render={({ field }) => ( <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField control={form.control} name="panNumber" render={({ field }) => ( <FormItem><FormLabel>PAN Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="bankAccountNumber" render={({ field }) => ( <FormItem><FormLabel>Bank Account Number</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="ifscCode" render={({ field }) => ( <FormItem><FormLabel>IFSC Code</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
+                    <FormField control={form.control} name="panNumber" render={({ field }) => ( <FormItem><FormLabel>PAN Number</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem> )}/>
                  </AccordionContent>
               </AccordionItem>
               
