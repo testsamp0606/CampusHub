@@ -264,6 +264,58 @@
         "schoolId": { "type": "string" }
       },
       "required": ["allocationId", "studentId", "routeId", "stop", "feeStatus", "schoolId"]
+    },
+    "Fee": {
+      "title": "Fee",
+      "description": "Represents a fee invoice for a student.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Paid", "Unpaid", "Overdue"] },
+        "description": { "type": "string" },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "studentId", "amount", "dueDate", "status", "schoolId"]
+    },
+    "Timetable": {
+      "title": "Timetable",
+      "description": "Represents the timetable for a specific class on a specific day.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "day": { "type": "string", "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] },
+        "entries": { "type": "array", "items": { "$ref": "#/backend/entities/TimetableEntry" } },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "classId", "day", "schoolId"]
+    },
+    "TimetableEntry": {
+      "title": "Timetable Entry",
+      "description": "Represents a single period in a timetable.",
+      "type": "object",
+      "properties": {
+        "period": { "type": "number" },
+        "subjectId": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "time": { "type": "string" }
+      },
+      "required": ["period", "subjectId", "teacherId", "time"]
+    },
+    "RolePermission": {
+      "title": "Role Permission",
+      "description": "Defines permissions for a specific role and module.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string" },
+        "module": { "type": "string" },
+        "permissions": { "type": "array", "items": { "type": "string", "enum": ["V", "C", "E", "A"] } },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["role", "module", "permissions", "schoolId"]
     }
   },
   "auth": {
@@ -463,10 +515,44 @@
             { "name": "allocationId", "description": "The unique ID of the allocation record." }
           ]
         }
+      },
+      {
+        "path": "/schools/{schoolId}/fees/{feeId}",
+        "definition": {
+          "entityName": "Fee",
+          "schema": { "$ref": "#/backend/entities/Fee" },
+          "description": "Stores fee invoices.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "feeId", "description": "The unique ID of the fee invoice." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/timetables/{timetableId}",
+        "definition": {
+          "entityName": "Timetable",
+          "schema": { "$ref": "#/backend/entities/Timetable" },
+          "description": "Stores class timetables.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "timetableId", "description": "The unique ID of the timetable record." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/permissions/{roleName}",
+        "definition": {
+          "entityName": "RolePermission",
+          "schema": { "$ref": "#/backend/entities/RolePermission" },
+          "description": "Stores role-based permissions for different modules.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "roleName", "description": "The name of the role (e.g., Admin, Teacher)." }
+          ]
+        }
       }
     ],
     "reasoning": "The Firestore structure is designed to follow best practices for security, scalability, and debuggability, focusing on Authorization Independence and Structural Segregation. Authorization Independence is achieved through denormalization: schoolId is included in all subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation ensures that each collection has a homogeneous security posture. Path-based ownership is used where appropriate (e.g., `/schools/{schoolId}/users/{userId}`). The design facilitates secure `list` operations by segregating data based on access requirements. It supports integrity by providing explicit state modeling and predictable schemas."
   }
 }
-
-    
