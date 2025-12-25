@@ -112,16 +112,18 @@ export default function AppSidebar() {
       collapsible="icon"
       className="hidden border-r border-sidebar-border md:flex"
     >
-      <SidebarHeader className="h-16 justify-between px-3">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-lg font-bold"
-        >
-          <GraduationCap className="h-7 w-7 text-primary" />
-          <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
-            Campus Hub
-          </span>
-        </Link>
+      <SidebarHeader className="h-16 flex items-center justify-between px-3">
+        <div className="flex items-center gap-2">
+            <Link
+            href="/"
+            className="flex items-center gap-2 text-lg font-bold"
+            >
+            <GraduationCap className="h-7 w-7 text-primary" />
+            <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
+                Campus Hub
+            </span>
+            </Link>
+        </div>
         <div className="group-data-[collapsible=icon]:hidden">
           <SidebarToggle />
         </div>
