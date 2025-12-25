@@ -10,6 +10,9 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   useSidebar,
+  SidebarCollapsible,
+  SidebarCollapsibleContent,
+  SidebarCollapsibleTrigger,
 } from '@/components/ui/sidebar';
 import {
   Popover,
@@ -24,12 +27,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, type NavItem } from '@/lib/nav-items';
@@ -68,8 +65,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
           </Link>
         </SidebarMenuItem>
       ))}
-      <Accordion type="single" collapsible className="w-full">
-        {navGroups.collapsible.map((item) => {
+      {navGroups.collapsible.map((item) => {
           const isParentActive = item.subItems!.some((sub) => pathname.startsWith(sub.href || ''));
           if (isCollapsed) {
             return (
@@ -118,22 +114,20 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
           }
 
           return (
-            <AccordionItem value={item.label} key={item.label} className="border-none">
-              <AccordionTrigger
-                isActive={isParentActive}
-                className="hover:no-underline"
-              >
-                  <SidebarMenuButton
-                    isActive={isParentActive}
-                    className="justify-between w-full h-auto p-0 bg-transparent hover:bg-transparent"
-                    >
-                    <div className="flex items-center gap-3">
-                        <item.icon />
-                        <span>{item.label}</span>
-                    </div>
-                  </SidebarMenuButton>
-              </AccordionTrigger>
-              <AccordionContent className="ml-4 pl-2 border-l border-sidebar-border">
+            <SidebarCollapsible key={item.label}>
+                <SidebarCollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                        isActive={isParentActive}
+                        className="justify-between w-full"
+                        >
+                        <div className="flex items-center gap-3">
+                            <item.icon />
+                            <span>{item.label}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                    </SidebarMenuButton>
+              </SidebarCollapsibleTrigger>
+              <SidebarCollapsibleContent>
                 <SidebarMenu>
                   {item.subItems!.map((subItem) => (
                     <SidebarMenuItem key={subItem.label}>
@@ -153,11 +147,10 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
-              </AccordionContent>
-            </AccordionItem>
+              </SidebarCollapsibleContent>
+            </SidebarCollapsible>
           );
         })}
-      </Accordion>
     </>
   );
 };
