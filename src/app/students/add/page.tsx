@@ -157,11 +157,16 @@ export default function AddStudentPage() {
       });
       return;
     }
-    
-    // This removes any keys where the value is a File object.
-    const sanitizedData = Object.fromEntries(
-        Object.entries(data).filter(([_, value]) => !(value instanceof File))
-    );
+
+    const sanitizedData: { [key: string]: any } = {};
+    for (const key in data) {
+      const value = (data as any)[key];
+      if (!(value instanceof File) && value !== undefined) {
+        sanitizedData[key] = value;
+      } else if (value === undefined) {
+        sanitizedData[key] = null;
+      }
+    }
 
     const studentsCollection = collection(
       firestore,
