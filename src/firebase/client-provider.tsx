@@ -1,15 +1,29 @@
 'use client';
 
-import React, { useMemo, type ReactNode, useEffect } from 'react';
-import { FirebaseProvider, useAuth } from '@/firebase/provider';
+import React, { useMemo, type ReactNode } from 'react';
+import { FirebaseProvider, useUser } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
 import { initiateAnonymousSignIn } from './non-blocking-login';
+import { Loader2 } from 'lucide-react';
 
 function AuthGate({ children }: { children: ReactNode }) {
-  const auth = useAuth();
-  useEffect(() => {
-    initiateAnonymousSignIn(auth);
-  }, [auth]);
+  const { user, isUserLoading } = useUser();
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      // initiateAnonymousSignIn is non-blocking, auth state will be updated by listener
+      const { auth } = initializeFirebase();
+      initiateAnonymousSignIn(auth);
+    }
+  }, [isUserLoading, user]);
+
+  if (isUserLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return <>{children}</>;
 }
@@ -22,9 +36,8 @@ export function FirebaseClientProvider({
   children,
 }: FirebaseClientProviderProps) {
   const firebaseServices = useMemo(() => {
-    // Initialize Firebase on the client side, once per component mount.
     return initializeFirebase();
-  }, []); // Empty dependency array ensures this runs only once on mount
+  }, []);
 
   return (
     <FirebaseProvider
