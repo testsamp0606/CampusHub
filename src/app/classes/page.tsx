@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -22,40 +23,33 @@ import { Eye, Search, PlusCircle, User, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { classesData as initialClassesData, teachersData as initialTeachersData, ClassInfo, Teacher } from '@/lib/data';
 
-type ClassInfo = {
-  id: string;
-  name: string;
-  teacherId: string;
-  studentCount: number;
-  capacity: number;
-  status: 'Active' | 'Archived' | 'Completed';
-  classTeacher?: string; // Optional because we'll add it
-};
-
-type Teacher = {
-  id: string;
-  name: string;
-};
 
 export default function ClassesPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const firestore = useFirestore();
+  const [classesData, setClassesData] = useState<ClassInfo[]>([]);
+  const [teachersData, setTeachersData] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const classesQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
-    [firestore]
-  );
-  const { data: classesData, isLoading: classesLoading } = useCollection<ClassInfo>(classesQuery);
+  useEffect(() => {
+    const storedClasses = localStorage.getItem('classesData');
+    if (storedClasses) {
+      setClassesData(JSON.parse(storedClasses));
+    } else {
+      setClassesData(initialClassesData);
+    }
+    
+    const storedTeachers = localStorage.getItem('teachersData');
+    if (storedTeachers) {
+      setTeachersData(JSON.parse(storedTeachers));
+    } else {
+      setTeachersData(initialTeachersData);
+    }
 
-  const teachersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
-    [firestore]
-  );
-  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
+    setIsLoading(false);
+  }, []);
 
   const enrichedClasses = useMemo(() => {
     if (!classesData || !teachersData) return [];
@@ -90,8 +84,6 @@ export default function ClassesPage() {
     }
   };
   
-  const isLoading = classesLoading || teachersLoading;
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
@@ -188,3 +180,5 @@ export default function ClassesPage() {
     </div>
   );
 }
+
+    

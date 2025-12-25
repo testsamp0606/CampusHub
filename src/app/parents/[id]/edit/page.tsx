@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,28 +25,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Combobox } from '@/components/ui/combobox';
-import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
-type Student = {
-    id: string;
-    name: string;
-    fatherName: string;
-    fatherOccupation: string;
-    fatherPhone: string;
-    fatherMonthlyIncome?: number;
-    motherName: string;
-    motherOccupation: string;
-    motherPhone: string;
-    motherMonthlyIncome?: number;
-    permanentAddress: string;
-    temporaryAddress?: string;
-};
-
+import { students as initialStudentsData, Student } from '@/lib/data';
 
 const parentFormSchema = z.object({
   id: z.string(),
@@ -79,14 +61,20 @@ export default function EditParentPage() {
   const router = useRouter();
   const params = useParams();
   const studentId = params.id as string;
-  const firestore = useFirestore();
-
-  const studentDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/students', studentId) : null), [firestore, studentId]);
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+  const [student, setStudent] = useState<Student | undefined>(undefined);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
   });
+
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+    setAllStudents(students);
+    const currentStudent = students.find(s => s.id === studentId);
+    setStudent(currentStudent);
+  }, [studentId]);
 
   const sameAsStudentAddress = form.watch('sameAsStudentAddress');
   const fatherIncome = form.watch('fatherMonthlyIncome') || 0;
@@ -99,29 +87,33 @@ export default function EditParentPage() {
         form.reset({
             id: student.id,
             fatherName: student.fatherName,
-            fatherOccupation: student.fatherOccupation,
-            fatherPhone: student.fatherPhone,
-            fatherMonthlyIncome: student.fatherMonthlyIncome,
+            fatherOccupation: (student as any).fatherOccupation || '',
+            fatherPhone: student.fatherMobile,
+            fatherMonthlyIncome: (student as any).fatherMonthlyIncome,
             motherName: student.motherName,
-            motherOccupation: student.motherOccupation,
-            motherPhone: student.motherPhone,
-            motherMonthlyIncome: student.motherMonthlyIncome,
+            motherOccupation: (student as any).motherOccupation || '',
+            motherPhone: student.motherMobile,
+            motherMonthlyIncome: (student as any).motherMonthlyIncome,
             permanentAddress: student.permanentAddress,
-            temporaryAddress: student.temporaryAddress,
+            temporaryAddress: (student as any).temporaryAddress,
         });
     }
   }, [student, form]);
 
   useEffect(() => {
-    if (sameAsStudentAddress && student) {
+    if (sameAsStudentAddress && student && student.permanentAddress) {
         form.setValue('permanentAddress', student.permanentAddress);
     }
   }, [sameAsStudentAddress, student, form]);
 
   function onSubmit(data: ParentFormValues) {
-    if(!firestore) return;
-    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
-    setDocumentNonBlocking(studentRef, data, { merge: true });
+    const updatedStudents = allStudents.map(s => {
+        if (s.id === studentId) {
+            return { ...s, ...data };
+        }
+        return s;
+    });
+    localStorage.setItem('students', JSON.stringify(updatedStudents));
 
     toast({
       title: 'Parent Updated',
@@ -130,10 +122,6 @@ export default function EditParentPage() {
     router.push('/parents');
   }
 
-  if (isLoading) {
-      return <div>Loading...</div>
-  }
-  
   if (!student) {
       return <div>Parent/Student not found.</div>
   }
@@ -445,3 +433,5 @@ export default function EditParentPage() {
     </Card>
   );
 }
+
+    

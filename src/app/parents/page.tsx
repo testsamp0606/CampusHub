@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -22,16 +23,8 @@ import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { students as initialStudentsData, Student } from '@/lib/data';
 
-type Student = {
-  id: string;
-  name: string;
-  fatherName: string;
-  fatherMobile: string;
-  parentEmail?: string;
-};
 
 const PARENTS_PER_PAGE = 5;
 
@@ -40,22 +33,19 @@ export default function ParentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const firestore = useFirestore();
+  const [students, setStudents] = useState<Student[]>([]);
 
-  const studentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
-    [firestore]
-  );
-  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    if (storedStudents) {
+      setStudents(JSON.parse(storedStudents));
+    } else {
+      setStudents(initialStudentsData);
+    }
+  }, []);
 
   const handleEdit = (studentId: string) => {
-    // There is no dedicated parent edit page, so we can redirect to student edit page for now.
-    // A proper implementation might require a dedicated parent edit form.
-    router.push(`/students/${studentId}/edit`);
-    toast({
-        title: "Note",
-        description: "Parent details can be edited within the student's profile."
-    })
+    router.push(`/parents/${studentId}/edit`);
   };
 
   const handleDelete = (studentId: string) => {
@@ -67,14 +57,13 @@ export default function ParentsPage() {
   };
 
   const filteredParents = useMemo(() => {
-    if (!studentsData) return [];
-    return studentsData.filter(
+    return students.filter(
       (student) =>
         student.fatherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (student.parentEmail && student.parentEmail.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery, studentsData]);
+  }, [searchQuery, students]);
 
   const totalPages = Math.ceil(filteredParents.length / PARENTS_PER_PAGE);
 
@@ -132,12 +121,7 @@ export default function ParentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow>
-                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
-                </TableRow>
-              )}
-              {!isLoading && paginatedParents.map((student) => (
+              {paginatedParents.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">{student.fatherName}</TableCell>
                   <TableCell>{student.name}</TableCell>
@@ -146,7 +130,7 @@ export default function ParentsPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                        <Button asChild variant="ghost" size="icon">
-                        <Link href={`/students/${student.id}`}>
+                        <Link href={`/parents/${student.id}`}>
                           <Eye className="h-4 w-4" />
                           <span className="sr-only">View Student</span>
                         </Link>
@@ -174,7 +158,7 @@ export default function ParentsPage() {
               ))}
             </TableBody>
           </Table>
-           {!isLoading && paginatedParents.length === 0 && (
+           {paginatedParents.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">
               No parents found.
             </div>
@@ -213,3 +197,5 @@ export default function ParentsPage() {
     </div>
   );
 }
+
+    

@@ -1,0 +1,333 @@
+
+export type Student = {
+  id: string;
+  name: string;
+  classId: string;
+  parentName: string;
+  admissionDate: string;
+  email: string;
+  profilePhoto?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  permanentAddress?: string;
+  phone?: string;
+  fatherName: string;
+  motherName: string;
+  fatherMobile: string;
+  motherMobile: string;
+  parentEmail?: string;
+};
+
+export type Teacher = {
+  id: string;
+  name: string;
+  department: string;
+  subjects: string[];
+  role: string;
+  qualification: string;
+  experience: string;
+  phone: string;
+  email: string;
+  status: 'Active' | 'On Leave' | 'Inactive';
+  profilePhoto: string;
+};
+
+export type ClassInfo = {
+  id: string;
+  name: string;
+  teacherId: string;
+  studentCount: number;
+  capacity: number;
+  status: 'Active' | 'Archived' | 'Completed';
+  dailyAttendance?: number;
+  classTeacher?: string;
+  academicYear?: string;
+  passPercentage?: number;
+};
+
+export type Subject = {
+  id: string;
+  name: string;
+  code: string;
+  teacherId: string;
+};
+
+export type Fee = {
+  invoiceId: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  dueDate: string;
+  status: 'Paid' | 'Unpaid' | 'Overdue';
+  paymentDate: string | null;
+  paymentMethod: string | null;
+  description: string;
+};
+
+export type Expense = {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  department: string;
+  status: 'Approved' | 'Pending' | 'Rejected';
+};
+
+export type Asset = {
+    id: string;
+    name: string;
+    category: string;
+    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
+    purchaseDate: string;
+    warrantyEndDate?: string;
+    value: number;
+    assignedTo: string;
+    notes?: string;
+};
+
+export type Announcement = {
+    id: string;
+    title: string;
+    content: string;
+    author: string;
+    date: string;
+    audience: 'All' | 'Teachers' | 'Students' | 'Parents';
+};
+
+export type Book = {
+    id: string;
+    title: string;
+    author: string;
+    isbn: string;
+    publisher: string;
+    edition?: string;
+    category: string;
+    language: string;
+    quantity: number;
+    issued: number;
+    lost: number;
+    resourceType: string;
+    barcode?: string;
+    shelf?: string;
+    rack?: string;
+    coverImage: string;
+};
+
+export type BookIssue = {
+    issueId: string;
+    bookId: string;
+    studentId: string;
+    issueDate: string;
+    dueDate: string;
+    returnDate: string | null;
+    status: 'Issued' | 'Returned';
+    fineAmount: number;
+    fineStatus: 'Paid' | 'Unpaid';
+};
+
+
+export const students: Student[] = [
+  {
+    id: 'S001',
+    name: 'Alice Johnson',
+    classId: 'C001',
+    parentName: 'John Johnson',
+    admissionDate: '2023-04-15',
+    email: 'alice.j@example.com',
+    fatherName: 'John Johnson',
+    motherName: 'Mary Johnson',
+    fatherMobile: '1234567890',
+    motherMobile: '0987654321',
+  },
+  {
+    id: 'S002',
+    name: 'Bob Williams',
+    classId: 'C002',
+    parentName: 'Robert Williams',
+    admissionDate: '2023-04-16',
+    email: 'bob.w@example.com',
+    fatherName: 'Robert Williams',
+    motherName: 'Susan Williams',
+    fatherMobile: '1234567891',
+    motherMobile: '0987654322',
+  },
+  {
+    id: 'S003',
+    name: 'Charlie Brown',
+    classId: 'C001',
+    parentName: 'Charles Brown',
+    admissionDate: '2023-04-17',
+    email: 'charlie.b@example.com',
+    fatherName: 'Charles Brown',
+    motherName: 'Patricia Brown',
+    fatherMobile: '1234567892',
+    motherMobile: '0987654323',
+  },
+];
+
+export const teachersData: Teacher[] = [
+    {
+        id: 'T001',
+        name: 'Dr. Evelyn Reed',
+        department: 'Science',
+        subjects: ['Physics', 'Chemistry'],
+        role: 'HOD',
+        qualification: 'Ph.D. in Physics',
+        experience: '15 years',
+        phone: '123-456-7890',
+        email: 'e.reed@school.edu',
+        status: 'Active',
+        profilePhoto: 'https://picsum.photos/seed/T001/200/200'
+    },
+    {
+        id: 'T002',
+        name: 'Mr. Samuel Green',
+        department: 'Mathematics',
+        subjects: ['Algebra', 'Calculus'],
+        role: 'Class Teacher',
+        qualification: 'M.Sc. in Mathematics',
+        experience: '10 years',
+        phone: '123-456-7891',
+        email: 's.green@school.edu',
+        status: 'Active',
+        profilePhoto: 'https://picsum.photos/seed/T002/200/200'
+    },
+    {
+        id: 'T003',
+        name: 'Ms. Clara Oswald',
+        department: 'English',
+        subjects: ['Literature', 'Grammar'],
+        role: 'Teacher',
+        qualification: 'M.A. in English',
+        experience: '8 years',
+        phone: '123-456-7892',
+        email: 'c.oswald@school.edu',
+        status: 'On Leave',
+        profilePhoto: 'https://picsum.photos/seed/T003/200/200'
+    },
+];
+
+export const classesData: ClassInfo[] = [
+  {
+    id: 'C001',
+    name: 'Class X',
+    teacherId: 'T002',
+    studentCount: 30,
+    capacity: 35,
+    status: 'Active',
+    dailyAttendance: 95,
+    passPercentage: 88,
+  },
+  {
+    id: 'C002',
+    name: 'Class IX',
+    teacherId: 'T003',
+    studentCount: 28,
+    capacity: 30,
+    status: 'Active',
+    dailyAttendance: 92,
+    passPercentage: 91,
+  },
+];
+
+export const subjectsData: Subject[] = [
+    { id: 'SUB001', name: 'Physics', code: 'PHY101', teacherId: 'T001' },
+    { id: 'SUB002', name: 'Mathematics', code: 'MAT101', teacherId: 'T002' },
+    { id: 'SUB003', name: 'English', code: 'ENG101', teacherId: 'T003' },
+];
+
+export const feesData: Fee[] = [
+    { invoiceId: 'INV001', studentId: 'S001', studentName: 'Alice Johnson', amount: 1500, dueDate: '2024-08-10', status: 'Paid', paymentDate: '2024-08-05', paymentMethod: 'Credit Card', description: 'Monthly Tuition Fee' },
+    { invoiceId: 'INV002', studentId: 'S002', studentName: 'Bob Williams', amount: 1500, dueDate: '2024-08-10', status: 'Unpaid', paymentDate: null, paymentMethod: null, description: 'Monthly Tuition Fee' },
+    { invoiceId: 'INV003', studentId: 'S003', studentName: 'Charlie Brown', amount: 200, dueDate: '2024-07-15', status: 'Overdue', paymentDate: null, paymentMethod: null, description: 'Library Fine' },
+];
+
+export const expensesData: Expense[] = [
+    { id: 'EXP001', date: '2024-07-28', description: 'New lab equipment', amount: 5000, category: 'Academics', department: 'Science', status: 'Approved' },
+    { id: 'EXP002', date: '2024-07-29', description: 'Office stationery', amount: 300, category: 'Supplies', department: 'Admin', status: 'Pending' },
+    { id: 'EXP003', date: '2024-07-25', description: 'Sports day event expenses', amount: 1200, category: 'Events', department: 'Sports', status: 'Rejected' },
+];
+
+export const assetsData: Asset[] = [
+    { id: 'ASSET001', name: 'Dell Latitude 5420', category: 'Electronics', status: 'In Use', purchaseDate: '2023-01-15', value: 1200, assignedTo: 'Computer Lab' },
+    { id: 'ASSET002', name: 'Wooden Desk', category: 'Furniture', status: 'In Storage', purchaseDate: '2022-05-20', value: 150, assignedTo: 'Storeroom B' },
+    { id: 'ASSET003', name: 'Microscope Olympus CX23', category: 'Lab Equipment', status: 'Under Maintenance', purchaseDate: '2023-03-10', value: 800, assignedTo: 'Science Lab' },
+];
+
+export const announcementsData: Announcement[] = [
+    { id: 'ANN001', title: 'Annual Sports Day Rescheduled', content: 'The annual sports day has been rescheduled to August 30th due to weather conditions.', author: 'Principal\'s Office', date: '2024-07-28', audience: 'All' },
+    { id: 'ANN002', title: 'Parent-Teacher Meeting', content: 'A parent-teacher meeting will be held on August 15th for classes IX and X.', author: 'Academic Head', date: '2024-07-25', audience: 'Parents' },
+];
+
+export const booksData: Book[] = [
+    { id: 'B001', title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', isbn: '9780743273565', publisher: 'Scribner', category: 'Classic', language: 'English', quantity: 5, issued: 2, lost: 0, resourceType: 'Book', coverImage: 'https://picsum.photos/seed/B001/200/300' },
+    { id: 'B002', title: 'To Kill a Mockingbird', author: 'Harper Lee', isbn: '9780061120084', publisher: 'Harper Perennial', category: 'Fiction', language: 'English', quantity: 3, issued: 3, lost: 0, resourceType: 'Book', coverImage: 'https://picsum.photos/seed/B002/200/300' },
+    { id: 'B003', title: '1984', author: 'George Orwell', isbn: '9780451524935', publisher: 'Signet Classic', category: 'Dystopian', language: 'English', quantity: 4, issued: 1, lost: 1, resourceType: 'Book', coverImage: 'https://picsum.photos/seed/B003/200/300' },
+];
+
+export const bookIssuesData: BookIssue[] = [
+    { issueId: 'I001', bookId: 'B001', studentId: 'S001', issueDate: '2024-07-15', dueDate: '2024-07-29', returnDate: null, status: 'Issued', fineAmount: 0, fineStatus: 'Unpaid' },
+    { issueId: 'I002', bookId: 'B002', studentId: 'S002', issueDate: '2024-07-10', dueDate: '2024-07-24', returnDate: '2024-07-28', status: 'Returned', fineAmount: 4, fineStatus: 'Unpaid' },
+];
+
+export const routesData = [
+  { id: 'R001', routeName: 'City Center Loop', vehicleId: 'V001', stops: ['Central Station', 'City Market', 'Town Hall'] },
+  { id: 'R002', routeName: 'Suburb Express', vehicleId: 'V002', stops: ['Suburb A', 'Suburb B', 'Suburb C'] },
+];
+
+export const vehiclesData = [
+  { id: 'V001', vehicleNumber: 'KA-01-AB-1234', type: 'Bus', capacity: 40, driverName: 'John Doe', driverContact: '9876543210', status: 'Active' },
+  { id: 'V002', vehicleNumber: 'KA-01-CD-5678', type: 'Van', capacity: 15, driverName: 'Jane Smith', driverContact: '9876543211', status: 'Maintenance' },
+];
+
+export const studentTransportData = [
+  { allocationId: 'ST001', studentId: 'S001', routeId: 'R001', stop: 'City Market', feeStatus: 'Paid' },
+  { allocationId: 'ST002', studentId: 'S002', routeId: 'R002', stop: 'Suburb B', feeStatus: 'Unpaid' },
+];
+
+export const permissionsData: { [key: string]: { [key: string]: Permission[] } } = {
+  Dashboard: { SuperAdmin: ['V'], Admin: ['V'] },
+  Students: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Teachers: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Parents: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Classes: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Subjects: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Attendance: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'C', 'E'], Teacher: ['V', 'C'] },
+  Examinations: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'C', 'E'], Teacher: ['V'] },
+  Fees: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'], Accountant: ['V', 'C'] },
+  Expenses: { SuperAdmin: ['V', 'C', 'E', 'A'], Admin: ['V', 'A'], Accountant: ['V', 'C'] },
+  Library: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+  Transport: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
+};
+
+export type Permission = 'V' | 'C' | 'E' | 'A';
+
+export const roles: string[] = [
+  'SuperAdmin',
+  'Admin',
+  'Accountant',
+  'Teacher',
+  'Student',
+  'Parent',
+];
+
+export const modules: string[] = [
+  'Dashboard',
+  'Students',
+  'Teachers',
+  'Parents',
+  'Classes',
+  'Subjects',
+  'Attendance',
+  'Examinations',
+  'Fees',
+  'Expenses',
+  'Library',
+  'Transport',
+  'Assets',
+  'Messages',
+  'Announcements',
+];
+
+    

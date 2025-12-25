@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,21 +24,10 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCollection, useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { teachersData as initialTeachersData, subjectsData as initialSubjectsData, Teacher, Subject } from '@/lib/data';
 
-type Subject = {
-    id: string;
-    name: string;
-    code: string;
-    teacherId: string;
-};
-type Teacher = {
-    id: string;
-    name: string;
-}
 
 const subjectFormSchema = z.object({
   id: z.string(),
@@ -59,32 +49,35 @@ export default function EditSubjectPage() {
   const router = useRouter();
   const params = useParams();
   const subjectId = params.id as string;
-  const firestore = useFirestore();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   
-  const subjectDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/subjects', subjectId) : null), [firestore, subjectId]);
-  const { data: subjectToEdit, isLoading: subjectLoading } = useDoc<Subject>(subjectDocRef);
-
-  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
-  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
-
   const form = useForm<SubjectFormValues>({
     resolver: zodResolver(subjectFormSchema),
   });
 
   useEffect(() => {
+    const storedSubjects = localStorage.getItem('subjectsData');
+    const subjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : initialSubjectsData;
+    const subjectToEdit = subjects.find(s => s.id === subjectId);
+
+    const storedTeachers = localStorage.getItem('teachersData');
+    setTeachers(storedTeachers ? JSON.parse(storedTeachers) : initialTeachersData);
+
     if (subjectToEdit) {
         form.reset(subjectToEdit);
-    } else if (!subjectLoading && subjectId) {
+    } else {
         toast({ title: "Error", description: "Subject not found.", variant: "destructive"});
         router.push('/subjects');
     }
-  }, [subjectId, form, router, toast, subjectToEdit, subjectLoading]);
+  }, [subjectId, form, router, toast]);
 
   function onSubmit(data: SubjectFormValues) {
-    if(!firestore) return;
-    const subjectRef = doc(firestore, 'schools/school-1/subjects', subjectId);
-    setDocumentNonBlocking(subjectRef, data, { merge: true });
+    const storedSubjects = localStorage.getItem('subjectsData');
+    const currentSubjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : [];
     
+    const updatedSubjects = currentSubjects.map(s => s.id === subjectId ? data : s);
+    localStorage.setItem('subjectsData', JSON.stringify(updatedSubjects));
+
     toast({
       title: 'Subject Updated',
       description: `Subject "${data.name}" has been successfully updated.`,
@@ -92,12 +85,7 @@ export default function EditSubjectPage() {
     router.push('/subjects');
   }
 
-  const teacherOptions = teachersData?.map(t => ({ value: t.id, label: t.name })) || [];
-  const isLoading = subjectLoading || teachersLoading;
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
+  const teacherOptions = teachers?.map(t => ({ value: t.id, label: t.name })) || [];
 
   return (
     <Card className="shadow-lg">
@@ -175,3 +163,5 @@ export default function EditSubjectPage() {
     </Card>
   );
 }
+
+    

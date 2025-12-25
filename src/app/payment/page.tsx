@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -10,24 +11,22 @@ import {
 import { DollarSign, Hourglass, AlertCircle } from 'lucide-react';
 import MonthlyRevenueChart from '@/components/dashboard/payment-charts/monthly-revenue-chart';
 import PaymentStatusChart from '@/components/dashboard/payment-charts/payment-status-chart';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { feesData as initialFeesData, Fee } from '@/lib/data';
 
-type Fee = {
-  invoiceId: string;
-  studentId: string;
-  studentName: string;
-  amount: number;
-  status: 'Paid' | 'Unpaid' | 'Overdue';
-  paymentDate: string | null;
-  description: string;
-};
 
 export default function PaymentDashboardPage() {
-  const firestore = useFirestore();
-  const feesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/fees') : null), [firestore]);
-  const { data: feesData, isLoading } = useCollection<Fee>(feesQuery);
+  const [feesData, setFeesData] = useState<Fee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    if (storedFees) {
+      setFeesData(JSON.parse(storedFees));
+    } else {
+      setFeesData(initialFeesData);
+    }
+    setIsLoading(false);
+  }, []);
 
   const stats = useMemo(() => {
     if (!feesData) return { totalRevenue: 0, totalDues: 0, totalOverdue: 0 };
@@ -100,3 +99,5 @@ export default function PaymentDashboardPage() {
     </div>
   );
 }
+
+    

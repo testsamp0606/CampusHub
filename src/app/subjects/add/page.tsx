@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,15 +24,10 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { teachersData as initialTeachersData, subjectsData as initialSubjectsData, Teacher, Subject } from '@/lib/data';
 
-type Teacher = {
-    id: string;
-    name: string;
-}
 
 const subjectFormSchema = z.object({
   id: z.string(),
@@ -58,11 +54,17 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddSubjectPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   
-  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
-  const { data: teachersData } = useCollection<Teacher>(teachersQuery);
-
+  useEffect(() => {
+    const storedTeachers = localStorage.getItem('teachersData');
+    if (storedTeachers) {
+      setTeachers(JSON.parse(storedTeachers));
+    } else {
+      setTeachers(initialTeachersData);
+    }
+  }, []);
+  
   const form = useForm<SubjectFormValues>({
     resolver: zodResolver(subjectFormSchema),
     defaultValues,
@@ -74,10 +76,12 @@ export default function AddSubjectPage() {
   }, [form]);
 
   function onSubmit(data: SubjectFormValues) {
-    if(!firestore) return;
-    const subjectsCollection = collection(firestore, 'schools/school-1/subjects');
-    const newSubject = { ...data, schoolId: 'school-1' };
-    addDocumentNonBlocking(subjectsCollection, newSubject, data.id);
+    const storedSubjects = localStorage.getItem('subjectsData');
+    const currentSubjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : initialSubjectsData;
+    const newSubject: Subject = { ...data };
+    
+    const updatedSubjects = [...currentSubjects, newSubject];
+    localStorage.setItem('subjectsData', JSON.stringify(updatedSubjects));
     
     toast({
       title: 'Subject Added',
@@ -87,7 +91,7 @@ export default function AddSubjectPage() {
     router.push('/subjects');
   }
 
-  const teacherOptions = teachersData?.map(t => ({ value: t.id, label: t.name })) || [];
+  const teacherOptions = teachers?.map(t => ({ value: t.id, label: t.name })) || [];
 
   return (
     <Card className="shadow-lg">
@@ -165,3 +169,5 @@ export default function AddSubjectPage() {
     </Card>
   );
 }
+
+    

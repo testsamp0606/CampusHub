@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -12,33 +13,23 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit } from 'lucide-react';
 import Link from 'next/link';
-import { useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-
-type Student = {
-    id: string;
-    name: string;
-    fatherName: string;
-    fatherMobile: string;
-    parentEmail?: string;
-    permanentAddress: string;
-    profilePhoto?: string;
-};
+import { students as initialStudentsData, Student } from '@/lib/data';
+import { useState, useEffect } from 'react';
 
 
 export default function ParentProfilePage() {
   const params = useParams();
   const router = useRouter();
   const parentId = params.id as string; //This is actually studentId
-  const firestore = useFirestore();
+  const [student, setStudent] = useState<Student | undefined>(undefined);
 
-  const studentDocRef = doc(firestore, 'schools/school-1/students', parentId);
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+    const currentStudent = students.find((s) => s.id === parentId);
+    setStudent(currentStudent);
+  }, [parentId]);
 
-
-  if (isLoading) {
-      return <div>Loading...</div>
-  }
 
   if (!student) {
     return (
@@ -96,3 +87,5 @@ export default function ParentProfilePage() {
     </Card>
   );
 }
+
+    

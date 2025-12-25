@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -21,37 +22,39 @@ import { Search, PlusCircle, Trash2, Edit, Book } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
-type Subject = {
-  id: string;
-  name: string;
-  code: string;
-  teacherId: string;
-};
-type Teacher = {
-    id: string;
-    name: string;
-}
+import { subjectsData as initialSubjectsData, teachersData as initialTeachersData, Subject, Teacher } from '@/lib/data';
 
 export default function SubjectsPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const subjectsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/subjects') : null), [firestore]);
-  const { data: subjects, isLoading: subjectsLoading } = useCollection<Subject>(subjectsQuery);
-  
-  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
-  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
 
+  useEffect(() => {
+    const storedSubjects = localStorage.getItem('subjectsData');
+    if (storedSubjects) {
+      setSubjects(JSON.parse(storedSubjects));
+    } else {
+      setSubjects(initialSubjectsData);
+    }
+    
+    const storedTeachers = localStorage.getItem('teachersData');
+    if (storedTeachers) {
+      setTeachers(JSON.parse(storedTeachers));
+    } else {
+      setTeachers(initialTeachersData);
+    }
+  }, []);
+
+  const updateAndStoreSubjects = (newSubjects: Subject[]) => {
+    setSubjects(newSubjects);
+    localStorage.setItem('subjectsData', JSON.stringify(newSubjects));
+  };
+  
   const handleDelete = (subjectId: string) => {
-    if(!firestore) return;
-    const subjectRef = doc(firestore, 'schools/school-1/subjects', subjectId);
-    deleteDocumentNonBlocking(subjectRef);
+    const updatedSubjects = subjects.filter(s => s.id !== subjectId);
+    updateAndStoreSubjects(updatedSubjects);
 
     toast({
       title: 'Subject Deleted',
@@ -61,13 +64,13 @@ export default function SubjectsPage() {
   };
 
   const enrichedSubjects = useMemo(() => {
-    if (!subjects || !teachersData) return [];
-    const teacherMap = new Map(teachersData.map(t => [t.id, t.name]));
+    if (!subjects || !teachers) return [];
+    const teacherMap = new Map(teachers.map(t => [t.id, t.name]));
     return subjects.map(s => ({
         ...s,
         teacherName: teacherMap.get(s.teacherId) || 'N/A'
     }));
-  }, [subjects, teachersData]);
+  }, [subjects, teachers]);
 
   const filteredSubjects = useMemo(() => {
     if (!enrichedSubjects) return [];
@@ -78,7 +81,6 @@ export default function SubjectsPage() {
     );
   }, [searchQuery, enrichedSubjects]);
 
-  const isLoading = subjectsLoading || teachersLoading;
 
   return (
     <div className="flex flex-col gap-4">
@@ -118,10 +120,7 @@ export default function SubjectsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow><TableCell colSpan={4} className="text-center">Loading subjects...</TableCell></TableRow>
-              )}
-              {!isLoading && filteredSubjects.map((subject) => (
+              {filteredSubjects.map((subject) => (
                   <TableRow key={subject.id}>
                     <TableCell className="font-medium">{subject.code}</TableCell>
                     <TableCell>
@@ -153,15 +152,17 @@ export default function SubjectsPage() {
                     </TableCell>
                   </TableRow>
               ))}
+              {filteredSubjects.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={4} className="text-center h-24">No subjects found</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-           {!isLoading && filteredSubjects.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No subjects found.
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
   );
 }
+
+    

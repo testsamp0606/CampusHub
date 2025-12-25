@@ -17,30 +17,31 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Progress } from '../ui/progress';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { useMemo } from 'react';
-
-type ClassInfo = {
-  id: string;
-  name: string;
-  teacherId: string;
-  studentCount: number;
-  dailyAttendance?: number;
-};
-type Teacher = {
-    id: string;
-    name: string;
-}
+import { useMemo, useState, useEffect } from 'react';
+import { classesData as initialClassesData, teachersData as initialTeachersData, ClassInfo, Teacher } from '@/lib/data';
 
 export default function ClassesTable() {
-  const firestore = useFirestore();
-  
-  const classesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/classes') : null), [firestore]);
-  const { data: classesData, isLoading: classesLoading } = useCollection<ClassInfo>(classesQuery);
+  const [classesData, setClassesData] = useState<ClassInfo[]>([]);
+  const [teachersData, setTeachersData] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
-  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
+  useEffect(() => {
+    const storedClasses = localStorage.getItem('classesData');
+    if (storedClasses) {
+      setClassesData(JSON.parse(storedClasses));
+    } else {
+      setClassesData(initialClassesData);
+    }
+    
+    const storedTeachers = localStorage.getItem('teachersData');
+    if (storedTeachers) {
+      setTeachersData(JSON.parse(storedTeachers));
+    } else {
+      setTeachersData(initialTeachersData);
+    }
+
+    setIsLoading(false);
+  }, []);
 
   const enrichedClasses = useMemo(() => {
     if (!classesData || !teachersData) return [];
@@ -51,7 +52,6 @@ export default function ClassesTable() {
     }));
   }, [classesData, teachersData]);
 
-  const isLoading = classesLoading || teachersLoading;
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -107,3 +107,5 @@ export default function ClassesTable() {
     </Card>
   );
 }
+
+    

@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -23,16 +24,7 @@ import { Edit, Eye, Trash2, Search, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-
-type Teacher = {
-  id: string;
-  name: string;
-  department: string;
-  role: string;
-  status: 'Active' | 'On Leave' | 'Inactive';
-};
+import { teachersData as initialTeachersData, Teacher } from '@/lib/data';
 
 const TEACHERS_PER_PAGE = 5;
 
@@ -41,19 +33,32 @@ export default function TeachersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const firestore = useFirestore();
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
 
-  const teachersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
-    [firestore]
-  );
-  const { data: teachersData, isLoading } = useCollection<Teacher>(teachersQuery);
+  useEffect(() => {
+    const storedTeachers = localStorage.getItem('teachersData');
+    if (storedTeachers) {
+      setTeachers(JSON.parse(storedTeachers));
+    } else {
+      setTeachers(initialTeachersData);
+      localStorage.setItem('teachersData', JSON.stringify(initialTeachersData));
+    }
+  }, []);
+
+  const updateAndStoreTeachers = (newTeachers: Teacher[]) => {
+    setTeachers(newTeachers);
+    localStorage.setItem('teachersData', JSON.stringify(newTeachers));
+  };
+
 
   const handleDelete = (teacherId: string) => {
+    const updatedTeachers = teachers.filter(teacher => teacher.id !== teacherId);
+    updateAndStoreTeachers(updatedTeachers);
+
     toast({
-      title: 'Delete Teacher',
+      title: 'Teacher Deleted',
       variant: 'destructive',
-      description: `Deleting teacher with ID: ${teacherId}`,
+      description: `Teacher with ID: ${teacherId} has been permanently deleted.`,
     });
   };
 
@@ -71,15 +76,14 @@ export default function TeachersPage() {
   };
 
   const filteredTeachers = useMemo(() => {
-    if (!teachersData) return [];
-    return teachersData.filter(
+    return teachers.filter(
       (teacher) =>
         teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         teacher.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         teacher.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
         teacher.role.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery, teachersData]);
+  }, [searchQuery, teachers]);
 
   const totalPages = Math.ceil(filteredTeachers.length / TEACHERS_PER_PAGE);
 
@@ -140,12 +144,7 @@ export default function TeachersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
-                </TableRow>
-              )}
-              {!isLoading && paginatedTeachers.map((teacher) => (
+              {paginatedTeachers.map((teacher) => (
                 <TableRow key={teacher.id}>
                   <TableCell>{teacher.id}</TableCell>
                   <TableCell className="font-medium">{teacher.name}</TableCell>
@@ -184,7 +183,7 @@ export default function TeachersPage() {
                   </TableCell>
                 </TableRow>
               ))}
-               {!isLoading && paginatedTeachers.length === 0 && (
+               {paginatedTeachers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                     No teachers found.
@@ -227,3 +226,5 @@ export default function TeachersPage() {
     </div>
   );
 }
+
+    

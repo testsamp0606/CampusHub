@@ -1,14 +1,15 @@
+
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatCard from './stat-card';
 import AttendanceCard from './attendance-card';
 import ClassesTable from './classes-table';
 import AnomalyDetector from './anomaly-detector';
 import ClassPerformanceChart from './student-charts/class-performance-chart';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
 import { Briefcase, School2, Users, TrendingUp, UserCheck, UserX, UserPlus } from 'lucide-react';
+import { students as initialStudentsData, teachersData as initialTeachersData, classesData as initialClassesData } from '@/lib/data';
 
 export type StatCardData = {
   title: string;
@@ -18,47 +19,43 @@ export type StatCardData = {
   bgColor: string;
 };
 
-
 export default function MainDashboard() {
-  const firestore = useFirestore();
+  const [students, setStudents] = useState(initialStudentsData);
+  const [teachers, setTeachers] = useState(initialTeachersData);
+  const [classes, setClasses] = useState(initialClassesData);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const studentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
-    [firestore]
-  );
-  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
+  useEffect(() => {
+    const studentsData = localStorage.getItem('studentsData');
+    if (studentsData) setStudents(JSON.parse(studentsData));
 
-  const teachersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
-    [firestore]
-  );
-  const { data: teachers, isLoading: teachersLoading } = useCollection(teachersQuery);
-  
-  const classesQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
-    [firestore]
-  );
-  const { data: classes, isLoading: classesLoading } = useCollection(classesQuery);
+    const teachersData = localStorage.getItem('teachersData');
+    if (teachersData) setTeachers(JSON.parse(teachersData));
 
+    const classesData = localStorage.getItem('classesData');
+    if (classesData) setClasses(JSON.parse(classesData));
+
+    setIsLoading(false);
+  }, []);
 
   const statCardsData: StatCardData[] = [
     {
       title: 'Total Students',
-      count: studentsLoading ? '...' : students?.length.toString() || '0',
+      count: isLoading ? '...' : students?.length.toString() || '0',
       Icon: Users,
       color: 'text-blue-500',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Total Teachers',
-      count: teachersLoading ? '...' : teachers?.length.toString() || '0',
+      count: isLoading ? '...' : teachers?.length.toString() || '0',
       Icon: Briefcase,
       color: 'text-green-500',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Classes Count',
-      count: classesLoading ? '...' : classes?.length.toString() || '0',
+      count: isLoading ? '...' : classes?.length.toString() || '0',
       Icon: School2,
       color: 'text-pink-500',
       bgColor: 'bg-pink-100',
@@ -169,3 +166,5 @@ export default function MainDashboard() {
     </div>
   );
 }
+
+    

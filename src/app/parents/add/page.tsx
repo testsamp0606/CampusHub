@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,11 +25,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Combobox } from '@/components/ui/combobox';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { students as initialStudentsData, Student } from '@/lib/data';
+
 
 const parentFormSchema = z.object({
   parentId: z.string(),
@@ -81,13 +82,16 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddParentPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
+  const [students, setStudents] = useState<Student[]>([]);
 
-  const studentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
-    [firestore]
-  );
-  const { data: studentsData } = useCollection<{id: string, name: string, permanentAddress: string}>(studentsQuery);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    if (storedStudents) {
+      setStudents(JSON.parse(storedStudents));
+    } else {
+      setStudents(initialStudentsData);
+    }
+  }, []);
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
@@ -103,24 +107,26 @@ export default function AddParentPage() {
 
 
   useEffect(() => {
-    // Generate a unique parent ID when the component mounts
     const uniqueId = `P${Date.now().toString().slice(-6)}`;
     form.setValue('parentId', uniqueId);
   }, [form]);
   
   useEffect(() => {
-    if (sameAsStudentAddress && studentId && studentsData) {
-      const student = studentsData.find((s) => s.id === studentId);
-      if (student) {
+    if (sameAsStudentAddress && studentId && students) {
+      const student = students.find((s) => s.id === studentId);
+      if (student && student.permanentAddress) {
         form.setValue('permanentAddress', student.permanentAddress);
       }
     }
-  }, [sameAsStudentAddress, studentId, form, studentsData]);
+  }, [sameAsStudentAddress, studentId, form, students]);
 
   function onSubmit(data: ParentFormValues) {
-    if (!studentsData) return;
+    if (!students) return;
+
+    // This is a simplified logic. In a real app, you would likely save this to a separate 'parents' table
+    // and link it to the student. For this demo, we'll just show a success toast.
     const studentName =
-      studentsData.find((s) => s.id === data.studentId)?.name || 'a student';
+      students.find((s) => s.id === data.studentId)?.name || 'a student';
     toast({
       title: 'Parent Registered',
       description: `Parents of ${studentName} have been successfully registered.`,
@@ -130,12 +136,12 @@ export default function AddParentPage() {
   }
 
   const studentOptions = useMemo(() => {
-    if (!studentsData) return [];
-    return studentsData.map((student) => ({
+    if (!students) return [];
+    return students.map((student) => ({
       value: student.id,
       label: `${student.name} (${student.id})`,
     }))
-  }, [studentsData]);
+  }, [students]);
 
   return (
     <Card className="shadow-lg">
@@ -466,3 +472,5 @@ export default function AddParentPage() {
     </Card>
   );
 }
+
+    
