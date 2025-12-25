@@ -6,32 +6,13 @@
       "type": "object",
       "description": "Represents a school or college.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the school entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the school."
-        },
-        "address": {
-          "type": "string",
-          "description": "The address of the school."
-        },
-        "phone": {
-          "type": "string",
-          "description": "The phone number of the school."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the school.",
-          "format": "email"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the school entity." },
+        "name": { "type": "string", "description": "The name of the school." },
+        "address": { "type": "string", "description": "The address of the school." },
+        "phone": { "type": "string", "description": "The phone number of the school." },
+        "email": { "type": "string", "description": "The email address of the school.", "format": "email" }
       },
-      "required": [
-        "id",
-        "name"
-      ]
+      "required": ["id", "name"]
     },
     "User": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -39,35 +20,13 @@
       "type": "object",
       "description": "Represents a user of the system (admin, teacher, accountant).",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user entity."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N User)"
-        },
-        "username": {
-          "type": "string",
-          "description": "The username of the user."
-        },
-        "role": {
-          "type": "string",
-          "description": "The role of the user (e.g., admin, teacher, accountant)."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email address of the user.",
-          "format": "email"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the user entity." },
+        "schoolId": { "type": "string", "description": "Reference to School. (Relationship: School 1:N User)" },
+        "username": { "type": "string", "description": "The username of the user." },
+        "role": { "type": "string", "description": "The role of the user (e.g., admin, teacher, accountant)." },
+        "email": { "type": "string", "description": "The email address of the user.", "format": "email" }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "username",
-        "role",
-        "email"
-      ]
+      "required": ["id", "schoolId", "username", "role", "email"]
     },
     "Student": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -75,40 +34,36 @@
       "type": "object",
       "description": "Represents a student in the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the student entity."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Student)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the student."
-        },
-        "classId": {
-          "type": "string",
-          "description": "Reference to Class. (Relationship: Class 1:N Student)"
-        },
-        "dateOfBirth": {
-          "type": "string",
-          "description": "The date of birth of the student.",
-          "format": "date-time"
-        },
-        "gender": {
-          "type": "string",
-          "description": "The gender of the student."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the student entity (Admission Number)." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "name": { "type": "string", "description": "The full name of the student." },
+        "gender": { "type": "string", "description": "The gender of the student." },
+        "dateOfBirth": { "type": "string", "description": "The date of birth of the student.", "format": "date" },
+        "bloodGroup": { "type": "string", "description": "Student's blood group." },
+        "category": { "type": "string", "description": "Student's category (e.g., General, SC/ST, OBC)." },
+        "aadhaar": { "type": "string", "description": "Student's Aadhaar number." },
+        "studentPhoto": { "type": "string", "description": "URL to the student's photo." },
+        "academicYear": { "type": "string", "description": "The current academic year for the student." },
+        "classId": { "type": "string", "description": "Reference to Class." },
+        "section": { "type": "string", "description": "The section of the class (e.g., A, B, C)." },
+        "rollNumber": { "type": "string", "description": "Student's roll number in the class." },
+        "mediumOfInstruction": { "type": "string", "description": "e.g., English, Hindi." },
+        "previousSchool": { "type": "string", "description": "Name of the previous school attended." },
+        "previousBoard": { "type": "string", "description": "Board of the previous school (e.g., CBSE, ICSE)." },
+        "fatherName": { "type": "string" },
+        "motherName": { "type": "string" },
+        "fatherMobile": { "type": "string" },
+        "motherMobile": { "type": "string" },
+        "parentEmail": { "type": "string", "format": "email" },
+        "fatherOccupation": { "type": "string" },
+        "motherOccupation": { "type": "string" },
+        "fatherAnnualIncome": { "type": "number" },
+        "motherAnnualIncome": { "type": "number" },
+        "currentAddress": { "type": "string" },
+        "permanentAddress": { "type": "string" },
+        "emergencyContact": { "type": "string" }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "name",
-        "classId",
-        "dateOfBirth",
-        "gender"
-      ]
+      "required": ["id", "schoolId", "name", "gender", "dateOfBirth", "classId", "fatherName", "motherName", "fatherMobile", "motherMobile", "currentAddress", "permanentAddress", "emergencyContact"]
     },
     "Teacher": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -116,35 +71,13 @@
       "type": "object",
       "description": "Represents a teacher in the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the teacher entity."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Teacher)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the teacher."
-        },
-        "subject": {
-          "type": "string",
-          "description": "The subject taught by the teacher."
-        },
-        "email": {
-          "type": "string",
-          "description": "The email of the teacher",
-          "format": "email"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the teacher entity." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "name": { "type": "string", "description": "The name of the teacher." },
+        "subject": { "type": "string", "description": "The subject taught by the teacher." },
+        "email": { "type": "string", "description": "The email of the teacher", "format": "email" }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "name",
-        "subject",
-        "email"
-      ]
+      "required": ["id", "schoolId", "name", "subject", "email"]
     },
     "Class": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -152,29 +85,12 @@
       "type": "object",
       "description": "Represents a class in the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the class entity."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Class)"
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the class (e.g., Grade 10, Section A)."
-        },
-        "teacherId": {
-          "type": "string",
-          "description": "Reference to Teacher. (Relationship: Teacher 1:N Class - Class Teacher)"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the class entity." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "name": { "type": "string", "description": "The name of the class (e.g., Grade 10, Section A)." },
+        "teacherId": { "type": "string", "description": "Reference to Teacher." }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "name",
-        "teacherId"
-      ]
+      "required": ["id", "schoolId", "name", "teacherId"]
     },
     "Attendance": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -182,40 +98,14 @@
       "type": "object",
       "description": "Represents the attendance record for a student or teacher on a specific date.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the attendance record."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Attendance)"
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User (Student or Teacher). (Relationship: User 1:N Attendance)"
-        },
-        "date": {
-          "type": "string",
-          "description": "The date of the attendance record.",
-          "format": "date-time"
-        },
-        "status": {
-          "type": "string",
-          "description": "The attendance status (e.g., present, absent, excused)."
-        },
-        "attendanceType": {
-          "type": "string",
-          "description": "Type of attendance ('student' or 'teacher')."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the attendance record." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "userId": { "type": "string", "description": "Reference to User (Student or Teacher)." },
+        "date": { "type": "string", "description": "The date of the attendance record.", "format": "date-time" },
+        "status": { "type": "string", "description": "e.g., present, absent, excused." },
+        "attendanceType": { "type": "string", "description": "Type of attendance ('student' or 'teacher')." }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "userId",
-        "date",
-        "status",
-        "attendanceType"
-      ]
+      "required": ["id", "schoolId", "userId", "date", "status", "attendanceType"]
     },
     "Expense": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -223,35 +113,13 @@
       "type": "object",
       "description": "Represents an expense record for the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the expense record."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Expense)"
-        },
-        "date": {
-          "type": "string",
-          "description": "The date of the expense.",
-          "format": "date-time"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the expense."
-        },
-        "amount": {
-          "type": "number",
-          "description": "The amount of the expense."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the expense record." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "date": { "type": "string", "description": "The date of the expense.", "format": "date-time" },
+        "description": { "type": "string", "description": "Description of the expense." },
+        "amount": { "type": "number", "description": "The amount of the expense." }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "date",
-        "description",
-        "amount"
-      ]
+      "required": ["id", "schoolId", "date", "description", "amount"]
     },
     "Account": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -259,35 +127,13 @@
       "type": "object",
       "description": "Represents an account record for the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the account record."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Account)"
-        },
-        "accountName": {
-          "type": "string",
-          "description": "Name of the account"
-        },
-        "balance": {
-          "type": "number",
-          "description": "Balance of the account"
-        },
-        "lastTransactionDate": {
-          "type": "string",
-          "description": "The date of the last transaction.",
-          "format": "date-time"
-        }
+        "id": { "type": "string", "description": "Unique identifier for the account record." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "accountName": { "type": "string", "description": "Name of the account" },
+        "balance": { "type": "number", "description": "Balance of the account" },
+        "lastTransactionDate": { "type": "string", "description": "The date of the last transaction.", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "accountName",
-        "balance",
-        "lastTransactionDate"
-      ]
+      "required": ["id", "schoolId", "accountName", "balance", "lastTransactionDate"]
     },
     "Asset": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -295,40 +141,14 @@
       "type": "object",
       "description": "Represents an asset owned by the school.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the asset."
-        },
-        "schoolId": {
-          "type": "string",
-          "description": "Reference to School. (Relationship: School 1:N Asset)"
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the asset"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the asset"
-        },
-        "purchaseDate": {
-          "type": "string",
-          "description": "Date the asset was purchased",
-          "format": "date-time"
-        },
-        "value": {
-          "type": "number",
-          "description": "Current value of the asset."
-        }
+        "id": { "type": "string", "description": "Unique identifier for the asset." },
+        "schoolId": { "type": "string", "description": "Reference to School." },
+        "name": { "type": "string", "description": "Name of the asset" },
+        "description": { "type": "string", "description": "Description of the asset" },
+        "purchaseDate": { "type": "string", "description": "Date the asset was purchased", "format": "date-time" },
+        "value": { "type": "number", "description": "Current value of the asset." }
       },
-      "required": [
-        "id",
-        "schoolId",
-        "name",
-        "description",
-        "purchaseDate",
-        "value"
-      ]
+      "required": ["id", "schoolId", "name", "description", "purchaseDate", "value"]
     }
   },
   "auth": {
@@ -343,35 +163,20 @@
         "path": "/schools/{schoolId}",
         "definition": {
           "entityName": "School",
-          "schema": {
-            "$ref": "#/backend/entities/School"
-          },
+          "schema": { "$ref": "#/backend/entities/School" },
           "description": "Stores school information.",
-          "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            }
-          ]
+          "params": [{ "name": "schoolId", "description": "The unique ID of the school." }]
         }
       },
       {
         "path": "/schools/{schoolId}/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/User" },
+          "description": "Stores user information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "userId",
-              "description": "The unique ID of the user."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "userId", "description": "The unique ID of the user." }
           ]
         }
       },
@@ -379,19 +184,11 @@
         "path": "/schools/{schoolId}/students/{studentId}",
         "definition": {
           "entityName": "Student",
-          "schema": {
-            "$ref": "#/backend/entities/Student"
-          },
-          "description": "Stores student information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Student" },
+          "description": "Stores student information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "studentId",
-              "description": "The unique ID of the student."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "studentId", "description": "The unique ID of the student." }
           ]
         }
       },
@@ -399,19 +196,11 @@
         "path": "/schools/{schoolId}/teachers/{teacherId}",
         "definition": {
           "entityName": "Teacher",
-          "schema": {
-            "$ref": "#/backend/entities/Teacher"
-          },
-          "description": "Stores teacher information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Teacher" },
+          "description": "Stores teacher information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "teacherId",
-              "description": "The unique ID of the teacher."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "teacherId", "description": "The unique ID of the teacher." }
           ]
         }
       },
@@ -419,19 +208,11 @@
         "path": "/schools/{schoolId}/classes/{classId}",
         "definition": {
           "entityName": "Class",
-          "schema": {
-            "$ref": "#/backend/entities/Class"
-          },
-          "description": "Stores class information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Class" },
+          "description": "Stores class information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "classId",
-              "description": "The unique ID of the class."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "classId", "description": "The unique ID of the class." }
           ]
         }
       },
@@ -439,19 +220,11 @@
         "path": "/schools/{schoolId}/attendances/{attendanceId}",
         "definition": {
           "entityName": "Attendance",
-          "schema": {
-            "$ref": "#/backend/entities/Attendance"
-          },
-          "description": "Stores attendance information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Attendance" },
+          "description": "Stores attendance information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "attendanceId",
-              "description": "The unique ID of the attendance."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "attendanceId", "description": "The unique ID of the attendance." }
           ]
         }
       },
@@ -459,19 +232,11 @@
         "path": "/schools/{schoolId}/expenses/{expenseId}",
         "definition": {
           "entityName": "Expense",
-          "schema": {
-            "$ref": "#/backend/entities/Expense"
-          },
-          "description": "Stores expense information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Expense" },
+          "description": "Stores expense information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "expenseId",
-              "description": "The unique ID of the expense."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "expenseId", "description": "The unique ID of the expense." }
           ]
         }
       },
@@ -479,19 +244,11 @@
         "path": "/schools/{schoolId}/accounts/{accountId}",
         "definition": {
           "entityName": "Account",
-          "schema": {
-            "$ref": "#/backend/entities/Account"
-          },
-          "description": "Stores account information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Account" },
+          "description": "Stores account information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "accountId",
-              "description": "The unique ID of the account."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "accountId", "description": "The unique ID of the account." }
           ]
         }
       },
@@ -499,23 +256,15 @@
         "path": "/schools/{schoolId}/assets/{assetId}",
         "definition": {
           "entityName": "Asset",
-          "schema": {
-            "$ref": "#/backend/entities/Asset"
-          },
-          "description": "Stores asset information. Includes denormalized 'schoolId' for authorization independence.",
+          "schema": { "$ref": "#/backend/entities/Asset" },
+          "description": "Stores asset information.",
           "params": [
-            {
-              "name": "schoolId",
-              "description": "The unique ID of the school."
-            },
-            {
-              "name": "assetId",
-              "description": "The unique ID of the asset."
-            }
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "assetId", "description": "The unique ID of the asset." }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to follow best practices for security, scalability, and debuggability, focusing on Authorization Independence and Structural Segregation.  Authorization Independence is achieved through denormalization: schoolId is included in all subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation ensures that each collection has a homogeneous security posture. Path-based ownership is used where appropriate (e.g., `/schools/{schoolId}/users/{userId}`). The design facilitates secure `list` operations by segregating data based on access requirements. It supports integrity by providing explicit state modeling and predictable schemas."
+    "reasoning": "The Firestore structure is designed to follow best practices for security, scalability, and debuggability, focusing on Authorization Independence and Structural Segregation. Authorization Independence is achieved through denormalization: schoolId is included in all subcollections to avoid costly and insecure `get()` calls in security rules. Structural Segregation ensures that each collection has a homogeneous security posture. Path-based ownership is used where appropriate (e.g., `/schools/{schoolId}/users/{userId}`). The design facilitates secure `list` operations by segregating data based on access requirements. It supports integrity by providing explicit state modeling and predictable schemas."
   }
 }
