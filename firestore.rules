@@ -231,22 +231,10 @@ service cloud.firestore {
      * @principle Enforces that users can only interact with their own conversations.
      */
     match /schools/{schoolId}/conversations/{conversationId} {
-      // READ (Single Doc): Allow `get` if the user is a school member and their UID is in the participantIds array.
       allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-
-      // READ (Query/List): Securely allow querying the collection. The rule ensures that any query
-      // MUST include a `where('participantIds', 'array-contains', request.auth.uid)` clause.
-      // This prevents users from listing all conversations and only allows them to fetch their own.
-      allow list: if isSchoolMember(schoolId) && request.query.where.size() > 0 && request.query.where[0][1] == 'array-contains' && request.query.where[0][2] == request.auth.uid;
-      
-      // CREATE: Allow if user is a member of the school AND their UID is in the new conversation's participant list.
-      // Also ensures data integrity by checking schoolId.
+      allow list: if isSchoolMember(schoolId) && request.auth.uid in request.query.filters.participantIds;
       allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
-      
-      // UPDATE: Allow if user is a participant. Typically used to update lastMessage, timestamp, and readBy fields.
       allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
-
-      // DELETE: Generally, deleting conversations should be disabled or restricted to admins to prevent data loss.
       allow delete: if false;
 
       /**
