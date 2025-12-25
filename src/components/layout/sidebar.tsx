@@ -20,6 +20,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import {
   LogOut,
   Settings,
   GraduationCap,
@@ -65,92 +71,97 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
           </Link>
         </SidebarMenuItem>
       ))}
-      {navGroups.collapsible.map((item) => {
-          const isParentActive = item.subItems!.some((sub) => pathname.startsWith(sub.href || ''));
-          if (isCollapsed) {
+      <Accordion type="single" collapsible className="w-full">
+        {navGroups.collapsible.map((item) => {
+            const isParentActive = item.subItems!.some((sub) => pathname.startsWith(sub.href || ''));
+            if (isCollapsed) {
+              return (
+                <SidebarMenuItem key={item.label}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <SidebarMenuButton
+                        isActive={isParentActive}
+                        tooltip={item.label}
+                        className="justify-center"
+                        asChild
+                      >
+                        <div>
+                          <item.icon />
+                          <span className="sr-only">{item.label}</span>
+                        </div>
+                      </SidebarMenuButton>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      side="right"
+                      align="start"
+                      className="p-1 w-auto bg-sidebar-accent border-sidebar-border"
+                    >
+                      <SidebarMenu>
+                        {item.subItems!.map((subItem) => (
+                          <SidebarMenuItem key={subItem.label}>
+                            <Link href={subItem.href || '#'} passHref>
+                              <SidebarMenuButton
+                                isActive={pathname === subItem.href}
+                                className="justify-start"
+                                asChild
+                              >
+                                <div>
+                                  <subItem.icon />
+                                  <span>{subItem.label}</span>
+                                </div>
+                              </SidebarMenuButton>
+                            </Link>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </PopoverContent>
+                  </Popover>
+                </SidebarMenuItem>
+              );
+            }
+
             return (
-              <SidebarMenuItem key={item.label}>
-                <Popover>
-                  <PopoverTrigger asChild>
+              <AccordionItem value={item.label} key={item.label} className="border-none">
+                <AccordionTrigger
+                  asChild
+                  className="p-0 [&[data-state=open]>button>svg]:rotate-180"
+                >
                     <SidebarMenuButton
                       isActive={isParentActive}
-                      tooltip={item.label}
-                      className="justify-center"
-                      asChild
+                      className="w-full justify-between"
                     >
-                      <div>
+                      <div className="flex items-center gap-3">
                         <item.icon />
-                        <span className="sr-only">{item.label}</span>
+                        <span>{item.label}</span>
                       </div>
+                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                     </SidebarMenuButton>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="right"
-                    align="start"
-                    className="p-1 w-auto bg-sidebar-accent border-sidebar-border"
-                  >
-                    <SidebarMenu>
-                      {item.subItems!.map((subItem) => (
-                        <SidebarMenuItem key={subItem.label}>
-                          <Link href={subItem.href || '#'} passHref>
-                            <SidebarMenuButton
-                              isActive={pathname === subItem.href}
-                              className="justify-start"
-                              asChild
-                            >
-                              <div>
-                                <subItem.icon />
-                                <span>{subItem.label}</span>
-                              </div>
-                            </SidebarMenuButton>
-                          </Link>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </PopoverContent>
-                </Popover>
-              </SidebarMenuItem>
+                </AccordionTrigger>
+                <AccordionContent className="p-0 pl-4">
+                  <SidebarMenu>
+                    {item.subItems!.map((subItem) => (
+                      <SidebarMenuItem key={subItem.label}>
+                        <Link href={subItem.href || '#'} passHref>
+                          <SidebarMenuButton
+                            isActive={pathname === subItem.href}
+                            tooltip={subItem.label}
+                            className="justify-start"
+                            asChild
+                          >
+                            <div>
+                              <subItem.icon />
+                              <span>{subItem.label}</span>
+                            </div>
+                          </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </AccordionContent>
+              </AccordionItem>
             );
-          }
-
-          return (
-            <SidebarCollapsible key={item.label}>
-              <SidebarCollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  isActive={isParentActive}
-                  className="w-full justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </div>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                </SidebarMenuButton>
-              </SidebarCollapsibleTrigger>
-              <SidebarCollapsibleContent>
-                <SidebarMenu>
-                  {item.subItems!.map((subItem) => (
-                    <SidebarMenuItem key={subItem.label}>
-                      <Link href={subItem.href || '#'} passHref>
-                        <SidebarMenuButton
-                          isActive={pathname === subItem.href}
-                          tooltip={subItem.label}
-                          className="justify-start"
-                          asChild
-                        >
-                          <div>
-                            <subItem.icon />
-                            <span>{subItem.label}</span>
-                          </div>
-                        </SidebarMenuButton>
-                      </Link>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarCollapsibleContent>
-            </SidebarCollapsible>
-          );
-        })}
+          })}
+      </Accordion>
     </>
   );
 };
