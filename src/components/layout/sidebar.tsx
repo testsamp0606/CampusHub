@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -7,7 +8,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarFooter,
   useSidebar,
   SidebarCollapsible,
   SidebarCollapsibleContent,
@@ -123,7 +123,6 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
               <AccordionItem value={item.label} key={item.label} className="border-none">
                 <AccordionTrigger
                   asChild
-                  className="[&[data-state=open]>button>svg]:rotate-180"
                 >
                     <SidebarMenuButton
                       isActive={isParentActive}
@@ -209,34 +208,6 @@ export default function AppSidebar() {
       <SidebarContent className="flex-1 p-2">
         <SidebarMenu>{renderNavItems(NAV_ITEMS, pathname, isCollapsed)}</SidebarMenu>
       </SidebarContent>
-
-      <Separator className="my-2" />
-
-      <SidebarFooter className="p-2">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              tooltip="Settings"
-              isActive={pathname === '/settings'}
-              className="justify-start group-data-[collapsible=icon]:justify-center"
-            >
-              <Link href="/settings">
-                <Settings />
-                <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Log Out" className="justify-start group-data-[collapsible=icon]:justify-center">
-              <Link href="#">
-                <LogOut />
-                <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }
