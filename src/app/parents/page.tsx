@@ -20,11 +20,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { parents } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Parent = (typeof parents)[0];
+type Student = {
+  id: string;
+  name: string;
+  fatherName: string;
+  fatherMobile: string;
+  parentEmail?: string;
+};
 
 const PARENTS_PER_PAGE = 5;
 
@@ -33,28 +40,41 @@ export default function ParentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const firestore = useFirestore();
 
-  const handleEdit = (parentId: string) => {
-    router.push(`/parents/${parentId}/edit`);
+  const studentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
+    [firestore]
+  );
+  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
+
+  const handleEdit = (studentId: string) => {
+    // There is no dedicated parent edit page, so we can redirect to student edit page for now.
+    // A proper implementation might require a dedicated parent edit form.
+    router.push(`/students/${studentId}/edit`);
+    toast({
+        title: "Note",
+        description: "Parent details can be edited within the student's profile."
+    })
   };
 
-  const handleDelete = (parentId: string) => {
+  const handleDelete = (studentId: string) => {
     toast({
-      title: 'Delete Parent',
+      title: 'Action Not Implemented',
       variant: 'destructive',
-      description: `Deleting parent with ID: ${parentId}`,
+      description: `Deleting parent records for student ${studentId} is not yet supported.`,
     });
   };
 
   const filteredParents = useMemo(() => {
-    return parents.filter(
-      (parent) =>
-        parent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parent.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parent.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        parent.studentName.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!studentsData) return [];
+    return studentsData.filter(
+      (student) =>
+        student.fatherName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.parentEmail && student.parentEmail.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery]);
+  }, [searchQuery, studentsData]);
 
   const totalPages = Math.ceil(filteredParents.length / PARENTS_PER_PAGE);
 
@@ -77,20 +97,20 @@ export default function ParentsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Parents</h1>
         <Button asChild>
-          <Link href="/parents/add">Add New Parent</Link>
+          <Link href="/students/add">Add New Student/Parent</Link>
         </Button>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>All Parents</CardTitle>
           <CardDescription>
-            A list of all parents in the school.
+            A list of all parents derived from student records.
           </CardDescription>
           <div className="relative mt-4">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search parents by name, ID, or email..."
+              placeholder="Search by parent name, student name, or email..."
               className="w-full rounded-lg bg-background pl-8"
               value={searchQuery}
               onChange={(e) => {
@@ -104,34 +124,37 @@ export default function ParentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Parent ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Tagged Student</TableHead>
+                <TableHead>Parent Name</TableHead>
+                <TableHead>Student Name</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedParents.map((parent) => (
-                <TableRow key={parent.id}>
-                  <TableCell>{parent.id}</TableCell>
-                  <TableCell className="font-medium">{parent.name}</TableCell>
-                  <TableCell>{parent.studentName}</TableCell>
-                  <TableCell>{parent.phone}</TableCell>
-                  <TableCell>{parent.email}</TableCell>
+              {isLoading && (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && paginatedParents.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell className="font-medium">{student.fatherName}</TableCell>
+                  <TableCell>{student.name}</TableCell>
+                  <TableCell>{student.fatherMobile}</TableCell>
+                  <TableCell>{student.parentEmail || 'N/A'}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                        <Button asChild variant="ghost" size="icon">
-                        <Link href={`/parents/${parent.id}`}>
+                        <Link href={`/students/${student.id}`}>
                           <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
+                          <span className="sr-only">View Student</span>
                         </Link>
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleEdit(parent.id)}
+                        onClick={() => handleEdit(student.id)}
                       >
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
@@ -139,7 +162,7 @@ export default function ParentsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(parent.id)}
+                        onClick={() => handleDelete(student.id)}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -151,7 +174,7 @@ export default function ParentsPage() {
               ))}
             </TableBody>
           </Table>
-           {paginatedParents.length === 0 && (
+           {!isLoading && paginatedParents.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">
               No parents found.
             </div>
