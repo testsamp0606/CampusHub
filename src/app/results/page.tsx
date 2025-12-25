@@ -260,7 +260,7 @@ export default function ResultsPage() {
                         ))}
                          {relevantAssessments?.length === 0 && (
                             <p className="text-muted-foreground text-sm col-span-full">No published assessments found for this class.</p>
-                        )}
+                         )}
                     </CardContent>
                     <CardFooter className="flex justify-between">
                          <Button onClick={handleCalculateResults} disabled={!relevantAssessments || relevantAssessments.length === 0}>
@@ -353,3 +353,5 @@ export default function ResultsPage() {
     </div>
   );
 }
+
+    

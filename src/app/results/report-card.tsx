@@ -131,3 +131,5 @@ const ReportCard: React.FC<ReportCardProps> = ({ student, results, marks, assess
 };
 
 export default ReportCard;
+
+    
