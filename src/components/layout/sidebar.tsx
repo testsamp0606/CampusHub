@@ -12,14 +12,14 @@ import {
   SidebarCollapsible,
   SidebarCollapsibleTrigger,
   SidebarCollapsibleContent,
-  SidebarRail,
-  SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { LogOut, Settings, GraduationCap, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, GraduationCap, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, type NavItem } from '@/lib/nav-items';
 import { Separator } from '../ui/separator';
+import { Button } from '../ui/button';
 
 const renderNavItems = (items: NavItem[], pathname: string) => {
   return items.map((item) => {
@@ -88,6 +88,21 @@ const renderNavItems = (items: NavItem[], pathname: string) => {
   });
 };
 
+function SidebarToggle() {
+    const { state, toggleSidebar } = useSidebar();
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+            {state === 'expanded' ? <PanelLeftClose /> : <PanelLeftOpen />}
+        </Button>
+    )
+}
+
 export default function AppSidebar() {
   const pathname = usePathname();
 
@@ -97,19 +112,19 @@ export default function AppSidebar() {
       collapsible="icon"
       className="hidden border-r border-sidebar-border md:flex"
     >
-      <SidebarRail>
-        <SidebarTrigger className='hidden md:flex'/>
-      </SidebarRail>
-      <SidebarHeader className="h-16 justify-start px-3">
+      <SidebarHeader className="h-16 justify-between px-3">
         <Link
           href="/"
           className="flex items-center gap-2 text-lg font-bold"
         >
           <GraduationCap className="h-7 w-7 text-primary" />
-          <span className="text-primary-foreground group-data-[collapsible=icon]:hidden">
+          <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
             Campus Hub
           </span>
         </Link>
+        <div className="group-data-[collapsible=icon]:hidden">
+          <SidebarToggle />
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="flex-1 p-2">
