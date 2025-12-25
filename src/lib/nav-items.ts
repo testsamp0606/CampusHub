@@ -65,7 +65,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: 'Academics',
+    label: 'Academics & Exams',
     icon: School,
     roles: ['SuperAdmin', 'Admin'],
     subItems: [
@@ -78,25 +78,10 @@ export const ALL_NAV_ITEMS: NavItem[] = [
         icon: ClipboardCheck,
       },
       { href: '/calendar', label: 'Calendar', icon: Calendar },
+      { href: '/examinations', label: 'Examinations', icon: FileText },
+      { href: '/assessments', label: 'Assessments', icon: Notebook },
+      { href: '/results', label: 'Results', icon: ResultsIcon },
     ],
-  },
-  {
-    href: '/examinations',
-    label: 'Examinations',
-    icon: FileText,
-    roles: ['SuperAdmin', 'Admin'],
-  },
-  {
-    href: '/assessments',
-    label: 'Assessments',
-    icon: Notebook,
-    roles: ['SuperAdmin', 'Admin'],
-  },
-  {
-    href: '/results',
-    label: 'Results',
-    icon: ResultsIcon,
-    roles: ['SuperAdmin', 'Admin'],
   },
   {
     label: 'E-Learning',
