@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -11,37 +12,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit } from 'lucide-react';
-import { useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
 import Link from 'next/link';
+import { students as initialStudents } from '@/lib/data';
+import { useEffect, useState } from 'react';
 
-type Student = {
-    id: string;
-    name: string;
-    classId: string;
-    email: string;
-    phone: string;
-    dateOfBirth: string;
-    gender: string;
-    permanentAddress: string;
-    profilePhoto?: string;
-  };
+type Student = (typeof initialStudents)[0];
 
 export default function StudentProfilePage() {
   const params = useParams();
   const studentId = params.id as string;
-  const firestore = useFirestore();
+  const [student, setStudent] = useState<Student | undefined>(undefined);
+  
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('studentsData');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
+    const currentStudent = students.find((s) => s.id === studentId);
+    setStudent(currentStudent);
+  }, [studentId]);
 
-  const studentDocRef = doc(firestore, 'schools/school-1/students', studentId);
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p>Loading...</p>
-      </div>
-    );
-  }
 
   if (!student) {
     return (
@@ -84,11 +72,11 @@ export default function StudentProfilePage() {
             <p className="font-medium text-muted-foreground">Phone</p>
             <p>{student.phone}</p>
             <p className="font-medium text-muted-foreground">Address</p>
-            <p>{student.permanentAddress}</p>
+            <p>{student.address}</p>
             <p className="font-medium text-muted-foreground">Date of Birth</p>
-            <p>{student.dateOfBirth}</p>
+            <p>N/A</p>
              <p className="font-medium text-muted-foreground">Gender</p>
-            <p>{student.gender}</p>
+            <p>N/A</p>
           </div>
         </div>
         <div className="space-y-4">

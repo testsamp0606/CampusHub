@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
@@ -13,8 +14,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { classesData } from '@/lib/data';
 
 const chartConfig = {
   passPercentage: {
@@ -24,23 +24,15 @@ const chartConfig = {
 };
 
 export default function ClassPerformanceChart() {
-  const firestore = useFirestore();
-  const classesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'schools', 'school-1', 'classes'), where('status', '==', 'Active'));
-  }, [firestore]);
-
-  const { data: classesData } = useCollection(classesQuery);
 
   const chartData = useMemo(() => {
-    if (!classesData) return [];
     return classesData
       .filter((c: any) => c.passPercentage)
       .map((c: any) => ({
         class: c.name,
         passPercentage: c.passPercentage,
       }));
-  }, [classesData]);
+  }, []);
 
   return (
     <Card>

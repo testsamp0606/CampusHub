@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -22,17 +23,7 @@ import { Edit, Eye, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
-
-type Student = {
-  id: string;
-  name: string;
-  class: string;
-  parentName: string;
-  admissionDate: string;
-  email: string;
-};
+import { students as initialStudents, Student } from '@/lib/data';
 
 const STUDENTS_PER_PAGE = 5;
 
@@ -41,29 +32,39 @@ export default function StudentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const firestore = useFirestore();
+  const [studentsData, setStudentsData] = useState<Student[]>([]);
 
-  const studentsQuery = useMemoFirebase(
-    () =>
-      firestore ? collection(firestore, 'schools/school-1/students') : null,
-    [firestore]
-  );
-  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('studentsData');
+    if (storedStudents) {
+      setStudentsData(JSON.parse(storedStudents));
+    } else {
+      setStudentsData(initialStudents);
+      localStorage.setItem('studentsData', JSON.stringify(initialStudents));
+    }
+  }, []);
+
+  const updateAndStoreStudents = (newStudents: Student[]) => {
+    setStudentsData(newStudents);
+    localStorage.setItem('studentsData', JSON.stringify(newStudents));
+  };
+
 
   const handleEdit = (studentId: string) => {
     router.push(`/students/${studentId}/edit`);
   };
 
   const handleDelete = (studentId: string) => {
+    const updatedStudents = studentsData.filter(student => student.id !== studentId);
+    updateAndStoreStudents(updatedStudents);
     toast({
-      title: 'Delete Student',
+      title: 'Student Deleted',
       variant: 'destructive',
-      description: `Deleting student with ID: ${studentId}`,
+      description: `Student with ID: ${studentId} has been permanently deleted.`,
     });
   };
 
   const filteredStudents = useMemo(() => {
-    if (!studentsData) return [];
     return studentsData.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,15 +130,7 @@ export default function StudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">
-                    Loading students...
-                  </TableCell>
-                </TableRow>
-              )}
-              {!isLoading &&
-                paginatedStudents.map((student) => (
+              {paginatedStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>{student.id}</TableCell>
                     <TableCell className="font-medium">{student.name}</TableCell>
@@ -175,7 +168,7 @@ export default function StudentsPage() {
                 ))}
             </TableBody>
           </Table>
-          {!isLoading && paginatedStudents.length === 0 && (
+           {paginatedStudents.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">
               No students found.
             </div>
@@ -185,7 +178,7 @@ export default function StudentsPage() {
           <div className="text-sm text-muted-foreground">
             Showing{' '}
             <strong>
-              {filteredStudents.length > 0 ? Math.min(
+              {paginatedStudents.length > 0 ? Math.min(
                 (currentPage - 1) * STUDENTS_PER_PAGE + 1,
                 filteredStudents.length
               ) : 0}

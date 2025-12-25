@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,9 +34,6 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import {
   Accordion,
   AccordionContent,
@@ -43,6 +41,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { students as initialStudents, Student } from '@/lib/data';
 
 const studentFormSchema = z
   .object({
@@ -128,7 +127,6 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddStudentPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues,
@@ -149,43 +147,26 @@ export default function AddStudentPage() {
   }, [form]);
 
   async function onSubmit(data: StudentFormValues) {
-    if (!firestore) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Firestore is not available. Please try again later.',
-      });
-      return;
+
+    const storedStudents = localStorage.getItem('studentsData');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
+
+    const newStudent: Student = {
+        id: data.id,
+        name: `${data.title || ''} ${data.name}`.trim(),
+        class: data.classId,
+        parentName: data.fatherName,
+        admissionDate: format(new Date(), 'yyyy-MM-dd'),
+        email: data.parentEmail || '',
+        phone: data.fatherMobile,
+        address: data.permanentAddress,
+        profilePhoto: `https://picsum.photos/seed/${data.id}/200/200`,
+        classId: data.classId
     }
 
-    const sanitizedData: { [key: string]: any } = {};
-    for (const key in data) {
-      const value = (data as any)[key];
-      if (!(value instanceof File) && value !== undefined) {
-        sanitizedData[key] = value;
-      } else if (value === undefined) {
-        sanitizedData[key] = null;
-      }
-    }
+    const updatedStudents = [...students, newStudent];
+    localStorage.setItem('studentsData', JSON.stringify(updatedStudents));
 
-    const studentsCollection = collection(
-      firestore,
-      'schools/school-1/students'
-    );
-
-    const newStudentData = {
-      ...sanitizedData,
-      name: `${data.title || ''} ${data.name}`.trim(),
-      schoolId: 'school-1',
-      dateOfBirth: format(
-        new Date(
-          `${data.dob_year}-${data.dob_month}-${data.dob_day}`
-        ),
-        'yyyy-MM-dd'
-      ),
-    };
-
-    addDocumentNonBlocking(studentsCollection, newStudentData, data.id);
 
     toast({
       title: 'Student Registered',

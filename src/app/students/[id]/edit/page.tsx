@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,10 +41,8 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect } from 'react';
-import { useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useEffect, useState } from 'react';
+import { students as initialStudents } from '@/lib/data';
 
 const studentFormSchema = z.object({
   id: z.string(),
@@ -77,45 +76,64 @@ export default function EditStudentPage() {
   const router = useRouter();
   const params = useParams();
   const studentId = params.id as string;
-  const firestore = useFirestore();
-
-  const studentDocRef = doc(firestore, 'schools/school-1/students', studentId);
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+  const [student, setStudent] = useState<Student | undefined>(undefined);
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
   });
 
   useEffect(() => {
-    if (student) {
-      form.reset({
-        ...student,
-        dateOfBirth: student.dateOfBirth ? parseISO(student.dateOfBirth) : new Date(),
-      });
+    const storedStudents = localStorage.getItem('studentsData');
+    if (storedStudents) {
+      const students: Student[] = JSON.parse(storedStudents);
+      const studentToEdit = students.find(s => s.id === studentId);
+      if (studentToEdit) {
+        setStudent(studentToEdit);
+        form.reset({
+          ...studentToEdit,
+          dateOfBirth: studentToEdit.dateOfBirth ? parseISO(studentToEdit.dateOfBirth) : new Date(),
+        });
+      }
+    } else {
+        const studentToEdit = initialStudents.find(s => s.id === studentId);
+        if (studentToEdit) {
+            setStudent(studentToEdit as any);
+             form.reset({
+                id: studentToEdit.id,
+                name: studentToEdit.name,
+                email: studentToEdit.email,
+                phone: studentToEdit.phone,
+                dateOfBirth: new Date(),
+                gender: 'Male',
+                permanentAddress: studentToEdit.address,
+                classId: studentToEdit.classId
+            });
+        }
     }
-  }, [student, form]);
+  }, [studentId, form]);
 
   function onSubmit(data: StudentFormValues) {
-    if (!firestore) return;
-    
-    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
-    
-    const updatedData = {
-        ...data,
-        dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd')
-    };
+    const storedStudents = localStorage.getItem('studentsData');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
 
-    setDocumentNonBlocking(studentRef, updatedData, { merge: true });
+    const updatedStudents = students.map(s => {
+        if (s.id === studentId) {
+            return {
+                ...s,
+                ...data,
+                dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd')
+            };
+        }
+        return s;
+    });
+
+    localStorage.setItem('studentsData', JSON.stringify(updatedStudents));
 
     toast({
       title: 'Student Updated',
       description: `${data.name} has been successfully updated.`,
     });
     router.push('/students');
-  }
-
-  if (isLoading) {
-    return <div>Loading...</div>;
   }
 
   if (!student) {
