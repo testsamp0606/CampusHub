@@ -59,7 +59,7 @@ export default function ExaminationsPage() {
       </div>
 
       <Tabs defaultValue="schedule">
-        <TabsList className="grid w-full grid-cols-4 md:w-[800px]">
+        <TabsList>
           <TabsTrigger value="schedule">
             <List className="mr-2 h-4 w-4" /> Exam Schedule
           </TabsTrigger>
