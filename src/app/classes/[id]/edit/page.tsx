@@ -23,11 +23,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import {
-  classesData as initialClassesData,
-  teachersData,
-} from '@/lib/data';
+import { useEffect, useMemo } from 'react';
 import {
   Select,
   SelectContent,
@@ -35,8 +31,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-type ClassInfo = (typeof initialClassesData)[0];
+type ClassInfo = {
+    id: string;
+    name: string;
+    teacherId: string;
+    capacity: number;
+    academicYear: string;
+    status: 'Active' | 'Archived' | 'Completed';
+    studentCount: number;
+};
+type Teacher = { id: string; name: string; };
 
 const classFormSchema = z.object({
   id: z.string(),
@@ -62,19 +70,23 @@ export default function EditClassPage() {
   const router = useRouter();
   const params = useParams();
   const classId = params.id as string;
+  const firestore = useFirestore();
+
+  const classDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/classes', classId) : null), [firestore, classId]);
+  const { data: classData, isLoading: classLoading } = useDoc<ClassInfo>(classDocRef);
+
+  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
+  const { data: teachersData } = useCollection<Teacher>(teachersQuery);
+
 
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classFormSchema),
   });
 
   useEffect(() => {
-    const storedClasses = localStorage.getItem('classesData');
-    const classes: ClassInfo[] = storedClasses ? JSON.parse(storedClasses) : initialClassesData;
-    
-    const classToEdit = classes.find((c) => c.id === classId);
-    if (classToEdit) {
-      form.reset(classToEdit);
-    } else {
+    if (classData) {
+      form.reset(classData);
+    } else if (!classLoading && classId) {
       toast({
         title: 'Error',
         description: 'Class not found.',
@@ -82,25 +94,19 @@ export default function EditClassPage() {
       });
       router.push('/classes');
     }
-  }, [classId, form, router, toast]);
+  }, [classData, classLoading, classId, form, router, toast]);
 
   function onSubmit(data: ClassFormValues) {
-    const storedClasses = localStorage.getItem('classesData');
-    const currentClasses: ClassInfo[] = storedClasses
-      ? JSON.parse(storedClasses)
-      : initialClassesData;
+    if (!firestore || !classData) return;
 
-    const updatedClasses = currentClasses.map((cls) => {
-      if (cls.id === classId) {
-        return {
-          ...cls, // preserve studentCount
-          ...data,
-        };
-      }
-      return cls;
-    });
+    const classRef = doc(firestore, 'schools/school-1/classes', classId);
+    
+    const updatedClassData = {
+        ...classData,
+        ...data,
+    };
 
-    localStorage.setItem('classesData', JSON.stringify(updatedClasses));
+    setDocumentNonBlocking(classRef, updatedClassData, { merge: true });
 
     toast({
       title: 'Class Updated',
@@ -109,10 +115,17 @@ export default function EditClassPage() {
     router.push(`/classes/${classId}`);
   }
 
-  const teacherOptions = teachersData.map((t) => ({
-    value: t.id,
-    label: t.name,
-  }));
+  const teacherOptions = useMemo(() => {
+      if (!teachersData) return [];
+      return teachersData.map((t) => ({
+        value: t.id,
+        label: t.name,
+      }));
+  }, [teachersData]);
+
+  if (classLoading) {
+      return <div>Loading...</div>
+  }
 
   return (
     <Card className="shadow-lg">

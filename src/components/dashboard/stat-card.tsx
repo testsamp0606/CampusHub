@@ -1,6 +1,15 @@
-import type { StatCardData } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react';
+
+
+export type StatCardData = {
+    title: string;
+    count: string;
+    Icon: LucideIcon;
+    color: string;
+    bgColor: string;
+};
 
 export default function StatCard({
   title,

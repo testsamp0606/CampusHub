@@ -1,7 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { parents } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -13,18 +12,38 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit } from 'lucide-react';
 import Link from 'next/link';
+import { useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+
+type Student = {
+    id: string;
+    name: string;
+    fatherName: string;
+    fatherMobile: string;
+    parentEmail?: string;
+    permanentAddress: string;
+    profilePhoto?: string;
+};
+
 
 export default function ParentProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const parentId = params.id;
+  const parentId = params.id as string; //This is actually studentId
+  const firestore = useFirestore();
 
-  const parent = parents.find((p) => p.id === parentId);
+  const studentDocRef = doc(firestore, 'schools/school-1/students', parentId);
+  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
 
-  if (!parent) {
+
+  if (isLoading) {
+      return <div>Loading...</div>
+  }
+
+  if (!student) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p>Parent not found.</p>
+        <p>Parent/Student not found.</p>
       </div>
     );
   }
@@ -35,12 +54,11 @@ export default function ParentProfilePage() {
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={parent.profilePhoto} alt={parent.name} />
-                    <AvatarFallback>{parent.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{student.fatherName.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div>
-                    <CardTitle className="text-3xl">{parent.name}</CardTitle>
-                    <CardDescription>Parent ID: {parent.id}</CardDescription>
+                    <CardTitle className="text-3xl">{student.fatherName}</CardTitle>
+                    <CardDescription>Guardian of {student.name}</CardDescription>
                 </div>
             </div>
             <Button asChild>
@@ -56,23 +74,21 @@ export default function ParentProfilePage() {
             <h3 className="font-semibold text-lg">Personal Information</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
                 <p className="font-medium text-muted-foreground">Email</p>
-                <p>{parent.email}</p>
+                <p>{student.parentEmail || 'N/A'}</p>
                 <p className="font-medium text-muted-foreground">Phone</p>
-                <p>{parent.phone}</p>
+                <p>{student.fatherMobile}</p>
                 <p className="font-medium text-muted-foreground">Address</p>
-                <p>{parent.address}</p>
-                 <p className="font-medium text-muted-foreground">Occupation</p>
-                <p>{parent.occupation}</p>
+                <p>{student.permanentAddress}</p>
             </div>
         </div>
          <div className="space-y-4">
             <h3 className="font-semibold text-lg">Tagged Student Information</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
                 <p className="font-medium text-muted-foreground">Student Name</p>
-                <p>{parent.studentName}</p>
+                <p>{student.name}</p>
                 <p className="font-medium text-muted-foreground">Student ID</p>
-                 <Link href={`/students/${parent.studentId}`} className="text-primary hover:underline">
-                    {parent.studentId}
+                 <Link href={`/students/${student.id}`} className="text-primary hover:underline">
+                    {student.id}
                 </Link>
             </div>
         </div>

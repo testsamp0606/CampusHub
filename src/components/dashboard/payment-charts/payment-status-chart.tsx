@@ -20,12 +20,9 @@ type Fee = {
   invoiceId: string;
   studentId: string;
   studentName: string;
-  class: string;
   amount: number;
-  dueDate: string;
   status: 'Paid' | 'Unpaid' | 'Overdue';
   paymentDate: string | null;
-  paymentMethod: string | null;
   description: string;
 };
 
@@ -52,6 +49,7 @@ export default function PaymentStatusChart({
   feesData,
 }: PaymentStatusChartProps) {
   const chartData = useMemo(() => {
+    if (!feesData) return [];
     const statusCounts = feesData.reduce(
       (acc, fee) => {
         if (fee.status === 'Paid') acc.paid += 1;

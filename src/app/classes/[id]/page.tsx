@@ -1,11 +1,6 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  classesData as initialClassesData,
-  teachersData,
-  students as allStudents,
-} from '@/lib/data';
-import {
   Card,
   CardContent,
   CardDescription,
@@ -36,10 +31,26 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc, query, where } from 'firebase/firestore';
 
-type ClassInfo = (typeof initialClassesData)[0];
-type Student = (typeof allStudents)[0];
-type Teacher = (typeof teachersData)[0];
+type ClassInfo = {
+  id: string;
+  name: string;
+  teacherId: string;
+  capacity: number;
+  academicYear: string;
+  status: 'Active' | 'Archived' | 'Completed';
+  studentCount: number;
+  classTeacher?: string;
+};
+type Student = {
+    id: string;
+    name: string;
+    email: string;
+    parentName: string;
+};
+type Teacher = { id: string; name: string };
 
 const periodTimes = [
   '09:00 - 09:45',
@@ -69,6 +80,7 @@ const subjects = [
 ];
 
 const generateRandomTimetable = (teachers: Teacher[]): TimetableEntry[] => {
+  if (!teachers || teachers.length === 0) return [];
   return Array.from({ length: 6 }, (_, i) => ({
     period: i + 1,
     subject: subjects[Math.floor(Math.random() * subjects.length)],
@@ -81,28 +93,44 @@ export default function ClassDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const classId = params.id as string;
+  const firestore = useFirestore();
 
-  const [cls, setCls] = useState<ClassInfo | undefined>(undefined);
-  const [students, setStudents] = useState<Student[]>([]);
+  const classDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/classes', classId) : null), [firestore, classId]);
+  const { data: classData, isLoading: classLoading } = useDoc<ClassInfo>(classDocRef);
+  
+  const teacherDocRef = useMemoFirebase(() => (firestore && classData ? doc(firestore, 'schools/school-1/teachers', classData.teacherId) : null), [firestore, classData]);
+  const { data: teacherData } = useDoc<Teacher>(teacherDocRef);
+
+  const studentsQuery = useMemoFirebase(() => (firestore ? query(collection(firestore, 'schools/school-1/students'), where('classId', '==', classId)) : null), [firestore, classId]);
+  const { data: students, isLoading: studentsLoading } = useCollection<Student>(studentsQuery);
+
+  const allTeachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
+  const { data: allTeachers } = useCollection<Teacher>(allTeachersQuery);
+
   const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
 
+  const cls = useMemo(() => {
+    if (!classData) return undefined;
+    return {
+      ...classData,
+      classTeacher: teacherData?.name || 'N/A',
+    };
+  }, [classData, teacherData]);
+
   useEffect(() => {
-    const storedClasses = localStorage.getItem('classesData');
-    const classes: ClassInfo[] = storedClasses
-      ? JSON.parse(storedClasses)
-      : initialClassesData;
-    const currentClass = classes.find((c) => c.id === classId);
-
-    if (currentClass) {
-      const teacher = teachersData.find((t) => t.id === currentClass.teacherId);
-      setCls({ ...currentClass, classTeacher: teacher ? teacher.name : 'N/A' });
-
-      const classStudents = allStudents.filter((s) => s.classId === classId);
-      setStudents(classStudents);
-
-      setTimetable(generateRandomTimetable(teachersData));
+    if (allTeachers) {
+      setTimetable(generateRandomTimetable(allTeachers));
     }
-  }, [classId]);
+  }, [allTeachers]);
+
+
+  if (classLoading || studentsLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (!cls) {
     return (
@@ -266,7 +294,7 @@ export default function ClassDetailsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {students.map((student) => (
+              {students && students.map((student) => (
                 <TableRow key={student.id}>
                   <TableCell className="py-4">{student.id}</TableCell>
                   <TableCell className="font-medium py-4">{student.name}</TableCell>
@@ -276,7 +304,7 @@ export default function ClassDetailsPage() {
               ))}
             </TableBody>
           </Table>
-          {students.length === 0 && (
+          {(!students || students.length === 0) && (
             <div className="py-10 text-center text-muted-foreground">
               No students enrolled in this class yet.
             </div>

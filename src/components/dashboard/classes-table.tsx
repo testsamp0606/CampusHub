@@ -18,6 +18,20 @@ import {
 import { Progress } from '../ui/progress';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
+import { useMemo } from 'react';
+
+type ClassInfo = {
+    id: string;
+    name: string;
+    studentCount: number;
+    teacherId: string;
+    dailyAttendance?: number;
+};
+
+type Teacher = {
+    id: string;
+    name: string;
+}
 
 export default function ClassesTable() {
   const firestore = useFirestore();
@@ -27,7 +41,25 @@ export default function ClassesTable() {
     return query(collection(firestore, 'schools', 'school-1', 'classes'));
   }, [firestore]);
   
-  const { data: classesData, isLoading } = useCollection(classesQuery);
+  const { data: classesData, isLoading: classesLoading } = useCollection<ClassInfo>(classesQuery);
+
+  const teachersQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'schools', 'school-1', 'teachers'));
+  }, [firestore]);
+
+  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
+
+  const enrichedClasses = useMemo(() => {
+    if (!classesData || !teachersData) return [];
+    const teacherMap = new Map(teachersData.map(t => [t.id, t.name]));
+    return classesData.map(c => ({
+        ...c,
+        classTeacher: teacherMap.get(c.teacherId) || 'N/A'
+    }));
+  }, [classesData, teachersData]);
+
+  const isLoading = classesLoading || teachersLoading;
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -56,7 +88,7 @@ export default function ClassesTable() {
                   </TableCell>
                 </TableRow>
               )}
-              {classesData?.map((item: any) => (
+              {enrichedClasses?.map((item: any) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell className="text-center">
@@ -71,7 +103,7 @@ export default function ClassesTable() {
                   <TableCell>{item.classTeacher}</TableCell>
                 </TableRow>
               ))}
-               {(!isLoading && (!classesData || classesData.length === 0)) && (
+               {(!isLoading && (!enrichedClasses || enrichedClasses.length === 0)) && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center">
                     No classes found.

@@ -29,12 +29,9 @@ type Fee = {
   invoiceId: string;
   studentId: string;
   studentName: string;
-  class: string;
   amount: number;
-  dueDate: string;
   status: 'Paid' | 'Unpaid' | 'Overdue';
   paymentDate: string | null;
-  paymentMethod: string | null;
   description: string;
 };
 
@@ -53,6 +50,7 @@ export default function MonthlyRevenueChart({
   feesData,
 }: MonthlyRevenueChartProps) {
   const chartData = useMemo(() => {
+    if (!feesData) return [];
     const monthlyRevenue: { [key: string]: number } = {};
 
     feesData.forEach((fee) => {

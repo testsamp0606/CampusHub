@@ -24,13 +24,31 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useParams } from 'next/navigation';
-import { students, parents } from '@/lib/data';
 import { useEffect, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Combobox } from '@/components/ui/combobox';
+import { useCollection, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
+type Student = {
+    id: string;
+    name: string;
+    fatherName: string;
+    fatherOccupation: string;
+    fatherPhone: string;
+    fatherMonthlyIncome?: number;
+    motherName: string;
+    motherOccupation: string;
+    motherPhone: string;
+    motherMonthlyIncome?: number;
+    permanentAddress: string;
+    temporaryAddress?: string;
+};
+
 
 const parentFormSchema = z.object({
-  parentId: z.string(),
+  id: z.string(),
   fatherName: z.string().min(2, 'Father name must be at least 2 characters.'),
   fatherOccupation: z.string().min(2, 'Father occupation is required.'),
   fatherPhone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
@@ -42,9 +60,6 @@ const parentFormSchema = z.object({
   permanentAddress: z.string().min(10, 'Permanent address must be at least 10 characters.'),
   temporaryAddress: z.string().optional(),
   sameAsStudentAddress: z.boolean().default(false),
-  studentId: z.string({
-    required_error: 'Please select a student to tag.',
-  }),
   profilePhoto: z.any().optional(),
   getUpdates: z.boolean().default(false),
   getResults: z.boolean().default(false),
@@ -63,33 +78,16 @@ export default function EditParentPage() {
   const { toast } = useToast();
   const router = useRouter();
   const params = useParams();
-  const parentId = params.id as string;
+  const studentId = params.id as string;
+  const firestore = useFirestore();
 
-  const parent = parents.find(p => p.id === parentId);
+  const studentDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/students', studentId) : null), [firestore, studentId]);
+  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
-    defaultValues: {
-        parentId: '',
-        fatherName: '',
-        fatherOccupation: '',
-        fatherPhone: '',
-        fatherMonthlyIncome: 0,
-        motherName: '',
-        motherOccupation: '',
-        motherPhone: '',
-        motherMonthlyIncome: 0,
-        permanentAddress: '',
-        temporaryAddress: '',
-        sameAsStudentAddress: false,
-        studentId: '',
-        getUpdates: false,
-        getResults: false,
-        getComplaints: false,
-    },
   });
 
-  const studentId = form.watch('studentId');
   const sameAsStudentAddress = form.watch('sameAsStudentAddress');
   const fatherIncome = form.watch('fatherMonthlyIncome') || 0;
   const motherIncome = form.watch('motherMonthlyIncome') || 0;
@@ -97,55 +95,47 @@ export default function EditParentPage() {
   const familyIncome = useMemo(() => fatherIncome + motherIncome, [fatherIncome, motherIncome]);
 
   useEffect(() => {
-    if (parent) {
-        // This is a simplification. A real app would need to distinguish between father/mother.
-        // We'll assume the main `name` is the father's name for this example.
+    if (student) {
         form.reset({
-            parentId: parent.id,
-            fatherName: parent.name, // Assumption
-            fatherOccupation: parent.occupation, // Assumption
-            fatherPhone: parent.phone.replace(/[^0-9]/g, '').slice(-10), // Assumption
-            fatherMonthlyIncome: 50000, // Dummy data
-            motherName: "Jane Doe", // Dummy data
-            motherOccupation: "Homemaker", // Dummy data
-            motherPhone: "9876543210", // Dummy data
-            motherMonthlyIncome: 0, // Dummy data
-            permanentAddress: parent.address,
-            temporaryAddress: '', // Dummy data
-            studentId: parent.studentId,
-            sameAsStudentAddress: false,
-            getUpdates: true, // Dummy data
-            getResults: true, // Dummy data
-            getComplaints: false // Dummy data
+            id: student.id,
+            fatherName: student.fatherName,
+            fatherOccupation: student.fatherOccupation,
+            fatherPhone: student.fatherPhone,
+            fatherMonthlyIncome: student.fatherMonthlyIncome,
+            motherName: student.motherName,
+            motherOccupation: student.motherOccupation,
+            motherPhone: student.motherPhone,
+            motherMonthlyIncome: student.motherMonthlyIncome,
+            permanentAddress: student.permanentAddress,
+            temporaryAddress: student.temporaryAddress,
         });
     }
-  }, [parent, form]);
+  }, [student, form]);
 
   useEffect(() => {
-    if (sameAsStudentAddress && studentId) {
-      const student = students.find((s) => s.id === studentId);
-      if (student) {
-        form.setValue('permanentAddress', student.address);
-      }
+    if (sameAsStudentAddress && student) {
+        form.setValue('permanentAddress', student.permanentAddress);
     }
-  }, [sameAsStudentAddress, studentId, form]);
+  }, [sameAsStudentAddress, student, form]);
 
   function onSubmit(data: ParentFormValues) {
-    console.log('Updated parent data:', data);
+    if(!firestore) return;
+    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
+    setDocumentNonBlocking(studentRef, data, { merge: true });
+
     toast({
       title: 'Parent Updated',
-      description: `Information for parent ID ${data.parentId} has been successfully updated.`,
+      description: `Information for parents of student ID ${studentId} has been successfully updated.`,
     });
     router.push('/parents');
   }
 
-  const studentOptions = students.map((student) => ({
-    value: student.id,
-    label: `${student.name} (${student.id})`,
-  }));
-
-  if (!parent) {
-      return <div>Parent not found.</div>
+  if (isLoading) {
+      return <div>Loading...</div>
+  }
+  
+  if (!student) {
+      return <div>Parent/Student not found.</div>
   }
 
   return (
@@ -160,42 +150,20 @@ export default function EditParentPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="parentId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parent ID</FormLabel>
-                    <FormControl>
-                      <Input placeholder="P123456" {...field} disabled value={field.value || ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-               <FormField
-                control={form.control}
-                name="studentId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <RequiredLabel>Tag a Student</RequiredLabel>
-                    <FormControl>
-                       <Combobox
-                        options={studentOptions}
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Select a student..."
-                        searchPlaceholder="Search students..."
-                        emptyResultText="No student found."
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Link this parent to an existing student.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Student ID</FormLabel>
+                <FormControl>
+                  <Input placeholder="S123456" value={student.id} disabled />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+               <FormItem>
+                <FormLabel>Student Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="S123456" value={student.name} disabled />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             </div>
 
             <div className="space-y-4 rounded-md border p-4">

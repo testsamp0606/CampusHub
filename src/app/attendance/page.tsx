@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -47,6 +47,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 type AttendanceStatus = 'present' | 'absent' | 'leave' | 'unmarked';
 
@@ -61,8 +63,9 @@ type ReportType = 'class' | 'student';
 export default function AttendancePage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedClass, setSelectedClass] = useState<string>('C001');
+  const [selectedClass, setSelectedClass] = useState<string>('');
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,19 +78,45 @@ export default function AttendancePage() {
   const [reportMonth, setReportMonth] = useState<string>((new Date().getMonth() + 1).toString());
   const [reportYear, setReportYear] = useState<string>(new Date().getFullYear().toString());
 
-  const classOptions: any[] = [];
+  const classesQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
+    [firestore]
+  );
+  const { data: classesData, isLoading: classesLoading } = useCollection<{id: string, name: string}>(classesQuery);
+
+  const studentsInClassQuery = useMemoFirebase(
+    () => (firestore && selectedClass ? query(collection(firestore, 'schools/school-1/students'), where('classId', '==', selectedClass)) : null),
+    [firestore, selectedClass]
+  );
+  const { data: studentsInClass, isLoading: studentsLoading } = useCollection<{id: string, name: string}>(studentsInClassQuery);
+
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({ value: (i + 1).toString(), label: format(new Date(0, i), 'MMMM')}));
   const yearOptions = Array.from({ length: 5 }, (_, i) => ({ value: (new Date().getFullYear() - i).toString(), label: (new Date().getFullYear() - i).toString()}));
 
   const fetchAttendance = () => {
     if (selectedDate && selectedClass) {
+        if(studentsInClass) {
+            const initialAttendance = studentsInClass.map(student => ({
+                studentId: student.id,
+                studentName: student.name,
+                status: 'unmarked' as AttendanceStatus,
+            }));
+            setAttendance(initialAttendance);
+        }
         setIsEditing(true);
     }
   };
 
-  React.useEffect(() => {
-    fetchAttendance();
-  }, [selectedDate, selectedClass]);
+  useEffect(() => {
+    if(studentsInClass) {
+        const initialAttendance = studentsInClass.map(student => ({
+            studentId: student.id,
+            studentName: student.name,
+            status: 'unmarked' as AttendanceStatus,
+        }));
+        setAttendance(initialAttendance);
+    }
+  }, [studentsInClass]);
   
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) =>
@@ -224,9 +253,9 @@ export default function AttendancePage() {
                                         <SelectValue placeholder="Select a class" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {classOptions.map((opt) => (
-                                        <SelectItem key={opt.value} value={opt.value}>
-                                            {opt.label}
+                                        {classesData?.map((opt) => (
+                                        <SelectItem key={opt.id} value={opt.id}>
+                                            {opt.name}
                                         </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -319,9 +348,9 @@ export default function AttendancePage() {
                 <SelectValue placeholder="Select a class" />
               </SelectTrigger>
               <SelectContent>
-                {classOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                {classesData?.map((opt) => (
+                  <SelectItem key={opt.id} value={opt.id}>
+                    {opt.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -339,7 +368,7 @@ export default function AttendancePage() {
              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <CardTitle>
-                        Attendance for {selectedClass}
+                        Attendance for {classesData?.find(c => c.id === selectedClass)?.name}
                     </CardTitle>
                     <CardDescription>
                         Date: {selectedDate ? format(selectedDate, 'PPP') : ''}
@@ -367,7 +396,8 @@ export default function AttendancePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAttendance.map((record) => (
+                {studentsLoading && <TableRow><TableCell colSpan={3} className="text-center">Loading students...</TableCell></TableRow>}
+                {!studentsLoading && filteredAttendance.map((record) => (
                   <TableRow key={record.studentId}>
                     <TableCell>{record.studentId}</TableCell>
                     <TableCell className="font-medium">
