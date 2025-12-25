@@ -9,9 +9,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarCollapsible,
-  SidebarCollapsibleTrigger,
-  SidebarCollapsibleContent,
   useSidebar,
 } from '@/components/ui/sidebar';
 import {
@@ -27,6 +24,12 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS, type NavItem } from '@/lib/nav-items';
@@ -34,40 +37,110 @@ import { Separator } from '../ui/separator';
 import { Button } from '../ui/button';
 
 const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean) => {
-  return items.map((item) => {
-    const isParentActive = item.subItems
-      ? item.subItems.some((sub) => pathname.startsWith(sub.href || ''))
-      : false;
+  const navGroups = items.reduce(
+    (acc, item) => {
+      if (item.subItems) {
+        acc.collapsible.push(item);
+      } else {
+        acc.links.push(item);
+      }
+      return acc;
+    },
+    { collapsible: [] as NavItem[], links: [] as NavItem[] }
+  );
 
-    if (item.subItems) {
-      if (isCollapsed) {
-        return (
-          <SidebarMenuItem key={item.label}>
-            <Popover>
-              <PopoverTrigger asChild>
-                <SidebarMenuButton
+  return (
+    <>
+      {navGroups.links.map((item) => (
+        <SidebarMenuItem key={item.label}>
+          <Link href={item.href || '#'} passHref>
+            <SidebarMenuButton
+              isActive={pathname === item.href}
+              tooltip={item.label}
+              className="justify-start group-data-[collapsible=icon]:justify-center"
+              asChild
+            >
+              <div>
+                <item.icon />
+                <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+              </div>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+      ))}
+      <Accordion type="single" collapsible className="w-full">
+        {navGroups.collapsible.map((item) => {
+          const isParentActive = item.subItems!.some((sub) => pathname.startsWith(sub.href || ''));
+          if (isCollapsed) {
+            return (
+              <SidebarMenuItem key={item.label}>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <SidebarMenuButton
+                      isActive={isParentActive}
+                      tooltip={item.label}
+                      className="justify-center"
+                      asChild
+                    >
+                      <div>
+                        <item.icon />
+                        <span className="sr-only">{item.label}</span>
+                      </div>
+                    </SidebarMenuButton>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="right"
+                    align="start"
+                    className="p-1 w-auto bg-sidebar-accent border-sidebar-border"
+                  >
+                    <SidebarMenu>
+                      {item.subItems!.map((subItem) => (
+                        <SidebarMenuItem key={subItem.label}>
+                          <Link href={subItem.href || '#'} passHref>
+                            <SidebarMenuButton
+                              isActive={pathname === subItem.href}
+                              className="justify-start"
+                              asChild
+                            >
+                              <div>
+                                <subItem.icon />
+                                <span>{subItem.label}</span>
+                              </div>
+                            </SidebarMenuButton>
+                          </Link>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </PopoverContent>
+                </Popover>
+              </SidebarMenuItem>
+            );
+          }
+
+          return (
+            <AccordionItem value={item.label} key={item.label} className="border-none">
+              <AccordionTrigger asChild>
+                 <SidebarMenuButton
                   isActive={isParentActive}
                   tooltip={item.label}
-                  className="justify-center"
+                  className="justify-start"
                   asChild
                 >
                   <div>
                     <item.icon />
-                    <span className='sr-only'>{item.label}</span>
+                    <span>{item.label}</span>
+                    <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                   </div>
                 </SidebarMenuButton>
-              </PopoverTrigger>
-              <PopoverContent
-                side="right"
-                align="start"
-                className="p-1 w-auto bg-sidebar-accent border-sidebar-border"
-              >
+              </AccordionTrigger>
+              <AccordionContent className="ml-4 pl-2 border-l border-sidebar-border">
                 <SidebarMenu>
-                  {item.subItems.map((subItem) => (
+                  {item.subItems!.map((subItem) => (
                     <SidebarMenuItem key={subItem.label}>
                       <Link href={subItem.href || '#'} passHref>
                         <SidebarMenuButton
                           isActive={pathname === subItem.href}
+                          tooltip={subItem.label}
                           className="justify-start"
                           asChild
                         >
@@ -80,74 +153,15 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
-              </PopoverContent>
-            </Popover>
-          </SidebarMenuItem>
-        );
-      }
-
-      return (
-        <SidebarMenuItem key={item.label}>
-          <SidebarCollapsible>
-            <SidebarCollapsibleTrigger asChild>
-              <SidebarMenuButton
-                isActive={isParentActive}
-                tooltip={item.label}
-                className="justify-start"
-                asChild
-              >
-                <div>
-                  <item.icon />
-                  <span>{item.label}</span>
-                  <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </div>
-              </SidebarMenuButton>
-            </SidebarCollapsibleTrigger>
-            <SidebarCollapsibleContent>
-              <SidebarMenu>
-                {item.subItems.map((subItem) => (
-                  <SidebarMenuItem key={subItem.label}>
-                    <Link href={subItem.href || '#'} passHref>
-                      <SidebarMenuButton
-                        isActive={pathname === subItem.href}
-                        tooltip={subItem.label}
-                        className="justify-start ml-4"
-                        asChild
-                      >
-                        <div>
-                          <subItem.icon />
-                          <span>{subItem.label}</span>
-                        </div>
-                      </SidebarMenuButton>
-                    </Link>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarCollapsibleContent>
-          </SidebarCollapsible>
-        </SidebarMenuItem>
-      );
-    }
-
-    return (
-      <SidebarMenuItem key={item.label}>
-        <Link href={item.href || '#'} passHref>
-          <SidebarMenuButton
-            isActive={pathname === item.href}
-            tooltip={item.label}
-            className="justify-start group-data-[collapsible=icon]:justify-center"
-            asChild
-          >
-            <div>
-              <item.icon />
-              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
-            </div>
-          </SidebarMenuButton>
-        </Link>
-      </SidebarMenuItem>
-    );
-  });
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+    </>
+  );
 };
+
 
 function SidebarToggle() {
   const { state, toggleSidebar } = useSidebar();
