@@ -65,7 +65,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     ],
   },
   {
-    label: 'Academics & Exams',
+    label: 'Scholastics',
     icon: School,
     roles: ['SuperAdmin', 'Admin'],
     subItems: [
