@@ -157,6 +157,17 @@ export type BookIssue = {
     fineStatus: 'Paid' | 'Unpaid';
 };
 
+export type Department = {
+    id: string;
+    name: string;
+    description: string;
+    hodId: string;
+    type: 'Academic' | 'Non-Academic';
+    budget: number;
+    teacherIds?: string[];
+    subjectIds?: string[];
+};
+
 
 export const students: Student[] = [
   {
@@ -441,6 +452,12 @@ export const permissionsData: { [key: string]: { [key: string]: Permission[] } }
   Transport: { SuperAdmin: ['V', 'C', 'E'], Admin: ['V', 'C', 'E'] },
 };
 
+export const departmentsData: Department[] = [
+  { id: 'DEPT01', name: 'Science', description: 'Department of Science', hodId: 'T001', type: 'Academic', budget: 50000, teacherIds: ['T001'], subjectIds: ['SUB001', 'SUB005'] },
+  { id: 'DEPT02', name: 'Mathematics', description: 'Department of Mathematics', hodId: 'T002', type: 'Academic', budget: 40000, teacherIds: ['T002'], subjectIds: ['SUB002'] },
+  { id: 'DEPT03', name: 'Administration', description: 'General school administration', hodId: '', type: 'Non-Academic', budget: 100000 },
+];
+
 export type Permission = 'V' | 'C' | 'E' | 'A';
 
 export const roles: string[] = [
@@ -459,6 +476,7 @@ export const modules: string[] = [
   'Parents',
   'Classes',
   'Subjects',
+  'Departments',
   'Attendance',
   'Examinations',
   'Fees',

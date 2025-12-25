@@ -21,6 +21,7 @@ import {
   Megaphone,
   ShieldCheck,
   MessageSquare,
+  Building,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -63,6 +64,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
     subItems: [
       { href: '/classes', label: 'Classes', icon: BookCopy },
       { href: '/subjects', label: 'Subjects', icon: Book },
+      { href: '/departments', label: 'Departments', icon: Building },
       {
         href: '/examinations',
         label: 'Examinations',
