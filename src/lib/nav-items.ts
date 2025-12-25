@@ -32,6 +32,7 @@ import {
   BookA,
   DollarSign,
   Wallet,
+  Settings,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
