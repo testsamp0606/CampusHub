@@ -27,6 +27,7 @@ import {
   File,
   ClipboardList,
   AreaChart,
+  Notebook,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -74,6 +75,11 @@ export const ALL_NAV_ITEMS: NavItem[] = [
         href: '/examinations',
         label: 'Examinations',
         icon: FileText,
+      },
+      {
+        href: '/assessments',
+        label: 'Assessments',
+        icon: Notebook,
       },
       {
         href: '/attendance',

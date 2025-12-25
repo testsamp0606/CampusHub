@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "School": {
@@ -317,9 +318,24 @@
       },
       "required": ["role", "module", "permissions", "schoolId"]
     },
-    "Exam": {
-        "title": "Exam",
-        "description": "Represents an exam or assessment for a class.",
+    "Examination": {
+        "title": "Examination",
+        "description": "Represents a formal school examination event.",
+        "type": "object",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "type": { "type": "string", "enum": ["Mid-Term", "Half-Yearly", "Annual"] },
+            "startDate": { "type": "string", "format": "date" },
+            "endDate": { "type": "string", "format": "date" },
+            "status": { "type": "string", "enum": ["Draft", "Scheduled", "Published", "Completed"] },
+            "schoolId": { "type": "string" }
+        },
+        "required": ["id", "name", "type", "startDate", "endDate", "status", "schoolId"]
+    },
+    "Assessment": {
+        "title": "Assessment",
+        "description": "Represents a continuous assessment for a class.",
         "type": "object",
         "properties": {
             "id": { "type": "string" },
@@ -335,16 +351,16 @@
     },
     "Mark": {
         "title": "Mark",
-        "description": "Represents a student's mark in an exam.",
+        "description": "Represents a student's mark in an assessment or exam.",
         "type": "object",
         "properties": {
             "id": { "type": "string" },
-            "examId": { "type": "string" },
+            "assessmentId": { "type": "string" },
             "studentId": { "type": "string" },
             "marks": { "type": "number" },
             "schoolId": { "type": "string" }
         },
-        "required": ["id", "examId", "studentId", "marks", "schoolId"]
+        "required": ["id", "assessmentId", "studentId", "marks", "schoolId"]
     }
   },
   "auth": {
@@ -582,14 +598,26 @@
         }
       },
       {
-        "path": "/schools/{schoolId}/exams/{examId}",
+        "path": "/schools/{schoolId}/examinations/{examId}",
         "definition": {
-          "entityName": "Exam",
-          "schema": { "$ref": "#/backend/entities/Exam" },
-          "description": "Stores exam and assessment information.",
+          "entityName": "Examination",
+          "schema": { "$ref": "#/backend/entities/Examination" },
+          "description": "Stores formal examination information.",
           "params": [
             { "name": "schoolId", "description": "The unique ID of the school." },
-            { "name": "examId", "description": "The unique ID of the exam." }
+            { "name": "examId", "description": "The unique ID of the examination." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/assessments/{assessmentId}",
+        "definition": {
+          "entityName": "Assessment",
+          "schema": { "$ref": "#/backend/entities/Assessment" },
+          "description": "Stores continuous assessment information.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "assessmentId", "description": "The unique ID of the assessment." }
           ]
         }
       },
@@ -598,7 +626,7 @@
         "definition": {
           "entityName": "Mark",
           "schema": { "$ref": "#/backend/entities/Mark" },
-          "description": "Stores student marks for an exam.",
+          "description": "Stores student marks for an assessment or exam.",
           "params": [
             { "name": "schoolId", "description": "The unique ID of the school." },
             { "name": "markId", "description": "The unique ID for the mark record." }
