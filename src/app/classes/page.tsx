@@ -20,44 +20,64 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, PlusCircle, User, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  classesData as initialClassesData,
-  teachersData,
-} from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
-type ClassInfo = (typeof initialClassesData)[0];
+type ClassInfo = {
+  id: string;
+  name: string;
+  teacherId: string;
+  studentCount: number;
+  capacity: number;
+  status: 'Active' | 'Archived' | 'Completed';
+  classTeacher?: string; // Optional because we'll add it
+};
+
+type Teacher = {
+  id: string;
+  name: string;
+};
 
 export default function ClassesPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [classesData, setClassesData] = useState<ClassInfo[]>([]);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    const storedClasses = localStorage.getItem('classesData');
-    const enrichedClasses = (
-      storedClasses ? JSON.parse(storedClasses) : initialClassesData
-    ).map((cls: ClassInfo) => {
-      const teacher = teachersData.find((t) => t.id === cls.teacherId);
-      return {
-        ...cls,
-        classTeacher: teacher ? teacher.name : 'N/A',
-      };
-    });
-    setClassesData(enrichedClasses);
-  }, []);
+  const classesQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
+    [firestore]
+  );
+  const { data: classesData, isLoading: classesLoading } = useCollection<ClassInfo>(classesQuery);
+
+  const teachersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
+    [firestore]
+  );
+  const { data: teachersData, isLoading: teachersLoading } = useCollection<Teacher>(teachersQuery);
+
+  const enrichedClasses = useMemo(() => {
+    if (!classesData || !teachersData) return [];
+
+    const teachersMap = new Map(teachersData.map(t => [t.id, t.name]));
+
+    return classesData.map((cls) => ({
+      ...cls,
+      classTeacher: teachersMap.get(cls.teacherId) || 'N/A',
+    }));
+  }, [classesData, teachersData]);
 
   const filteredClasses = useMemo(() => {
-    return classesData.filter(
+    return enrichedClasses.filter(
       (cls) =>
         cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (cls.classTeacher &&
           cls.classTeacher.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [searchQuery, classesData]);
+  }, [searchQuery, enrichedClasses]);
 
   const getStatusBadgeVariant = (status: ClassInfo['status']) => {
     switch (status) {
@@ -71,6 +91,8 @@ export default function ClassesPage() {
         return 'default';
     }
   };
+  
+  const isLoading = classesLoading || teachersLoading;
 
   return (
     <div className="flex flex-col gap-4">
@@ -111,7 +133,12 @@ export default function ClassesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClasses.map((cls) => (
+              {isLoading && (
+                 <TableRow>
+                  <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && filteredClasses.map((cls) => (
                 <TableRow key={cls.id}>
                   <TableCell className="font-medium">{cls.name}</TableCell>
                   <TableCell>
@@ -149,13 +176,15 @@ export default function ClassesPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {!isLoading && filteredClasses.length === 0 && (
+                <TableRow>
+                    <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                    No classes found.
+                    </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-          {filteredClasses.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No classes found.
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
