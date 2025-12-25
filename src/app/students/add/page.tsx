@@ -47,6 +47,7 @@ const studentFormSchema = z
   .object({
     // Student Details
     id: z.string(),
+    title: z.string().optional(),
     name: z.string().min(2, 'Name must be at least 2 characters.'),
     gender: z.enum(['Male', 'Female', 'Other']),
     dob_year: z.string({ required_error: 'Year is required.' }),
@@ -145,6 +146,7 @@ export default function AddStudentPage() {
 
     const newStudentData = {
       ...data,
+      name: `${data.title || ''} ${data.name}`.trim(),
       schoolId: 'school-1',
       dateOfBirth: format(
         new Date(
@@ -171,6 +173,8 @@ export default function AddStudentPage() {
     label: format(new Date(0, i), 'MMMM'),
   }));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
+  const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
 
   return (
     <Card className="shadow-lg">
@@ -189,7 +193,7 @@ export default function AddStudentPage() {
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-lg font-semibold">Student Details</AccordionTrigger>
                 <AccordionContent className="p-2">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-4">
                     <FormField
                       control={form.control}
                       name="id"
@@ -203,20 +207,44 @@ export default function AddStudentPage() {
                         </FormItem>
                       )}
                     />
-                     <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <RequiredLabel>Student Name</RequiredLabel>
-                          <FormControl>
-                            <Input placeholder="John Doe" {...field} value={field.value || ''} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="md:col-span-3">
+                     <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <RequiredLabel>Title</RequiredLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a title" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="Mr.">Mr.</SelectItem>
+                                            <SelectItem value="Mrs.">Mrs.</SelectItem>
+                                            <SelectItem value="Miss">Miss</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem className="md:col-span-3">
+                                <RequiredLabel>Full Name</RequiredLabel>
+                                <FormControl>
+                                    <Input placeholder="John Doe" {...field} value={field.value || ''} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <div className="md:col-span-4">
                       <RequiredLabel>Date of Birth</RequiredLabel>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField
@@ -253,7 +281,28 @@ export default function AddStudentPage() {
                         </FormItem>
                       )}
                     />
-                    <FormField control={form.control} name="bloodGroup" render={({ field }) => (<FormItem><FormLabel>Blood Group</FormLabel><FormControl><Input placeholder="e.g., O+" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
+                    <FormField
+                      control={form.control}
+                      name="bloodGroup"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Blood Group</FormLabel>
+                           <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select blood group" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {bloodGroups.map(group => (
+                                <SelectItem key={group} value={group}>{group}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField control={form.control} name="category" render={({ field }) => (<FormItem><FormLabel>Category</FormLabel><FormControl><Input placeholder="e.g., General" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="aadhaar" render={({ field }) => (<FormItem><FormLabel>Aadhaar Number</FormLabel><FormControl><Input placeholder="1234 5678 9012" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
                     <FormField control={form.control} name="studentPhoto" render={({ field: { value, onChange, ...field }}) => (<FormItem><FormLabel>Student Photo</FormLabel><FormControl><Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files?.[0])} {...field} /></FormControl><FormMessage /></FormItem>)} />
