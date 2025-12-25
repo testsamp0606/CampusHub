@@ -1,3 +1,4 @@
+
 /**
  * Core Philosophy: This ruleset enforces a strict multi-tenant security model where all data is partitioned by a school.
  * A user's access to any resource is contingent on their verified membership within a specific school, which is
@@ -230,9 +231,10 @@ service cloud.firestore {
      * @principle Enforces that users can only interact with their own conversations.
      */
     match /schools/{schoolId}/conversations/{conversationId} {
-      // READ: Allow if user is a member of the school AND their UID is in the participantIds array.
-      // This is secure for `get` and for `list` queries that include `where('participantIds', 'array-contains', request.auth.uid)`.
-      allow get, list: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
+      // READ: Allow `get` if the user is a participant. `list` is allowed only for queries
+      // that explicitly filter by the user's UID in the `participantIds` array.
+      allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
+      allow list: if isSchoolMember(schoolId) && request.query.where.get('participantIds', 'array-contains') == request.auth.uid;
       
       // CREATE: Allow if user is a member of the school AND their UID is in the new conversation's participant list.
       // Also ensures data integrity by checking schoolId.

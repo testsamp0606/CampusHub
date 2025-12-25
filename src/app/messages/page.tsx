@@ -32,7 +32,7 @@ type Conversation = {
     participantIds: string[];
     participants: Participant[]; // This will be enriched
     lastMessage: string;
-    lastMessageTimestamp: string;
+    lastMessageTimestamp: any; // Can be a server timestamp
     readBy: string[];
     read: boolean; // This will be enriched
 };
@@ -75,6 +75,8 @@ export default function MessagesPage() {
             name: usersMap.get(id) || 'Unknown User'
         })),
         read: convo.readBy?.includes(user.uid),
+        // Ensure timestamp is a Date object for formatDistanceToNow
+        lastMessageTimestamp: convo.lastMessageTimestamp?.toDate ? convo.lastMessageTimestamp.toDate() : new Date(),
     }));
   }, [conversationsData, usersData, user]);
 
@@ -149,7 +151,7 @@ export default function MessagesPage() {
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatDistanceToNow(new Date(convo.lastMessageTimestamp), { addSuffix: true })}
+                          {formatDistanceToNow(convo.lastMessageTimestamp, { addSuffix: true })}
                       </p>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1 truncate">{convo.lastMessage}</p>
@@ -170,5 +172,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
-    
