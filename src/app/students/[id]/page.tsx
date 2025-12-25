@@ -1,4 +1,3 @@
-
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -14,31 +13,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-
-type Student = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  permanentAddress: string;
-  dateOfBirth: string;
-  gender: string;
-  classId: string;
-  profilePhoto?: string;
-};
+import { Student, students as initialStudentsData } from '@/lib/data';
 
 export default function StudentProfilePage() {
   const params = useParams();
   const studentId = params.id as string;
-  const firestore = useFirestore();
+  const [student, setStudent] = useState<Student | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const studentDocRef = useMemoFirebase(() => (
-    firestore ? doc(firestore, 'schools/school-1/students', studentId) : null
-  ), [firestore, studentId]);
-
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+    const currentStudent = students.find((s) => s.id === studentId);
+    setStudent(currentStudent);
+    setIsLoading(false);
+  }, [studentId]);
 
   if (isLoading) {
     return (

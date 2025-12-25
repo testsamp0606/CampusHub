@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,9 +40,8 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect } from 'react';
-import { useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Student, students as initialStudentsData } from '@/lib/data';
 
 const studentFormSchema = z.object({
   id: z.string(),
@@ -62,10 +60,6 @@ const studentFormSchema = z.object({
 
 type StudentFormValues = z.infer<typeof studentFormSchema>;
 
-type Student = StudentFormValues & {
-  schoolId: string;
-}
-
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
   <FormLabel>
     {children} <span className="text-destructive">*</span>
@@ -77,41 +71,48 @@ export default function EditStudentPage() {
   const router = useRouter();
   const params = useParams();
   const studentId = params.id as string;
-  const firestore = useFirestore();
-
-  const studentDocRef = useMemoFirebase(() => (
-    firestore ? doc(firestore, 'schools/school-1/students', studentId) : null
-  ), [firestore, studentId]);
-
-  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
   });
 
   useEffect(() => {
-    if (student) {
+    const storedStudents = localStorage.getItem('students');
+    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+    setAllStudents(students);
+    const studentToEdit = students.find(s => s.id === studentId);
+
+    if (studentToEdit) {
+      const dob = studentToEdit.dateOfBirth ? parseISO(studentToEdit.dateOfBirth) : new Date();
       form.reset({
-        ...student,
-        dateOfBirth: student.dateOfBirth ? parseISO(student.dateOfBirth) : new Date(),
+        ...studentToEdit,
+        dateOfBirth: dob,
       });
-    } else if (!isLoading && studentId) {
+    } else if (studentId) {
       toast({ title: "Error", description: "Student not found.", variant: "destructive" });
       router.push('/students');
     }
-  }, [studentId, form, student, isLoading, router, toast]);
+    setIsLoading(false);
+  }, [studentId, form, router, toast]);
 
   function onSubmit(data: StudentFormValues) {
-    if (!firestore) return;
-    
-    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
-    
-    const updatedData = {
-        ...data,
-        dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd')
+    const updatedStudent = {
+      ...data,
+      dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
     };
 
-    setDocumentNonBlocking(studentRef, updatedData, { merge: true });
+    const updatedStudents = allStudents.map(s => {
+      if (s.id === studentId) {
+        // Find original student to merge with form data, preserving fields not in the form
+        const originalStudent = allStudents.find(orig => orig.id === studentId) || {};
+        return { ...originalStudent, ...updatedStudent };
+      }
+      return s;
+    });
+
+    localStorage.setItem('students', JSON.stringify(updatedStudents));
 
     toast({
       title: 'Student Updated',
@@ -120,7 +121,7 @@ export default function EditStudentPage() {
     router.push('/students');
   }
 
-  if (isLoading || !student) {
+  if (isLoading) {
     return <div>Loading student data...</div>;
   }
 
@@ -306,9 +307,9 @@ export default function EditStudentPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="C001">Class X</SelectItem>
-                        <SelectItem value="C002">Class IX</SelectItem>
-                        <SelectItem value="C003">Class VIII</SelectItem>
+                        <SelectItem value="C001">Class X-A</SelectItem>
+                        <SelectItem value="C002">Class IX-B</SelectItem>
+                        <SelectItem value="C003">Class VIII-A</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
