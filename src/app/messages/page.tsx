@@ -83,7 +83,7 @@ export default function MessagesPage() {
 
     return conversations.map(convo => ({
         ...convo,
-        participants: convo.participantIds.map(id => ({
+        participants: (convo.participantIds || []).map(id => ({
             id,
             name: usersMap.get(id) || 'Unknown User'
         })),
