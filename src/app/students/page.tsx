@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -22,42 +23,43 @@ import { Edit, Eye, Trash2, Search, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-
-type Student = {
-  id: string;
-  name: string;
-  classId: string;
-  parentName: string;
-  admissionDate: string;
-  email: string;
-};
+import { students as initialStudentsData, Student } from '@/lib/data';
 
 const STUDENTS_PER_PAGE = 5;
 
 export default function StudentsPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const studentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
-    [firestore]
-  );
-  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    if (storedStudents) {
+      setStudents(JSON.parse(storedStudents));
+    } else {
+      setStudents(initialStudentsData);
+      localStorage.setItem('students', JSON.stringify(initialStudentsData));
+    }
+    setIsLoading(false);
+  }, []);
+
+  const updateAndStoreStudents = (newStudents: Student[]) => {
+    setStudents(newStudents);
+    localStorage.setItem('students', JSON.stringify(newStudents));
+  };
+
 
   const handleEdit = (studentId: string) => {
     router.push(`/students/${studentId}/edit`);
   };
 
   const handleDelete = (studentId: string) => {
-    if (!firestore) return;
-    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
-    deleteDocumentNonBlocking(studentRef);
+    const updatedStudents = students.filter(student => student.id !== studentId);
+    updateAndStoreStudents(updatedStudents);
+
     toast({
       title: 'Student Deleted',
       variant: 'destructive',
@@ -66,14 +68,13 @@ export default function StudentsPage() {
   };
 
   const filteredStudents = useMemo(() => {
-    if (!studentsData) return [];
-    return studentsData.filter(
+    return students.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         student.email.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery, studentsData]);
+  }, [searchQuery, students]);
 
   const totalPages = Math.ceil(filteredStudents.length / STUDENTS_PER_PAGE);
 
