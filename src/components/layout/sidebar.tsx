@@ -47,7 +47,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
                 <SidebarMenuButton
                   isActive={isParentActive}
                   tooltip={item.label}
-                  className="justify-start"
+                  className="justify-center"
                   asChild
                 >
                   <div>
@@ -59,7 +59,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
               <PopoverContent
                 side="right"
                 align="start"
-                className="p-1 w-auto bg-sidebar border-sidebar-border"
+                className="p-1 w-auto bg-sidebar-accent border-sidebar-border"
               >
                 <SidebarMenu>
                   {item.subItems.map((subItem) => (
@@ -134,7 +134,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
           <SidebarMenuButton
             isActive={pathname === item.href}
             tooltip={item.label}
-            className="justify-start"
+            className="justify-start group-data-[collapsible=icon]:justify-center"
             asChild
           >
             <div>
@@ -175,13 +175,13 @@ export default function AppSidebar() {
       className="hidden border-r border-sidebar-border md:flex"
     >
       <SidebarHeader className="h-16 flex items-center justify-between px-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold">
             <GraduationCap className="h-7 w-7 text-primary" />
-            <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
-              Campus Hub
-            </span>
           </Link>
+          <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
+              Campus Hub
+          </span>
           <div className="group-data-[collapsible=icon]:hidden ml-auto">
             <SidebarToggle />
           </div>
@@ -201,6 +201,7 @@ export default function AppSidebar() {
               asChild
               tooltip="Settings"
               isActive={pathname === '/settings'}
+              className="justify-start group-data-[collapsible=icon]:justify-center"
             >
               <Link href="/settings">
                 <Settings />
@@ -209,7 +210,7 @@ export default function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Log Out">
+            <SidebarMenuButton asChild tooltip="Log Out" className="justify-start group-data-[collapsible=icon]:justify-center">
               <Link href="#">
                 <LogOut />
                 <span>Log Out</span>
