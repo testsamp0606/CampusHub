@@ -20,7 +20,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Bus,
-  Map,
+  Map as MapIcon,
   Users,
   Search,
   PlusCircle,
@@ -134,7 +134,7 @@ export default function TransportPage() {
       <Tabs defaultValue="routes">
         <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
           <TabsTrigger value="routes">
-            <Map className="mr-2 h-4 w-4" /> Routes
+            <MapIcon className="mr-2 h-4 w-4" /> Routes
           </TabsTrigger>
           <TabsTrigger value="vehicles">
             <Bus className="mr-2 h-4 w-4" /> Vehicles
@@ -168,7 +168,7 @@ export default function TransportPage() {
                   <Card key={route.id} className="shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <Map /> {route.routeName}
+                        <MapIcon /> {route.routeName}
                       </CardTitle>
                       <CardDescription>
                         Vehicle: {vehicle?.vehicleNumber || 'Not Assigned'} (
@@ -323,5 +323,3 @@ export default function TransportPage() {
     </div>
   );
 }
-
-    
