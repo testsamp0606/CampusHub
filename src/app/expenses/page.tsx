@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { useCollection, useFirestore } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
@@ -56,7 +56,7 @@ export default function ExpensesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
 
-  const expensesCol = useMemo(
+  const expensesCol = useMemoFirebase(
     () => (firestore ? collection(firestore, 'schools/school-1/expenses') : null),
     [firestore]
   );
