@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 
 type ClassInfo = {
   id: string;
