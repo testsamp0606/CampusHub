@@ -28,6 +28,7 @@ import {
   ClipboardList,
   AreaChart,
   Notebook,
+  GraduationCap as ResultsIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -80,6 +81,11 @@ export const ALL_NAV_ITEMS: NavItem[] = [
         href: '/assessments',
         label: 'Assessments',
         icon: Notebook,
+      },
+      {
+        href: '/results',
+        label: 'Results',
+        icon: ResultsIcon,
       },
       {
         href: '/attendance',

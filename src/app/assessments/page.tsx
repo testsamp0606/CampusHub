@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,11 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FilePlus2,
   List,
-  GraduationCap,
   ClipboardEdit,
   CheckCircle,
-  Printer,
-  Calculator,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,9 +38,6 @@ import Link from 'next/link';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import ReportCard from './report-card';
-
 
 type Assessment = {
     id: string;
@@ -71,11 +64,6 @@ type ClassInfo = {
     id: string;
     name: string;
 }
-type FinalResult = {
-    totalMarks: number;
-    percentage: number;
-    grade: string;
-}
 
 export default function AssessmentsPage() {
   const { toast } = useToast();
@@ -83,13 +71,6 @@ export default function AssessmentsPage() {
   const [selectedAssessment, setSelectedAssessment] = useState<string>('');
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [marks, setMarks] = useState<Map<string, number | string>>(new Map());
-
-  // State for results tab
-  const [resultClass, setResultClass] = useState<string>('');
-  const [weightages, setWeightages] = useState<Record<string, number>>({});
-  const [finalResults, setFinalResults] = useState<Map<string, FinalResult>>(new Map());
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [selectedStudentForReport, setSelectedStudentForReport] = useState<Student | null>(null);
 
   const assessmentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/assessments') : null), [firestore]);
   const { data: assessmentsData } = useCollection<Assessment>(assessmentsQuery);
@@ -109,18 +90,6 @@ export default function AssessmentsPage() {
   }, [firestore, selectedClass]);
   const { data: students } = useCollection<Student>(studentsQuery);
   
-  const allMarksQuery = useMemoFirebase(() => {
-    if (!firestore || !resultClass) return null;
-    return collection(firestore, 'schools/school-1/marks');
-  }, [firestore, resultClass]);
-  const { data: allMarksData } = useCollection<Mark>(allMarksQuery);
-
-  const studentsInResultClassQuery = useMemoFirebase(() => {
-      if(!firestore || !resultClass) return null;
-      return query(collection(firestore, 'schools/school-1/students'), where('classId', '==', resultClass))
-  }, [firestore, resultClass]);
-  const { data: studentsInResultClass } = useCollection<Student>(studentsInResultClassQuery);
-
   useEffect(() => {
     if (marksData) {
       const newMarks = new Map<string, number | string>();
@@ -221,96 +190,19 @@ export default function AssessmentsPage() {
     }
   }
 
-  // --- Result Calculation Logic ---
-
-  const relevantAssessments = useMemo(() => {
-      return assessmentsData?.filter(a => a.classId === resultClass && a.status === 'Published') || [];
-  }, [assessmentsData, resultClass]);
-
-  const handleWeightageChange = (assessmentId: string, value: string) => {
-      const numValue = Number(value);
-      if(!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
-          setWeightages(prev => ({...prev, [assessmentId]: numValue}));
-      }
-  }
-  
-  const getGrade = (percentage: number): string => {
-      if (percentage >= 90) return 'A+';
-      if (percentage >= 80) return 'A';
-      if (percentage >= 70) return 'B';
-      if (percentage >= 60) return 'C';
-      if (percentage >= 50) return 'D';
-      return 'F';
-  };
-
-  const handleCalculateResults = () => {
-      if(!studentsInResultClass || !allMarksData) return;
-
-      const totalWeightage = relevantAssessments.reduce((acc, assessment) => acc + (weightages[assessment.id] || 0), 0);
-      if(totalWeightage !== 100) {
-          toast({
-              variant: 'destructive',
-              title: 'Invalid Weightage',
-              description: `Total weightage must sum to 100%. Current total is ${totalWeightage}%.`
-          });
-          return;
-      }
-      
-      const newFinalResults = new Map<string, FinalResult>();
-      
-      studentsInResultClass.forEach(student => {
-          let weightedTotal = 0;
-          let totalPossibleWeightedMarks = 0;
-
-          relevantAssessments.forEach(assessment => {
-              const weight = weightages[assessment.id] || 0;
-              const markRecord = allMarksData.find(m => m.studentId === student.id && m.assessmentId === assessment.id);
-              const marks = typeof markRecord?.marks === 'number' ? markRecord.marks : 0;
-              
-              weightedTotal += (marks / assessment.maxMarks) * weight;
-              totalPossibleWeightedMarks += weight;
-          });
-
-          const percentage = totalPossibleWeightedMarks > 0 ? (weightedTotal / totalPossibleWeightedMarks) * 100 : 0;
-          const grade = getGrade(percentage);
-
-          newFinalResults.set(student.id, {
-              totalMarks: weightedTotal,
-              percentage: parseFloat(percentage.toFixed(2)),
-              grade,
-          });
-      });
-
-      setFinalResults(newFinalResults);
-      toast({
-          title: 'Results Calculated',
-          description: 'Final marks, percentages, and grades have been calculated.'
-      })
-  }
-
-  const handlePrint = (student: Student) => {
-    setSelectedStudentForReport(student);
-  };
-
-  // --- End Result Calculation Logic ---
-
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Assessments & Results</h1>
+        <h1 className="text-2xl font-bold">Assessments</h1>
       </div>
 
       <Tabs defaultValue="schedule">
-        <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
+        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="schedule">
             <List className="mr-2 h-4 w-4" /> Assessment Schedule
           </TabsTrigger>
           <TabsTrigger value="marks">
             <ClipboardEdit className="mr-2 h-4 w-4" /> Manage Marks
-          </TabsTrigger>
-          <TabsTrigger value="results">
-            <GraduationCap className="mr-2 h-4 w-4" /> Results
           </TabsTrigger>
         </TabsList>
 
@@ -452,117 +344,6 @@ export default function AssessmentsPage() {
                         )}
                     </CardContent>
                 </Card>
-            )}
-        </TabsContent>
-
-        <TabsContent value="results" className="mt-4">
-             <Card>
-                <CardHeader>
-                <CardTitle>Generate Final Results</CardTitle>
-                <CardDescription>
-                    Configure weightages, calculate final scores, and generate report cards.
-                </CardDescription>
-                </CardHeader>
-                 <CardContent className="space-y-4">
-                    <Select value={resultClass} onValueChange={setResultClass}>
-                        <SelectTrigger className="w-full md:w-[280px]">
-                            <SelectValue placeholder="Select a class to generate results" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {classOptions.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                 </CardContent>
-            </Card>
-            {resultClass && (
-                <>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Set Assessment Weightages</CardTitle>
-                        <CardDescription>Define the weightage (%) for each published assessment. The total must be 100%.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {relevantAssessments.map(assessment => (
-                            <div key={assessment.id} className="space-y-2">
-                                <label className="text-sm font-medium">{assessment.name}</label>
-                                <Input 
-                                    type="number"
-                                    value={weightages[assessment.id] || ''}
-                                    onChange={e => handleWeightageChange(assessment.id, e.target.value)}
-                                    placeholder="e.g., 20"
-                                    min="0"
-                                    max="100"
-                                />
-                            </div>
-                        ))}
-                    </CardContent>
-                    <CardFooter>
-                        <Button onClick={handleCalculateResults}>
-                            <Calculator className="mr-2 h-4 w-4" />
-                            Calculate Final Results
-                        </Button>
-                    </CardFooter>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Final Results for {classesData?.find(c=>c.id === resultClass)?.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student ID</TableHead>
-                                    <TableHead>Student Name</TableHead>
-                                    {relevantAssessments.map(a => <TableHead key={a.id}>{a.name} (Max {a.maxMarks})</TableHead>)}
-                                    <TableHead>Final %</TableHead>
-                                    <TableHead>Grade</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {studentsInResultClass?.map(student => (
-                                    <TableRow key={student.id}>
-                                        <TableCell>{student.id}</TableCell>
-                                        <TableCell>{student.name}</TableCell>
-                                        {relevantAssessments.map(assessment => {
-                                            const mark = allMarksData?.find(m => m.studentId === student.id && m.assessmentId === assessment.id);
-                                            return <TableCell key={assessment.id}>{mark ? mark.marks : 'N/A'}</TableCell>
-                                        })}
-                                        <TableCell className="font-semibold">{finalResults.get(student.id)?.percentage || 'N/A'}</TableCell>
-                                        <TableCell className="font-bold">{finalResults.get(student.id)?.grade || 'N/A'}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Dialog>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" onClick={() => handlePrint(student)} disabled={!finalResults.has(student.id)}>
-                                                        <Printer className="h-4 w-4" />
-                                                    </Button>
-                                                </DialogTrigger>
-                                                 {selectedStudentForReport && selectedStudentForReport.id === student.id && (
-                                                    <DialogContent className="max-w-4xl">
-                                                        <DialogHeader>
-                                                            <DialogTitle>Report Card</DialogTitle>
-                                                        </DialogHeader>
-                                                        <ReportCard 
-                                                            student={selectedStudentForReport}
-                                                            results={finalResults.get(student.id)!}
-                                                            marks={allMarksData?.filter(m => m.studentId === student.id) || []}
-                                                            assessments={relevantAssessments}
-                                                        />
-                                                    </DialogContent>
-                                                )}
-                                            </Dialog>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-                </>
             )}
         </TabsContent>
       </Tabs>
