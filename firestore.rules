@@ -134,7 +134,7 @@ service cloud.firestore {
      */
     match /schools/{schoolId}/students/{studentId} {
       allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
+      allow create: if canReadSchoolData(schoolId) && schoolIdMatchesPath(schoolId);
       allow update: if canModifySchoolData(schoolId);
       allow delete: if canModifySchoolData(schoolId);
     }
@@ -320,6 +320,37 @@ service cloud.firestore {
       allow create: if canCreateSchoolData(schoolId);
       allow update: if canModifySchoolData(schoolId);
       allow delete: if canModifySchoolData(schoolId);
+    }
+    /**
+     * @description Controls access to fee invoices.
+     * @path /schools/{schoolId}/fees/{feeId}
+     */
+    match /schools/{schoolId}/fees/{feeId} {
+        allow get, list: if canReadSchoolData(schoolId);
+        allow create: if canCreateSchoolData(schoolId);
+        allow update: if canModifySchoolData(schoolId);
+        allow delete: if canModifySchoolData(schoolId);
+    }
+
+    /**
+     * @description Controls access to class timetables.
+     * @path /schools/{schoolId}/timetables/{timetableId}
+     */
+    match /schools/{schoolId}/timetables/{timetableId} {
+        allow get, list: if canReadSchoolData(schoolId);
+        allow create: if canCreateSchoolData(schoolId);
+        allow update: if canModifySchoolData(schoolId);
+        allow delete: if canModifySchoolData(schoolId);
+    }
+    /**
+     * @description Controls access to role permissions.
+     * @path /schools/{schoolId}/permissions/{roleName}
+     */
+    match /schools/{schoolId}/permissions/{roleName} {
+        allow get, list: if isSchoolAdmin(schoolId);
+        allow create: if canCreateSchoolData(schoolId);
+        allow update: if canModifySchoolData(schoolId);
+        allow delete: if canModifySchoolData(schoolId);
     }
   }
 }
