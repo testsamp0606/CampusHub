@@ -23,11 +23,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import {
-  classesData as initialClassesData,
-  teachersData,
-} from '@/lib/data';
+import { useEffect, useMemo } from 'react';
 import {
   Select,
   SelectContent,
@@ -35,8 +31,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-type ClassInfo = (typeof initialClassesData)[0];
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection } from 'firebase/firestore';
 
 const classFormSchema = z.object({
   id: z.string(),
@@ -69,6 +66,14 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddClassPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const teachersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
+    [firestore]
+  );
+  const { data: teachersData } = useCollection<{id: string, name: string}>(teachersQuery);
+
   const form = useForm<ClassFormValues>({
     resolver: zodResolver(classFormSchema),
     defaultValues,
@@ -80,18 +85,14 @@ export default function AddClassPage() {
   }, [form]);
 
   function onSubmit(data: ClassFormValues) {
-    const storedClasses = localStorage.getItem('classesData');
-    const currentClasses: ClassInfo[] = storedClasses
-      ? JSON.parse(storedClasses)
-      : [];
-
-    const newClass: ClassInfo = {
+    if (!firestore) return;
+    const classesCollection = collection(firestore, 'schools/school-1/classes');
+    const newClassData = {
       ...data,
       studentCount: 0, // New classes start with 0 students
+      schoolId: 'school-1',
     };
-
-    const updatedClasses = [...currentClasses, newClass];
-    localStorage.setItem('classesData', JSON.stringify(updatedClasses));
+    addDocumentNonBlocking(classesCollection, newClassData);
 
     toast({
       title: 'Class Created',
@@ -101,10 +102,13 @@ export default function AddClassPage() {
     router.push('/classes');
   }
 
-  const teacherOptions = teachersData.map((t) => ({
-    value: t.id,
-    label: t.name,
-  }));
+  const teacherOptions = useMemo(() => {
+    if (!teachersData) return [];
+    return teachersData.map((t) => ({
+      value: t.id,
+      label: t.name,
+    }));
+  }, [teachersData]);
 
   return (
     <Card className="shadow-lg">
