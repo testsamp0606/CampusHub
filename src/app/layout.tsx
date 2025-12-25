@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/header';
+import { ThemeProvider } from '@/components/layout/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Campus Hub',
@@ -35,14 +36,21 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased')}>
-        <Toaster />
-        <SidebarProvider>
-          <AppSidebar />
-          <div className="flex h-screen flex-1 flex-col overflow-y-auto">
-            <Header />
-            <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
-          </div>
-        </SidebarProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Toaster />
+          <SidebarProvider>
+            <AppSidebar />
+            <div className="flex h-screen flex-1 flex-col overflow-y-auto">
+              <Header />
+              <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+            </div>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

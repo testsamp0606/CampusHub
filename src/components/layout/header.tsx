@@ -30,6 +30,7 @@ import {
 import Link from 'next/link';
 import { conversationsData } from '@/lib/data';
 import { formatDistanceToNow } from 'date-fns';
+import { ThemeToggle } from './theme-toggle';
 
 export default function Header() {
   const userAvatar = PlaceHolderImages.find(
@@ -41,198 +42,204 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
-      <SidebarTrigger className="md:hidden" />
-      <div className="flex items-center gap-2">
-      </div>
-      <div className="flex-1">
-        
+      <div className="flex items-center gap-2 md:hidden">
+        <SidebarTrigger />
+        <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+          <GraduationCap className="h-6 w-6 text-primary" />
+          <span className="sr-only">Campus Hub</span>
+        </Link>
       </div>
 
-      <div className="flex-1 text-center">
+      <div className="flex-1"></div>
+
+      <div className="flex-1 text-center hidden md:block">
         <h1 className="font-headline text-xl font-semibold md:text-2xl">
           St. Peter School
         </h1>
       </div>
-      
+
       <div className="flex flex-1 items-center justify-end gap-2">
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-10 w-10 rounded-full"
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 rounded-full"
             >
-                <MessageSquare className="h-5 w-5" />
-                {unreadConversations.length > 0 && (
+              <MessageSquare className="h-5 w-5" />
+              {unreadConversations.length > 0 && (
                 <span className="absolute top-2 right-2.5 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                 </span>
-                )}
-                <span className="sr-only">Messages</span>
+              )}
+              <span className="sr-only">Messages</span>
             </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Recent Messages</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {unreadConversations.length > 0 ? (
-                unreadConversations.map((convo) => (
+              unreadConversations.map((convo) => (
                 <React.Fragment key={convo.id}>
-                    <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild>
                     <Link
-                        href={`/messages/${convo.id}`}
-                        className="flex items-start gap-3"
+                      href={`/messages/${convo.id}`}
+                      className="flex items-start gap-3"
                     >
-                        <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                            {convo.participants
+                          {convo.participants
                             .find((p) => p.id !== 'user')
                             ?.name.charAt(0)}
                         </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
+                      </Avatar>
+                      <div className="flex-1">
                         <p className="font-semibold truncate">{convo.subject}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                            {convo.lastMessage}
+                          {convo.lastMessage}
                         </p>
                         <p className="text-xs text-muted-foreground/80 mt-1">
-                            {formatDistanceToNow(
+                          {formatDistanceToNow(
                             new Date(convo.lastMessageTimestamp),
                             { addSuffix: true }
-                            )}
+                          )}
                         </p>
-                        </div>
+                      </div>
                     </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                 </React.Fragment>
-                ))
+              ))
             ) : (
-                <DropdownMenuItem disabled>
+              <DropdownMenuItem disabled>
                 <p className="text-sm text-muted-foreground text-center w-full">
-                    No new messages
+                  No new messages
                 </p>
-                </DropdownMenuItem>
+              </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-                <Link
+              <Link
                 href="/messages"
                 className="justify-center text-sm text-primary"
-                >
+              >
                 View all messages
-                </Link>
+              </Link>
             </DropdownMenuItem>
-            </DropdownMenuContent>
+          </DropdownMenuContent>
         </DropdownMenu>
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-10 w-10 rounded-full"
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 rounded-full"
             >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2.5 flex h-2 w-2">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2.5 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                <span className="sr-only">Notifications</span>
+              </span>
+              <span className="sr-only">Notifications</span>
             </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-start gap-3">
-                <UserPlus className="mt-1 h-4 w-4 text-green-500" />
-                <div>
+              <UserPlus className="mt-1 h-4 w-4 text-green-500" />
+              <div>
                 <p className="font-semibold">New student registered</p>
                 <p className="text-xs text-muted-foreground">
-                    John Doe has been admitted to Class I.
+                  John Doe has been admitted to Class I.
                 </p>
-                </div>
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-start gap-3">
-                <FileWarning className="mt-1 h-4 w-4 text-yellow-500" />
-                <div>
+              <FileWarning className="mt-1 h-4 w-4 text-yellow-500" />
+              <div>
                 <p className="font-semibold">Fee Payment Overdue</p>
                 <p className="text-xs text-muted-foreground">
-                    Invoice INV003 for Mike Johnson is overdue.
+                  Invoice INV003 for Mike Johnson is overdue.
                 </p>
-                </div>
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-start gap-3">
-                <AlertCircle className="mt-1 h-4 w-4 text-red-500" />
-                <div>
+              <AlertCircle className="mt-1 h-4 w-4 text-red-500" />
+              <div>
                 <p className="font-semibold">Maintenance Alert</p>
                 <p className="text-xs text-muted-foreground">
-                    Vehicle V003 reported for maintenance.
+                  Vehicle V003 reported for maintenance.
                 </p>
-                </div>
+              </div>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link
+              <Link
                 href="/notifications"
                 className="justify-center text-sm text-primary"
-                >
+              >
                 View all notifications
-                </Link>
+              </Link>
             </DropdownMenuItem>
-            </DropdownMenuContent>
+          </DropdownMenuContent>
         </DropdownMenu>
+
+        <ThemeToggle />
+
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button
-                variant="ghost"
-                className="relative h-10 w-10 rounded-full"
+              variant="ghost"
+              className="relative h-10 w-10 rounded-full"
             >
-                <Avatar className="h-10 w-10">
+              <Avatar className="h-10 w-10">
                 {userAvatar && (
-                    <Image
+                  <Image
                     src={userAvatar.imageUrl}
                     alt={userAvatar.description}
                     width={40}
                     height={40}
                     data-ai-hint={userAvatar.imageHint}
                     className="rounded-full"
-                    />
+                  />
                 )}
                 <AvatarFallback>AD</AvatarFallback>
-                </Avatar>
+              </Avatar>
             </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
+              <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">Admin</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                    admin@stpeters.edu
+                  admin@stpeters.edu
                 </p>
-                </div>
+              </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link href="/profile">
+              <Link href="/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
-                </Link>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-                <Link href="/settings">
+              <Link href="/settings">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
-                </Link>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-                <Link href="#">
+              <Link href="#">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log Out</span>
-                </Link>
+              </Link>
             </DropdownMenuItem>
-            </DropdownMenuContent>
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
