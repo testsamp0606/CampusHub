@@ -145,6 +145,7 @@ export type ClassInfo = {
   status: 'Active' | 'Archived' | 'Completed';
   dailyAttendance?: number;
   classTeacher?: string;
+  passPercentage?: number;
 };
 
 export const classesData: ClassInfo[] = [
@@ -158,6 +159,7 @@ export const classesData: ClassInfo[] = [
     status: 'Active',
     dailyAttendance: 95,
     classTeacher: 'Mr. John Doe',
+    passPercentage: 92,
   },
   {
     id: 'C002',
@@ -169,6 +171,7 @@ export const classesData: ClassInfo[] = [
     status: 'Active',
     dailyAttendance: 98,
     classTeacher: 'Ms. Jane Smith',
+    passPercentage: 95,
   },
   {
     id: 'C003',
@@ -180,6 +183,7 @@ export const classesData: ClassInfo[] = [
     status: 'Active',
     dailyAttendance: 92,
     classTeacher: 'Mr. Robert Brown',
+    passPercentage: 88,
   },
   {
     id: 'C004',
@@ -191,6 +195,7 @@ export const classesData: ClassInfo[] = [
     status: 'Active',
     dailyAttendance: 100,
     classTeacher: 'Ms. Emily White',
+    passPercentage: 98,
   },
   {
     id: 'C005',
@@ -202,6 +207,7 @@ export const classesData: ClassInfo[] = [
     status: 'Active',
     dailyAttendance: 94,
     classTeacher: 'Mr. Michael Green',
+    passPercentage: 91,
   },
   {
     id: 'C006',
@@ -213,6 +219,7 @@ export const classesData: ClassInfo[] = [
     status: 'Archived',
     dailyAttendance: 96,
     classTeacher: 'Ms. Sarah Black',
+    passPercentage: 94,
   },
 ];
 

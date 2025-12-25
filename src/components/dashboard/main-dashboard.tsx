@@ -6,6 +6,7 @@ import { statCardsData, studentStatsData, teacherStatsData } from '@/lib/data';
 import AttendanceCard from './attendance-card';
 import ClassesTable from './classes-table';
 import AnomalyDetector from './anomaly-detector';
+import ClassPerformanceChart from './student-charts/class-performance-chart';
 
 export default function MainDashboard() {
   return (
@@ -32,10 +33,15 @@ export default function MainDashboard() {
           </div>
         </TabsContent>
         <TabsContent value="students">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {studentStatsData.map((card) => (
-              <StatCard key={card.title} {...card} />
-            ))}
+          <div className="flex flex-col gap-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {studentStatsData.map((card) => (
+                <StatCard key={card.title} {...card} />
+              ))}
+            </div>
+            <div className="grid gap-4 md:grid-cols-1">
+              <ClassPerformanceChart />
+            </div>
           </div>
         </TabsContent>
         <TabsContent value="teachers">
