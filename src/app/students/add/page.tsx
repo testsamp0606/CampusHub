@@ -30,14 +30,6 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -45,21 +37,34 @@ import { useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-const studentFormSchema = z.object({
-  id: z.string(),
-  title: z.enum(['Mr', 'Mrs', 'Miss']),
-  name: z.string().min(2, 'Name must be at least 2 characters.'),
-  email: z.string().email('Invalid email address.'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
-  dateOfBirth: z.date({
-    required_error: 'A date of birth is required.',
-  }),
-  gender: z.enum(['Male', 'Female', 'Other']),
-  permanentAddress: z
-    .string()
-    .min(10, 'Permanent Address must be at least 10 characters.'),
-  classId: z.string({ required_error: 'Please select a class.' }),
-});
+const studentFormSchema = z
+  .object({
+    id: z.string(),
+    title: z.enum(['Mr', 'Mrs', 'Miss']),
+    name: z.string().min(2, 'Name must be at least 2 characters.'),
+    email: z.string().email('Invalid email address.'),
+    phone: z.string().regex(/^\d{10}$/, 'Phone number must be 10 digits.'),
+    dob_year: z.string({ required_error: 'Year is required.' }),
+    dob_month: z.string({ required_error: 'Month is required.' }),
+    dob_day: z.string({ required_error: 'Day is required.' }),
+    gender: z.enum(['Male', 'Female', 'Other']),
+    permanentAddress: z
+      .string()
+      .min(10, 'Permanent Address must be at least 10 characters.'),
+    classId: z.string({ required_error: 'Please select a class.' }),
+  })
+  .refine(
+    (data) => {
+      const { dob_year, dob_month, dob_day } = data;
+      if (!dob_year || !dob_month || !dob_day) return false;
+      const date = new Date(`${dob_year}-${dob_month}-${dob_day}`);
+      return !isNaN(date.getTime());
+    },
+    {
+      message: 'Invalid date of birth.',
+      path: ['dob_day'],
+    }
+  );
 
 type StudentFormValues = z.infer<typeof studentFormSchema>;
 
@@ -88,7 +93,6 @@ export default function AddStudentPage() {
   });
 
   useEffect(() => {
-    // Generate a unique student ID when the component mounts
     const uniqueId = `S${Date.now().toString().slice(-6)}`;
     form.setValue('id', uniqueId);
   }, [form]);
@@ -102,17 +106,23 @@ export default function AddStudentPage() {
       });
       return;
     }
-    const studentsCollection = collection(firestore, 'schools/school-1/students');
+    const studentsCollection = collection(
+      firestore,
+      'schools/school-1/students'
+    );
 
     const newStudentData = {
       ...data,
       name: `${data.title} ${data.name}`,
       schoolId: 'school-1',
-      dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd'),
+      dateOfBirth: format(
+        new Date(
+          `${data.dob_year}-${data.dob_month}-${data.dob_day}`
+        ),
+        'yyyy-MM-dd'
+      ),
     };
-    
-    // We use the non-blocking version to let the UI update immediately.
-    // The security rule error handling is managed centrally.
+
     addDocumentNonBlocking(studentsCollection, newStudentData, data.id);
 
     toast({
@@ -122,6 +132,14 @@ export default function AddStudentPage() {
     form.reset();
     router.push('/students');
   }
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1).padStart(2, '0'),
+    label: format(new Date(0, i), 'MMMM'),
+  }));
+  const days = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
 
   return (
     <Card className="shadow-lg">
@@ -155,7 +173,7 @@ export default function AddStudentPage() {
                 )}
               />
               <div className="md:col-span-1"></div>
-              
+
               <div className="grid grid-cols-4 gap-4 md:col-span-2 items-end">
                 <FormField
                   control={form.control}
@@ -163,7 +181,10 @@ export default function AddStudentPage() {
                   render={({ field }) => (
                     <FormItem className="col-span-1">
                       <RequiredLabel>Title</RequiredLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a title" />
@@ -232,47 +253,96 @@ export default function AddStudentPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="dateOfBirth"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <RequiredLabel>Date of Birth</RequiredLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP')
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date('1900-01-01')
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="md:col-span-2">
+                <RequiredLabel>Date of Birth</RequiredLabel>
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="dob_day"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="sr-only">Day</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Day" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {days.map((day) => (
+                              <SelectItem key={day} value={day}>
+                                {day}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dob_month"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="sr-only">Month</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Month" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {months.map((month) => (
+                              <SelectItem key={month.value} value={month.value}>
+                                {month.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dob_year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="sr-only">Year</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Year" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {years.map((year) => (
+                              <SelectItem
+                                key={year}
+                                value={year.toString()}
+                              >
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                 <FormMessage>
+                  {form.formState.errors.dob_day?.message}
+                </FormMessage>
+              </div>
+
               <FormField
                 control={form.control}
                 name="gender"
