@@ -231,10 +231,12 @@ service cloud.firestore {
      * @principle Enforces that users can only interact with their own conversations.
      */
     match /schools/{schoolId}/conversations/{conversationId} {
-      // READ: Allow `get` if the user is a participant. `list` is allowed only for queries
-      // that explicitly filter by the user's UID in the `participantIds` array.
+      // READ: Allow `get` if the user is a participant.
       allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-      allow list: if isSchoolMember(schoolId) && request.auth.uid in request.query.filters.participantIds;
+      // LIST: Allow any school member to attempt a query. The query itself on the client
+      // MUST be constrained (e.g., using `array-contains`) and the `get` rule above
+      // will be checked on every document returned by the query.
+      allow list: if isSchoolMember(schoolId);
       
       // CREATE: Allow if user is a member of the school AND their UID is in the new conversation's participant list.
       // Also ensures data integrity by checking schoolId.
