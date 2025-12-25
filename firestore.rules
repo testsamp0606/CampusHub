@@ -221,5 +221,47 @@ service cloud.firestore {
       allow update: if canModifySchoolData(schoolId);
       allow delete: if canModifySchoolData(schoolId);
     }
+
+    /**
+     * @description Controls access to conversation threads.
+     * @path /schools/{schoolId}/conversations/{conversationId}
+     * @allow A user can read/list conversations they are a participant in.
+     * @allow A user can create a conversation if they are one of the participants.
+     * @principle Enforces that users can only interact with their own conversations.
+     */
+    match /schools/{schoolId}/conversations/{conversationId} {
+      // READ: Allow if user is a member of the school AND their UID is in the participantIds array.
+      // This is secure for `get` and for `list` queries that include `where('participantIds', 'array-contains', request.auth.uid)`.
+      allow get, list: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
+      
+      // CREATE: Allow if user is a member of the school AND their UID is in the new conversation's participant list.
+      // Also ensures data integrity by checking schoolId.
+      allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
+      
+      // UPDATE: Allow if user is a participant. Typically used to update lastMessage, timestamp, and readBy fields.
+      allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
+
+      // DELETE: Generally, deleting conversations should be disabled or restricted to admins to prevent data loss.
+      allow delete: if false;
+
+      /**
+       * @description Controls access to messages within a conversation.
+       * @path /schools/{schoolId}/conversations/{conversationId}/messages/{messageId}
+       * @allow A participant can read all messages in the conversation.
+       * @allow A participant can create a new message in the conversation.
+       * @principle Inherits permissions from the parent conversation document.
+       */
+      match /messages/{messageId} {
+        // READ/LIST: Allow reading messages if the user is a participant in the parent conversation.
+        // The `get()` call securely checks the parent document.
+        allow get, list: if isSchoolMember(schoolId) && request.auth.uid in get(parent).data.participantIds;
+
+        // CREATE: Allow creating a message if the user is the sender and a participant in the parent conversation.
+        allow create: if isSchoolMember(schoolId) && request.resource.data.senderId == request.auth.uid && request.auth.uid in get(parent).data.participantIds;
+
+        // UPDATE/DELETE: Messages are typically immutable.
+        allow update, delete: if false;
+      }
+    }
   }
 }
