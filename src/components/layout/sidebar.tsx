@@ -121,7 +121,6 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
             <AccordionItem value={item.label} key={item.label} className="border-none">
               <AccordionTrigger
                 isActive={isParentActive}
-                className="[&_svg:last-child]:data-[state=open]:rotate-180"
               >
                   <item.icon />
                   <span>{item.label}</span>
