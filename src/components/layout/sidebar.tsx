@@ -12,6 +12,7 @@ import {
   SidebarCollapsible,
   SidebarCollapsibleContent,
   SidebarCollapsibleTrigger,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
 import {
   Popover,
