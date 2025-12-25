@@ -9,8 +9,9 @@
  * and financial records. This hierarchical structure ensures strong data isolation between different schools.
  *
  * Key Security Decisions:
+ * - SuperAdmin Override: A 'SuperAdmin' role has unrestricted access to all data across all schools.
  * - School Segregation: The primary security boundary is the school. A user authenticated for one school cannot read,
- *   write, or even see data belonging to another school. This is enforced by the `isSchoolMember(schoolId)` function.
+ *   write, or even see data belonging to another school, unless they are a SuperAdmin. This is enforced by the `isSchoolMember(schoolId)` function.
  * - Role-Based Writes: While any member of a school has broad read access within their school's data, write permissions
  *   (create, update, delete) for most collections are restricted to users with an 'admin' role. This provides a secure
  *   default for managing school-wide data.
@@ -45,6 +46,16 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    // Retrieves the user's role data from their profile document.
+    function getUserRole(schoolId) {
+      return get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data.role;
+    }
+
+    // Checks if the user is a SuperAdmin. SuperAdmins have universal access.
+    function isSuperAdmin(schoolId) {
+      return isSignedIn() && getUserRole(schoolId) == 'SuperAdmin';
+    }
 
     // Constructs the path to a user's profile document for a given school and user ID.
     function getUserDataPath(schoolId, userId) {
@@ -54,12 +65,12 @@ service cloud.firestore {
     // Checks if the requesting user is a registered member of the specified school.
     // This is the foundational check for almost all data access. It performs a single document read.
     function isSchoolMember(schoolId) {
-      return isSignedIn() && get(getUserDataPath(schoolId, request.auth.uid)).data.schoolId == schoolId;
+      return isSignedIn() && (exists(getUserDataPath(schoolId, request.auth.uid)) || isSuperAdmin(schoolId));
     }
 
     // Checks if the requesting user has the 'admin' role within the specified school.
     function isSchoolAdmin(schoolId) {
-      return isSchoolMember(schoolId) && get(getUserDataPath(schoolId, request.auth.uid)).data.role == 'admin';
+      return isSchoolMember(schoolId) && (getUserRole(schoolId) == 'admin' || isSuperAdmin(schoolId));
     }
 
     /**
@@ -80,17 +91,17 @@ service cloud.firestore {
      * Common access control rule sets for most school subcollections.
      * These bundle common logic for readability.
      */
-    // Grants read access to any verified member of the school.
+    // Grants read access to any verified member of the school or a SuperAdmin.
     function canReadSchoolData(schoolId) {
       return isSchoolMember(schoolId);
     }
 
-    // Grants create access to school admins and validates data integrity.
+    // Grants create access to school admins and validates data integrity. SuperAdmins bypass this.
     function canCreateSchoolData(schoolId) {
       return isSchoolAdmin(schoolId) && schoolIdMatchesPath(schoolId);
     }
 
-    // Grants update/delete access to school admins and ensures document existence.
+    // Grants update/delete access to school admins and ensures document existence. SuperAdmins bypass this.
     function canModifySchoolData(schoolId) {
       return resource != null && isSchoolAdmin(schoolId) && schoolIdIsImmutable();
     }
@@ -105,265 +116,149 @@ service cloud.firestore {
      */
     match /schools/{schoolId} {
       allow get, list: if isSchoolMember(schoolId);
-      allow create: if false;
-      allow update: if resource != null && isSchoolAdmin(schoolId);
-      allow delete: if false;
-    }
+      allow create: if false; // School creation should be an admin/backend process
+      allow update: if isSchoolAdmin(schoolId);
+      allow delete: if false; // School deletion should be an admin/backend process
 
-    /**
-     * @description Controls access to user profiles within a school.
-     * @path /schools/{schoolId}/users/{userId}
-     * @allow A user can create their own profile to join a school (create).
-     * @allow An admin can delete a user's profile from the school (delete).
-     * @deny A user cannot update another non-admin user's profile (update).
-     * @principle Implements self-service profile management combined with admin oversight.
-     */
-    match /schools/{schoolId}/users/{userId} {
-      allow get, list: if isSchoolMember(schoolId);
-      allow create: if isOwner(userId) && request.resource.data.id == userId && request.resource.data.schoolId == schoolId;
-      allow update: if resource != null && (isOwner(userId) || isSchoolAdmin(schoolId)) && request.resource.data.id == resource.data.id && request.resource.data.schoolId == resource.data.schoolId;
-      allow delete: if resource != null && isSchoolAdmin(schoolId);
-    }
-
-    /**
-     * @description Controls access to student records within a school.
-     * @path /schools/{schoolId}/students/{studentId}
-     * @allow A logged-in admin of "school-abc" can create a new student record (create).
-     * @deny A non-admin teacher from "school-abc" cannot create a new student record (create).
-     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/students/{studentId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canReadSchoolData(schoolId) && schoolIdMatchesPath(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to teacher records within a school.
-     * @path /schools/{schoolId}/teachers/{teacherId}
-     * @allow A logged-in member of "school-abc" can view a list of all teachers (list).
-     * @deny A user from "school-xyz" cannot view any teacher records from "school-abc" (list).
-     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/teachers/{teacherId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to class records within a school.
-     * @path /schools/{schoolId}/classes/{classId}
-     * @allow A logged-in admin of "school-abc" can update a class record (update).
-     * @deny A non-admin teacher from "school-abc" cannot delete a class record (delete).
-     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/classes/{classId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to attendance records within a school.
-     * @path /schools/{schoolId}/attendances/{attendanceId}
-     * @allow A logged-in member of "school-abc" can view an attendance record (get).
-     * @deny An admin from "school-xyz" cannot create an attendance record for "school-abc" (create).
-     * @principle Restricts modification of core school data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/attendances/{attendanceId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to expense records within a school.
-     * @path /schools/{schoolId}/expenses/{expenseId}
-     * @allow A logged-in admin of "school-abc" can delete an expense record (delete).
-     * @deny A non-admin accountant from "school-abc" cannot create an expense record (create).
-     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/expenses/{expenseId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to account records within a school.
-     * @path /schools/{schoolId}/accounts/{accountId}
-     * @allow A logged-in admin of "school-abc" can create a new account (create).
-     * @deny A logged-in teacher from "school-abc" cannot update an account (update).
-     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/accounts/{accountId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to asset records within a school.
-     * @path /schools/{schoolId}/assets/{assetId}
-     * @allow A logged-in member of "school-abc" can view asset details (get).
-     * @deny A logged-in admin of "school-xyz" cannot view assets from "school-abc" (get).
-     * @principle Restricts modification of financial data to administrators, while allowing reads by all school members.
-     */
-    match /schools/{schoolId}/assets/{assetId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-
-    /**
-     * @description Controls access to calendar events.
-     * @path /schools/{schoolId}/events/{eventId}
-     * @allow Any school member can read event information.
-     * @allow Only admins can create, update, or delete events.
-     */
-    match /schools/{schoolId}/events/{eventId} {
-        allow get, list: if canReadSchoolData(schoolId);
-        allow create: if canCreateSchoolData(schoolId);
-        allow update: if canModifySchoolData(schoolId);
-        allow delete: if canModifySchoolData(schoolId);
-    }
-    
-    /**
-     * @description Controls access to conversation threads.
-     * @path /schools/{schoolId}/conversations/{conversationId}
-     * @allow A user can read/list conversations they are a participant in.
-     * @allow A user can create a conversation if they are one of the participants.
-     * @principle Enforces that users can only interact with their own conversations.
-     */
-    match /schools/{schoolId}/conversations/{conversationId} {
-      allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-      allow list: if isSchoolMember(schoolId) && request.query.where.participantIds_array_contains == request.auth.uid;
-      allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
-      allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
-      allow delete: if false;
+      // SuperAdmin override for all subcollections
+      match /{allChildren=**} {
+        allow read, write: if isSuperAdmin(schoolId);
+      }
+      
+      /**
+       * @description Controls access to user profiles within a school.
+       * @path /schools/{schoolId}/users/{userId}
+       * @allow A user can create their own profile to join a school (create).
+       * @allow An admin can delete a user's profile from the school (delete).
+       * @deny A user cannot update another non-admin user's profile (update).
+       * @principle Implements self-service profile management combined with admin oversight.
+       */
+      match /users/{userId} {
+        allow get, list: if isSchoolMember(schoolId);
+        allow create: if isOwner(userId) && schoolIdMatchesPath(schoolId);
+        allow update: if (isOwner(userId) || isSchoolAdmin(schoolId)) && schoolIdIsImmutable();
+        allow delete: if isSchoolAdmin(schoolId);
+      }
 
       /**
-       * @description Controls access to messages within a conversation.
-       * @path /schools/{schoolId}/conversations/{conversationId}/messages/{messageId}
-       * @allow A participant can read all messages in the conversation.
-       * @allow A participant can create a new message in the conversation.
-       * @principle Inherits permissions from the parent conversation document.
+       * @description Generic rules for most school data subcollections.
+       * @principle Restricts modifications to administrators, while allowing reads by all school members.
        */
-      match /messages/{messageId} {
-        // READ/LIST: Allow reading messages if the user is a participant in the parent conversation.
-        // The `get()` call securely checks the parent document.
-        allow get, list: if isSchoolMember(schoolId) && request.auth.uid in get(parent).data.participantIds;
-
-        // CREATE: Allow creating a message if the user is the sender and a participant in the parent conversation.
-        allow create: if isSchoolMember(schoolId) && request.resource.data.senderId == request.auth.uid && request.auth.uid in get(parent).data.participantIds;
-
-        // UPDATE/DELETE: Messages are typically immutable.
-        allow update, delete: if false;
+      match /students/{studentId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
       }
-    }
-    
-    /**
-     * @description Controls access to library books.
-     * @path /schools/{schoolId}/books/{bookId}
-     * @allow Any school member can read book information.
-     * @allow Only admins can create, update, or delete book records.
-     */
-    match /schools/{schoolId}/books/{bookId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-    
-    /**
-     * @description Controls access to book issue records.
-     * @path /schools/{schoolId}/bookIssues/{issueId}
-     * @allow Any school member can read issue records.
-     * @allow Only admins can create or modify issue records.
-     */
-    match /schools/{schoolId}/bookIssues/{issueId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if isSchoolAdmin(schoolId) || (isSchoolMember(schoolId) && request.resource.data.studentId == request.auth.uid);
-      allow update: if isSchoolAdmin(schoolId);
-      allow delete: if isSchoolAdmin(schoolId);
-    }
 
-    /**
-     * @description Controls access to transport vehicles.
-     * @path /schools/{schoolId}/vehicles/{vehicleId}
-     * @allow Any school member can read vehicle information.
-     * @allow Only admins can create, update, or delete vehicle records.
-     */
-    match /schools/{schoolId}/vehicles/{vehicleId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
+      match /teachers/{teacherId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
 
-    /**
-     * @description Controls access to transport routes.
-     * @path /schools/{schoolId}/routes/{routeId}
-     * @allow Any school member can read route information.
-     * @allow Only admins can create, update, or delete route records.
-     */
-    match /schools/{schoolId}/routes/{routeId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-    
-    /**
-     * @description Controls access to student transport allocations.
-     * @path /schools/{schoolId}/studentTransports/{allocationId}
-     * @allow Any school member can read allocation information.
-     * @allow Only admins can create, update, or delete allocation records.
-     */
-    match /schools/{schoolId}/studentTransports/{allocationId} {
-      allow get, list: if canReadSchoolData(schoolId);
-      allow create: if canCreateSchoolData(schoolId);
-      allow update: if canModifySchoolData(schoolId);
-      allow delete: if canModifySchoolData(schoolId);
-    }
-    /**
-     * @description Controls access to fee invoices.
-     * @path /schools/{schoolId}/fees/{feeId}
-     */
-    match /schools/{schoolId}/fees/{feeId} {
-        allow get, list: if canReadSchoolData(schoolId);
-        allow create: if canCreateSchoolData(schoolId);
-        allow update: if canModifySchoolData(schoolId);
-        allow delete: if canModifySchoolData(schoolId);
-    }
+      match /classes/{classId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
 
-    /**
-     * @description Controls access to class timetables.
-     * @path /schools/{schoolId}/timetables/{timetableId}
-     */
-    match /schools/{schoolId}/timetables/{timetableId} {
-        allow get, list: if canReadSchoolData(schoolId);
-        allow create: if canCreateSchoolData(schoolId);
-        allow update: if canModifySchoolData(schoolId);
-        allow delete: if canModifySchoolData(schoolId);
-    }
-    /**
-     * @description Controls access to role permissions.
-     * @path /schools/{schoolId}/permissions/{roleName}
-     */
-    match /schools/{schoolId}/permissions/{roleName} {
-        allow get, list: if isSchoolAdmin(schoolId);
-        allow create: if canCreateSchoolData(schoolId);
-        allow update: if canModifySchoolData(schoolId);
-        allow delete: if canModifySchoolData(schoolId);
+      match /attendances/{attendanceId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /expenses/{expenseId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /accounts/{accountId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /assets/{assetId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /events/{eventId} {
+          allow read: if canReadSchoolData(schoolId);
+          allow write: if isSchoolAdmin(schoolId);
+      }
+      
+      /**
+       * @description Controls access to conversation threads.
+       * @path /schools/{schoolId}/conversations/{conversationId}
+       * @allow A user can read/list conversations they are a participant in.
+       * @allow A user can create a conversation if they are one of the participants.
+       * @principle Enforces that users can only interact with their own conversations.
+       */
+      match /conversations/{conversationId} {
+        allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
+        allow list: if isSchoolMember(schoolId) && request.query.where.participantIds_array_contains == request.auth.uid;
+        allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
+        allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
+        allow delete: if false;
+
+        /**
+         * @description Controls access to messages within a conversation.
+         * @path /schools/{schoolId}/conversations/{conversationId}/messages/{messageId}
+         * @allow A participant can read all messages in the conversation.
+         * @allow A participant can create a new message in the conversation.
+         * @principle Inherits permissions from the parent conversation document.
+         */
+        match /messages/{messageId} {
+          // READ/LIST: Allow reading messages if the user is a participant in the parent conversation.
+          // The `get()` call securely checks the parent document.
+          allow get, list: if isSchoolMember(schoolId) && request.auth.uid in get(parent).data.participantIds;
+
+          // CREATE: Allow creating a message if the user is the sender and a participant in the parent conversation.
+          allow create: if isSchoolMember(schoolId) && request.resource.data.senderId == request.auth.uid && request.auth.uid in get(parent).data.participantIds;
+
+          // UPDATE/DELETE: Messages are typically immutable.
+          allow update, delete: if false;
+        }
+      }
+      
+      match /books/{bookId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+      
+      match /bookIssues/{issueId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /vehicles/{vehicleId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /routes/{routeId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+      
+      match /studentTransports/{allocationId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /fees/{feeId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /timetables/{timetableId} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
+
+      match /permissions/{roleName} {
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
+      }
     }
   }
 }
+
+    
