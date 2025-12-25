@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -9,6 +8,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
+  SidebarFooter,
   SidebarCollapsible,
   SidebarCollapsibleContent,
   SidebarCollapsibleTrigger,
@@ -121,19 +121,16 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
 
             return (
               <AccordionItem value={item.label} key={item.label} className="border-none">
-                <AccordionTrigger
-                  asChild
-                >
-                    <SidebarMenuButton
-                      isActive={isParentActive}
-                      className="w-full justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                    </SidebarMenuButton>
+                <AccordionTrigger asChild>
+                  <SidebarMenuButton
+                    isActive={isParentActive}
+                    className="w-full justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </div>
+                  </SidebarMenuButton>
                 </AccordionTrigger>
                 <AccordionContent className="p-0 pl-4">
                   <SidebarMenu>
@@ -208,6 +205,42 @@ export default function AppSidebar() {
       <SidebarContent className="flex-1 p-2">
         <SidebarMenu>{renderNavItems(NAV_ITEMS, pathname, isCollapsed)}</SidebarMenu>
       </SidebarContent>
+
+      <Separator className="my-2" />
+
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Link href="/settings" passHref>
+              <SidebarMenuButton
+                isActive={pathname === '/settings'}
+                tooltip="Settings"
+                className="justify-start group-data-[collapsible=icon]:justify-center"
+                asChild
+              >
+                <div>
+                  <Settings />
+                  <span className="group-data-[collapsible=icon]:hidden">Settings</span>
+                </div>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Link href="#" passHref>
+              <SidebarMenuButton
+                tooltip="Log Out"
+                className="justify-start group-data-[collapsible=icon]:justify-center"
+                asChild
+              >
+                <div>
+                  <LogOut />
+                  <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
+                </div>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
