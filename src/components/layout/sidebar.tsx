@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -52,7 +53,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
                 >
                   <div>
                     <item.icon />
-                    <span>{item.label}</span>
+                    <span className='sr-only'>{item.label}</span>
                   </div>
                 </SidebarMenuButton>
               </PopoverTrigger>
@@ -139,7 +140,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
           >
             <div>
               <item.icon />
-              <span>{item.label}</span>
+              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </div>
           </SidebarMenuButton>
         </Link>
@@ -182,7 +183,7 @@ export default function AppSidebar() {
           <span className="text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden">
               Campus Hub
           </span>
-          <div className="group-data-[collapsible=icon]:hidden ml-auto">
+          <div className="ml-auto">
             <SidebarToggle />
           </div>
         </div>
@@ -205,7 +206,7 @@ export default function AppSidebar() {
             >
               <Link href="/settings">
                 <Settings />
-                <span>Settings</span>
+                <span className="group-data-[collapsible=icon]:hidden">Settings</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -213,7 +214,7 @@ export default function AppSidebar() {
             <SidebarMenuButton asChild tooltip="Log Out" className="justify-start group-data-[collapsible=icon]:justify-center">
               <Link href="#">
                 <LogOut />
-                <span>Log Out</span>
+                <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
