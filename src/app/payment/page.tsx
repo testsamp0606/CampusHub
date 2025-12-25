@@ -7,23 +7,30 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { feesData as initialFeesData, students, classesData } from '@/lib/data';
 import { DollarSign, Hourglass, AlertCircle } from 'lucide-react';
 import MonthlyRevenueChart from '@/components/dashboard/payment-charts/monthly-revenue-chart';
 import PaymentStatusChart from '@/components/dashboard/payment-charts/payment-status-chart';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Fee = (typeof initialFeesData)[0];
+type Fee = {
+  invoiceId: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  status: 'Paid' | 'Unpaid' | 'Overdue';
+  paymentDate: string | null;
+  description: string;
+};
 
 export default function PaymentDashboardPage() {
-  const [feesData, setFeesData] = useState<Fee[]>([]);
+  const firestore = useFirestore();
+  const feesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/fees') : null), [firestore]);
+  const { data: feesData, isLoading } = useCollection<Fee>(feesQuery);
 
-  useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
-    setFeesData(fees);
-  }, []);
 
   const stats = useMemo(() => {
+    if (!feesData) return { totalRevenue: 0, totalDues: 0, totalOverdue: 0 };
     return feesData.reduce(
       (acc, fee) => {
         if (fee.status === 'Paid') {
@@ -39,6 +46,10 @@ export default function PaymentDashboardPage() {
       { totalRevenue: 0, totalDues: 0, totalOverdue: 0 }
     );
   }, [feesData]);
+
+  if(isLoading) {
+      return <div>Loading payment data...</div>
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,8 +94,8 @@ export default function PaymentDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-          <MonthlyRevenueChart feesData={feesData} />
-          <PaymentStatusChart feesData={feesData} />
+          {feesData && <MonthlyRevenueChart feesData={feesData} />}
+          {feesData && <PaymentStatusChart feesData={feesData} />}
       </div>
     </div>
   );

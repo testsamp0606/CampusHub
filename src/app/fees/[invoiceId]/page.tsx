@@ -1,6 +1,5 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { feesData as initialFeesData, students } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -15,26 +14,50 @@ import { ArrowLeft, Printer, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useEffect, useState } from 'react';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
-type Fee = (typeof initialFeesData)[0];
+type Fee = {
+  invoiceId: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  dueDate: string;
+  status: 'Paid' | 'Unpaid' | 'Overdue';
+  paymentDate: string | null;
+  paymentMethod: string | null;
+  description: string;
+};
+type Student = {
+    id: string;
+    name: string;
+    address: string;
+    email: string;
+    phone: string;
+    classId: string;
+};
 
 export default function InvoiceDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const invoiceId = params.invoiceId;
+  const firestore = useFirestore();
+  const invoiceId = params.invoiceId as string;
 
-  const [invoice, setInvoice] = useState<Fee | undefined>(undefined);
+  const feeDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/fees', invoiceId) : null), [firestore, invoiceId]);
+  const { data: invoice, isLoading: feeLoading } = useDoc<Fee>(feeDocRef);
 
-  useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
-    const currentInvoice = fees.find((f) => f.invoiceId === invoiceId);
-    setInvoice(currentInvoice);
-  }, [invoiceId]);
-  
-  const student = invoice ? students.find(s => s.id === invoice.studentId) : null;
+  const studentDocRef = useMemoFirebase(() => (firestore && invoice ? doc(firestore, 'schools/school-1/students', invoice.studentId) : null), [firestore, invoice]);
+  const { data: student, isLoading: studentLoading } = useDoc<Student>(studentDocRef);
+
+
+  if (feeLoading || studentLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Loading invoice...</p>
+      </div>
+    );
+  }
 
   if (!invoice || !student) {
     return (
@@ -140,7 +163,7 @@ export default function InvoiceDetailsPage() {
                         {student.email} | {student.phone}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                        Student ID: {student.id} | Class: {student.class}
+                        Student ID: {student.id} | Class: {student.classId}
                     </p>
                 </div>
                  <div className="space-y-2 text-left md:text-right">

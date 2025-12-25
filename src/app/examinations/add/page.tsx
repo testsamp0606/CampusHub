@@ -23,8 +23,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { examsData as initialExamsData, classesData } from '@/lib/data';
+import { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -32,8 +31,13 @@ import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Exam = (typeof initialExamsData)[0];
+type ClassInfo = {
+    id: string;
+    name: string;
+}
 
 const examFormSchema = z.object({
   id: z.string(),
@@ -64,6 +68,11 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddExamPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const classesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/classes') : null), [firestore]);
+  const { data: classesData } = useCollection<ClassInfo>(classesQuery);
+
   const form = useForm<ExamFormValues>({
     resolver: zodResolver(examFormSchema),
     defaultValues,
@@ -75,19 +84,16 @@ export default function AddExamPage() {
   }, [form]);
 
   function onSubmit(data: ExamFormValues) {
-    const storedExams = localStorage.getItem('examsData');
-    const currentExams: Exam[] = storedExams ? JSON.parse(storedExams) : [];
-
-    const newExam: Exam = {
-        id: data.id,
-        name: data.name,
-        classId: data.classId,
+    if (!firestore) return;
+    
+    const examsCollection = collection(firestore, 'schools/school-1/exams');
+    const newExam = {
+        ...data,
         date: format(data.date, 'yyyy-MM-dd'),
         status: 'Scheduled',
+        schoolId: 'school-1',
     };
-
-    const updatedExams = [...currentExams, newExam];
-    localStorage.setItem('examsData', JSON.stringify(updatedExams));
+    addDocumentNonBlocking(examsCollection, newExam, data.id);
     
     toast({
       title: 'Exam Scheduled',
@@ -97,7 +103,7 @@ export default function AddExamPage() {
     router.push('/examinations');
   }
 
-  const classOptions = classesData.map(c => ({ value: c.id, label: c.name }));
+  const classOptions = classesData?.map(c => ({ value: c.id, label: c.name })) || [];
 
   return (
     <Card className="shadow-lg">

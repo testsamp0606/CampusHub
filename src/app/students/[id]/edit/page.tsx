@@ -41,8 +41,9 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { students as initialStudents } from '@/lib/data';
+import { useEffect } from 'react';
+import { useDoc, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 const studentFormSchema = z.object({
   id: z.string(),
@@ -76,58 +77,41 @@ export default function EditStudentPage() {
   const router = useRouter();
   const params = useParams();
   const studentId = params.id as string;
-  const [student, setStudent] = useState<Student | undefined>(undefined);
+  const firestore = useFirestore();
+
+  const studentDocRef = useMemoFirebase(() => (
+    firestore ? doc(firestore, 'schools/school-1/students', studentId) : null
+  ), [firestore, studentId]);
+
+  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
   });
 
   useEffect(() => {
-    const storedStudents = localStorage.getItem('studentsData');
-    if (storedStudents) {
-      const students: Student[] = JSON.parse(storedStudents);
-      const studentToEdit = students.find(s => s.id === studentId);
-      if (studentToEdit) {
-        setStudent(studentToEdit);
-        form.reset({
-          ...studentToEdit,
-          dateOfBirth: studentToEdit.dateOfBirth ? parseISO(studentToEdit.dateOfBirth) : new Date(),
-        });
-      }
-    } else {
-        const studentToEdit = initialStudents.find(s => s.id === studentId);
-        if (studentToEdit) {
-            setStudent(studentToEdit as any);
-             form.reset({
-                id: studentToEdit.id,
-                name: studentToEdit.name,
-                email: studentToEdit.email,
-                phone: studentToEdit.phone,
-                dateOfBirth: new Date(),
-                gender: 'Male',
-                permanentAddress: studentToEdit.address,
-                classId: studentToEdit.classId
-            });
-        }
+    if (student) {
+      form.reset({
+        ...student,
+        dateOfBirth: student.dateOfBirth ? parseISO(student.dateOfBirth) : new Date(),
+      });
+    } else if (!isLoading && studentId) {
+      toast({ title: "Error", description: "Student not found.", variant: "destructive" });
+      router.push('/students');
     }
-  }, [studentId, form]);
+  }, [studentId, form, student, isLoading, router, toast]);
 
   function onSubmit(data: StudentFormValues) {
-    const storedStudents = localStorage.getItem('studentsData');
-    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
+    if (!firestore) return;
+    
+    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
+    
+    const updatedData = {
+        ...data,
+        dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd')
+    };
 
-    const updatedStudents = students.map(s => {
-        if (s.id === studentId) {
-            return {
-                ...s,
-                ...data,
-                dateOfBirth: format(data.dateOfBirth, 'yyyy-MM-dd')
-            };
-        }
-        return s;
-    });
-
-    localStorage.setItem('studentsData', JSON.stringify(updatedStudents));
+    setDocumentNonBlocking(studentRef, updatedData, { merge: true });
 
     toast({
       title: 'Student Updated',
@@ -136,8 +120,8 @@ export default function EditStudentPage() {
     router.push('/students');
   }
 
-  if (!student) {
-    return <div>Student not found</div>;
+  if (isLoading || !student) {
+    return <div>Loading student data...</div>;
   }
 
   return (

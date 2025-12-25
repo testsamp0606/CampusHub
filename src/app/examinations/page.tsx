@@ -25,12 +25,6 @@ import {
   ClipboardEdit,
   CheckCircle,
 } from 'lucide-react';
-import {
-  examsData as initialExamsData,
-  marksData as initialMarksData,
-  classesData,
-  students,
-} from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -41,29 +35,55 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
-type Exam = (typeof initialExamsData)[0];
-type Mark = (typeof initialMarksData)[0] & { studentName?: string };
+type Exam = {
+    id: string;
+    name: string;
+    classId: string;
+    date: string;
+    status: 'Scheduled' | 'Completed' | 'Published';
+};
+type Mark = { 
+    id: string;
+    studentId: string;
+    examId: string;
+    marks: number | string;
+};
+type Student = {
+    id: string;
+    name: string;
+    classId: string;
+};
+type ClassInfo = {
+    id: string;
+    name: string;
+}
 
 export default function ExaminationsPage() {
   const { toast } = useToast();
-  const [examsData, setExamsData] = useState<Exam[]>([]);
-  const [marksData, setMarksData] = useState<Mark[]>([]);
+  const firestore = useFirestore();
   const [selectedExam, setSelectedExam] = useState<string>('');
   const [selectedClass, setSelectedClass] = useState<string>('');
 
-  useEffect(() => {
-    const storedExams = localStorage.getItem('examsData');
-    setExamsData(storedExams ? JSON.parse(storedExams) : initialExamsData);
+  const examsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/exams') : null), [firestore]);
+  const { data: examsData } = useCollection<Exam>(examsQuery);
+  
+  const marksQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/marks') : null), [firestore]);
+  const { data: marksData } = useCollection<Mark>(marksQuery);
+  
+  const classesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/classes') : null), [firestore]);
+  const { data: classesData } = useCollection<ClassInfo>(classesQuery);
 
-    const storedMarks = localStorage.getItem('marksData');
-    setMarksData(storedMarks ? JSON.parse(storedMarks) : initialMarksData);
-  }, []);
+  const studentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/students') : null), [firestore]);
+  const { data: students } = useCollection<Student>(studentsQuery);
 
-  const classOptions = useMemo(() => classesData.map(c => ({ value: c.id, label: c.name })), []);
+
+  const classOptions = useMemo(() => classesData?.map(c => ({ value: c.id, label: c.name })) || [], [classesData]);
   
   const examOptions = useMemo(() => {
-      if (selectedClass) {
+      if (selectedClass && examsData) {
           return examsData
             .filter(exam => exam.classId === selectedClass)
             .map(exam => ({ value: exam.id, label: exam.name}));
@@ -72,7 +92,7 @@ export default function ExaminationsPage() {
   }, [selectedClass, examsData]);
 
   const filteredMarks = useMemo(() => {
-    if (!selectedExam || !selectedClass) return [];
+    if (!selectedExam || !selectedClass || !students || !marksData) return [];
     
     const examStudents = students.filter(s => s.classId === selectedClass);
     return examStudents.map(student => {
@@ -81,11 +101,10 @@ export default function ExaminationsPage() {
             studentId: student.id,
             studentName: student.name,
             examId: selectedExam,
-            subject: 'Not Entered', // Placeholder
             marks: mark?.marks ?? 'N/A',
         };
     });
-  }, [selectedExam, selectedClass, marksData]);
+  }, [selectedExam, selectedClass, marksData, students]);
 
   const handlePublishResults = () => {
     if (!selectedExam) {
@@ -156,10 +175,10 @@ export default function ExaminationsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {examsData.map((exam) => (
+                  {examsData?.map((exam) => (
                     <TableRow key={exam.id}>
                       <TableCell className="font-medium">{exam.name}</TableCell>
-                      <TableCell>{classesData.find(c => c.id === exam.classId)?.name || 'N/A'}</TableCell>
+                      <TableCell>{classesData?.find(c => c.id === exam.classId)?.name || 'N/A'}</TableCell>
                       <TableCell>{exam.date}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(exam.status)}>
@@ -221,7 +240,7 @@ export default function ExaminationsPage() {
                                 <CheckCircle className="mr-2 h-4 w-4" /> Publish Results
                             </Button>
                         </div>
-                        <CardDescription>Class: {classesData.find(c => c.id === selectedClass)?.name}</CardDescription>
+                        <CardDescription>Class: {classesData?.find(c => c.id === selectedClass)?.name}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Table>

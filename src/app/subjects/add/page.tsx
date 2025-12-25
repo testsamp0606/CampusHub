@@ -23,11 +23,15 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { subjectsData as initialSubjectsData, teachersData } from '@/lib/data';
+import { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Subject = (typeof initialSubjectsData)[0];
+type Teacher = {
+    id: string;
+    name: string;
+}
 
 const subjectFormSchema = z.object({
   id: z.string(),
@@ -54,6 +58,11 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddSubjectPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+  
+  const teachersQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]);
+  const { data: teachersData } = useCollection<Teacher>(teachersQuery);
+
   const form = useForm<SubjectFormValues>({
     resolver: zodResolver(subjectFormSchema),
     defaultValues,
@@ -65,13 +74,10 @@ export default function AddSubjectPage() {
   }, [form]);
 
   function onSubmit(data: SubjectFormValues) {
-    const storedSubjects = localStorage.getItem('subjectsData');
-    const currentSubjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : [];
-
-    const newSubject: Subject = data;
-
-    const updatedSubjects = [...currentSubjects, newSubject];
-    localStorage.setItem('subjectsData', JSON.stringify(updatedSubjects));
+    if(!firestore) return;
+    const subjectsCollection = collection(firestore, 'schools/school-1/subjects');
+    const newSubject = { ...data, schoolId: 'school-1' };
+    addDocumentNonBlocking(subjectsCollection, newSubject, data.id);
     
     toast({
       title: 'Subject Added',
@@ -81,7 +87,7 @@ export default function AddSubjectPage() {
     router.push('/subjects');
   }
 
-  const teacherOptions = teachersData.map(t => ({ value: t.id, label: t.name }));
+  const teacherOptions = teachersData?.map(t => ({ value: t.id, label: t.name })) || [];
 
   return (
     <Card className="shadow-lg">

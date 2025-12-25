@@ -20,14 +20,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Eye, Search, FilePlus2, Bell, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { feesData as initialFeesData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
-type Fee = (typeof initialFeesData)[0];
+type Fee = {
+  invoiceId: string;
+  studentName: string;
+  studentId: string;
+  amount: number;
+  dueDate: string;
+  status: 'Paid' | 'Unpaid' | 'Overdue';
+};
+
 type Role = 'Admin' | 'Accountant' | 'SuperAdmin';
 
 const FEES_PER_PAGE = 5;
@@ -35,39 +43,23 @@ const FEES_PER_PAGE = 5;
 export default function FeesPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [feesData, setFeesData] = useState<Fee[]>([]);
   const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
 
-  useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    if (storedFees) {
-      setFeesData(JSON.parse(storedFees));
-    } else {
-      setFeesData(initialFeesData);
-      localStorage.setItem('feesData', JSON.stringify(initialFeesData));
-    }
-  }, []);
+  const feesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/fees') : null), [firestore]);
+  const { data: feesData, isLoading } = useCollection<Fee>(feesQuery);
 
-  const updateAndStoreFees = (newFees: Fee[]) => {
-    setFeesData(newFees);
-    localStorage.setItem('feesData', JSON.stringify(newFees));
-  };
 
   const handleRecordPayment = (invoiceId: string) => {
-    const updatedFees = feesData.map((fee) => {
-      if (fee.invoiceId === invoiceId) {
-        return {
-          ...fee,
-          status: 'Paid' as 'Paid',
-          paymentDate: format(new Date(), 'yyyy-MM-dd'),
-          paymentMethod: 'Manual Record',
-        };
-      }
-      return fee;
-    });
-    updateAndStoreFees(updatedFees);
+    if (!firestore) return;
+    const feeRef = doc(firestore, 'schools/school-1/fees', invoiceId);
+    setDocumentNonBlocking(feeRef, {
+        status: 'Paid',
+        paymentDate: format(new Date(), 'yyyy-MM-dd'),
+        paymentMethod: 'Manual Record',
+    }, { merge: true });
 
     toast({
       title: 'Payment Recorded',
@@ -83,6 +75,7 @@ export default function FeesPage() {
   };
 
   const filteredFees = useMemo(() => {
+    if (!feesData) return [];
     return feesData.filter(
       (fee) =>
         fee.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -154,7 +147,12 @@ export default function FeesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedFees.map((fee) => (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">Loading invoices...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && paginatedFees.map((fee) => (
                 <TableRow key={fee.invoiceId}>
                   <TableCell className="font-medium">{fee.invoiceId}</TableCell>
                   <TableCell>
@@ -209,13 +207,13 @@ export default function FeesPage() {
                   </TableCell>
                 </TableRow>
               ))}
+              {!isLoading && paginatedFees.length === 0 && (
+                 <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">No invoices found.</TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-           {paginatedFees.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No invoices found.
-            </div>
-          )}
         </CardContent>
          <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">

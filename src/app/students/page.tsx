@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -19,44 +18,46 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Eye, Trash2, Search } from 'lucide-react';
+import { Edit, Eye, Trash2, Search, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { students as initialStudents, Student } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
+type Student = {
+  id: string;
+  name: string;
+  classId: string;
+  parentName: string;
+  admissionDate: string;
+  email: string;
+};
 
 const STUDENTS_PER_PAGE = 5;
 
 export default function StudentsPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [studentsData, setStudentsData] = useState<Student[]>([]);
 
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('studentsData');
-    if (storedStudents) {
-      setStudentsData(JSON.parse(storedStudents));
-    } else {
-      setStudentsData(initialStudents);
-      localStorage.setItem('studentsData', JSON.stringify(initialStudents));
-    }
-  }, []);
-
-  const updateAndStoreStudents = (newStudents: Student[]) => {
-    setStudentsData(newStudents);
-    localStorage.setItem('studentsData', JSON.stringify(newStudents));
-  };
-
+  const studentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
+    [firestore]
+  );
+  const { data: studentsData, isLoading } = useCollection<Student>(studentsQuery);
 
   const handleEdit = (studentId: string) => {
     router.push(`/students/${studentId}/edit`);
   };
 
   const handleDelete = (studentId: string) => {
-    const updatedStudents = studentsData.filter(student => student.id !== studentId);
-    updateAndStoreStudents(updatedStudents);
+    if (!firestore) return;
+    const studentRef = doc(firestore, 'schools/school-1/students', studentId);
+    deleteDocumentNonBlocking(studentRef);
     toast({
       title: 'Student Deleted',
       variant: 'destructive',
@@ -65,6 +66,7 @@ export default function StudentsPage() {
   };
 
   const filteredStudents = useMemo(() => {
+    if (!studentsData) return [];
     return studentsData.filter(
       (student) =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,7 +96,9 @@ export default function StudentsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Students</h1>
         <Button asChild>
-          <Link href="/students/add">Add New Student</Link>
+          <Link href="/students/add">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add New Student
+          </Link>
         </Button>
       </div>
       <Card>
@@ -130,11 +134,16 @@ export default function StudentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedStudents.map((student) => (
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
+                </TableRow>
+              )}
+              {!isLoading && paginatedStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>{student.id}</TableCell>
                     <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.class}</TableCell>
+                    <TableCell>{student.classId}</TableCell>
                     <TableCell>{student.parentName}</TableCell>
                     <TableCell>{student.admissionDate}</TableCell>
                     <TableCell className="text-right">
@@ -168,7 +177,7 @@ export default function StudentsPage() {
                 ))}
             </TableBody>
           </Table>
-           {paginatedStudents.length === 0 && (
+           {paginatedStudents.length === 0 && !isLoading && (
             <div className="py-10 text-center text-muted-foreground">
               No students found.
             </div>

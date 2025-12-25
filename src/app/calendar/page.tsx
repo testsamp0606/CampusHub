@@ -4,18 +4,10 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  eventsData as initialEventsData,
-  classesData,
-  teachersData,
-  timetablesData as initialTimetablesData,
-  subjectsData,
-} from '@/lib/data';
 import { format, isValid, parseISO } from 'date-fns';
 import type { DayProps } from 'react-day-picker';
 import {
@@ -72,25 +64,30 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { CalendarEvent, Teacher, TimetableEntry, FullTimetable } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
 
-const periodTimes = [
-  '09:00 - 09:45',
-  '09:45 - 10:30',
-  '11:00 - 11:45',
-  '11:45 - 12:30',
-  '13:30 - 14:15',
-  '14:15 - 15:00',
-];
 
-const generateRandomTimetable = (classId: string, day: string): TimetableEntry[] => {
-  return Array.from({ length: 6 }, (_, i) => ({
-    period: i + 1,
-    subject: subjectsData[Math.floor(Math.random() * subjectsData.length)].name,
-    teacherId: teachersData[Math.floor(Math.random() * teachersData.length)].id,
-    time: periodTimes[i],
-  }));
+type CalendarEvent = {
+  title: string;
+  date: string;
+  type: 'Holiday' | 'Event' | 'Exam';
 };
+type TimetableEntry = {
+    period: number;
+    subjectId: string;
+    teacherId: string;
+    time: string;
+};
+type FullTimetable = {
+    id: string;
+    classId: string;
+    day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
+    entries: TimetableEntry[];
+};
+type ClassInfo = { id: string; name: string };
+type Subject = { id: string; name: string };
+type Teacher = { id: string; name: string };
 
 const eventFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters.'),
@@ -124,55 +121,83 @@ const eventTypeDetails: {
   },
 };
 
+const periodTimes = [
+    '09:00 - 09:45',
+    '09:45 - 10:30',
+    '11:00 - 11:45',
+    '11:45 - 12:30',
+    '13:30 - 14:15',
+    '14:15 - 15:00',
+];
+
 const WeeklyTimetable = () => {
   const { toast } = useToast();
-  const [selectedClass, setSelectedClass] = useState<string>(classesData[0].id);
+  const firestore = useFirestore();
+  const [selectedClass, setSelectedClass] = useState<string>('');
   const [timetables, setTimetables] = useState<FullTimetable[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    const storedTimetables = localStorage.getItem('timetablesData');
-    if (storedTimetables) {
-        setTimetables(JSON.parse(storedTimetables));
-    } else {
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-        const initialData = classesData.flatMap(cls => 
-            days.map(day => ({
-                classId: cls.id,
-                day: day as any,
-                entries: generateRandomTimetable(cls.id, day),
-            }))
-        );
-      setTimetables(initialData);
-      localStorage.setItem('timetablesData', JSON.stringify(initialData));
-    }
-  }, []);
+  const { data: classesData } = useCollection<ClassInfo>(useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/classes') : null), [firestore]));
+  const { data: subjectsData } = useCollection<Subject>(useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/subjects') : null), [firestore]));
+  const { data: teachersData } = useCollection<Teacher>(useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/teachers') : null), [firestore]));
+  const { data: storedTimetables } = useCollection<FullTimetable>(useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/timetables') : null), [firestore]));
 
-  const classOptions = classesData.map((c) => ({ value: c.id, label: c.name }));
-  const subjectOptions = subjectsData.map(s => ({ value: s.name, label: s.name }));
-  const teacherOptions = teachersData.map(t => ({ value: t.id, label: t.name }));
+  useEffect(() => {
+    if (storedTimetables) {
+        setTimetables(storedTimetables);
+    }
+  }, [storedTimetables]);
+  
+  useEffect(() => {
+    if (classesData && classesData.length > 0 && !selectedClass) {
+        setSelectedClass(classesData[0].id);
+    }
+  }, [classesData, selectedClass]);
+
+
+  const classOptions = classesData?.map((c) => ({ value: c.id, label: c.name })) || [];
+  const subjectOptions = subjectsData?.map(s => ({ value: s.id, label: s.name })) || [];
+  const teacherOptions = teachersData?.map(t => ({ value: t.id, label: t.name })) || [];
 
   const classTimetable = useMemo(() => {
     return timetables.filter(t => t.classId === selectedClass);
   }, [timetables, selectedClass]);
   
-  const handleTimetableChange = (day: string, period: number, field: 'subject' | 'teacherId', value: string) => {
+  const handleTimetableChange = (day: string, period: number, field: 'subjectId' | 'teacherId', value: string) => {
     setTimetables(prev => {
-        const newTimetables = [...prev];
-        const timetableIndex = newTimetables.findIndex(t => t.classId === selectedClass && t.day === day);
-        if (timetableIndex !== -1) {
-            const entryIndex = newTimetables[timetableIndex].entries.findIndex(e => e.period === period);
-            if (entryIndex !== -1) {
-                (newTimetables[timetableIndex].entries[entryIndex] as any)[field] = value;
-            }
+        const newTimetables = JSON.parse(JSON.stringify(prev));
+        let timetableForDay = newTimetables.find((t: FullTimetable) => t.classId === selectedClass && t.day === day);
+        
+        if(!timetableForDay) {
+            timetableForDay = {
+                id: `${selectedClass}-${day}`,
+                classId: selectedClass,
+                day: day,
+                entries: periodTimes.map((time, i) => ({ period: i+1, time, subjectId: '', teacherId: ''}))
+            };
+            newTimetables.push(timetableForDay);
         }
+
+        let entry = timetableForDay.entries.find((e: TimetableEntry) => e.period === period);
+        if(!entry) {
+            entry = { period, time: periodTimes[period-1], subjectId: '', teacherId: ''};
+            timetableForDay.entries.push(entry);
+        }
+
+        (entry as any)[field] = value;
         return newTimetables;
     });
     setHasChanges(true);
   };
 
   const handleSaveChanges = () => {
-    localStorage.setItem('timetablesData', JSON.stringify(timetables));
+    if(!firestore) return;
+
+    classTimetable.forEach(tt => {
+        const timetableRef = doc(firestore, 'schools/school-1/timetables', tt.id);
+        setDocumentNonBlocking(timetableRef, tt, { merge: true });
+    })
+    
     setHasChanges(false);
     toast({
       title: 'Timetable Saved',
@@ -240,8 +265,8 @@ const WeeklyTimetable = () => {
                         <TableCell key={periodIndex} className="text-center p-1">
                           <div className="flex flex-col gap-1">
                             <Select
-                                value={entry?.subject}
-                                onValueChange={(value) => handleTimetableChange(day, periodIndex + 1, 'subject', value)}
+                                value={entry?.subjectId}
+                                onValueChange={(value) => handleTimetableChange(day, periodIndex + 1, 'subjectId', value)}
                             >
                                 <SelectTrigger className="text-xs h-7">
                                     <SelectValue placeholder="Subject" />
@@ -278,25 +303,17 @@ const WeeklyTimetable = () => {
 
 export default function CalendarPage() {
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const { data: events } = useCollection<CalendarEvent>(useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/events') : null), [firestore]));
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventFormSchema),
   });
-
-  useEffect(() => {
-    const storedEvents = localStorage.getItem('eventsData');
-    if (storedEvents) {
-      setEvents(JSON.parse(storedEvents));
-    } else {
-      setEvents(initialEventsData);
-      localStorage.setItem('eventsData', JSON.stringify(initialEventsData));
-    }
-  }, []);
 
   useEffect(() => {
     form.reset({
@@ -307,6 +324,7 @@ export default function CalendarPage() {
   }, [isFormOpen, selectedDate, form]);
 
   const eventsByDate = useMemo(() => {
+    if (!events) return {};
     const grouped: { [key: string]: CalendarEvent[] } = {};
     events.forEach((event) => {
       if (!event.date) return;
@@ -323,14 +341,14 @@ export default function CalendarPage() {
   }, [events]);
 
   function onSubmit(data: EventFormValues) {
+    if (!firestore) return;
     const newEvent: CalendarEvent = {
       ...data,
       date: format(data.date, 'yyyy-MM-dd'),
     };
 
-    const updatedEvents = [...events, newEvent];
-    setEvents(updatedEvents);
-    localStorage.setItem('eventsData', JSON.stringify(updatedEvents));
+    const eventsCollection = collection(firestore, 'schools/school-1/events');
+    addDocumentNonBlocking(eventsCollection, newEvent);
 
     toast({
       title: 'Event Created',

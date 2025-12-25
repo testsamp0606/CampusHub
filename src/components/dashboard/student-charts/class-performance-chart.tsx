@@ -14,7 +14,14 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { useMemo } from 'react';
-import { classesData } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+
+type ClassInfo = {
+  id: string;
+  name: string;
+  passPercentage?: number;
+};
 
 const chartConfig = {
   passPercentage: {
@@ -24,15 +31,33 @@ const chartConfig = {
 };
 
 export default function ClassPerformanceChart() {
+  const firestore = useFirestore();
+  const classesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/classes') : null), [firestore]);
+  const { data: classesData, isLoading } = useCollection<ClassInfo>(classesQuery);
 
   const chartData = useMemo(() => {
+    if (!classesData) return [];
     return classesData
       .filter((c: any) => c.passPercentage)
       .map((c: any) => ({
         class: c.name,
         passPercentage: c.passPercentage,
       }));
-  }, []);
+  }, [classesData]);
+
+  if(isLoading) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Class Performance (Last Year)</CardTitle>
+                <CardDescription>Loading chart data...</CardDescription>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center h-[350px]">
+                <p>Loading...</p>
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <Card>

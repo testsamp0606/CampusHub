@@ -13,23 +13,40 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Edit } from 'lucide-react';
 import Link from 'next/link';
-import { students as initialStudents } from '@/lib/data';
 import { useEffect, useState } from 'react';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
-type Student = (typeof initialStudents)[0];
+type Student = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  permanentAddress: string;
+  dateOfBirth: string;
+  gender: string;
+  classId: string;
+  profilePhoto?: string;
+};
 
 export default function StudentProfilePage() {
   const params = useParams();
   const studentId = params.id as string;
-  const [student, setStudent] = useState<Student | undefined>(undefined);
-  
-  useEffect(() => {
-    const storedStudents = localStorage.getItem('studentsData');
-    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
-    const currentStudent = students.find((s) => s.id === studentId);
-    setStudent(currentStudent);
-  }, [studentId]);
+  const firestore = useFirestore();
 
+  const studentDocRef = useMemoFirebase(() => (
+    firestore ? doc(firestore, 'schools/school-1/students', studentId) : null
+  ), [firestore, studentId]);
+
+  const { data: student, isLoading } = useDoc<Student>(studentDocRef);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (!student) {
     return (
@@ -72,11 +89,11 @@ export default function StudentProfilePage() {
             <p className="font-medium text-muted-foreground">Phone</p>
             <p>{student.phone}</p>
             <p className="font-medium text-muted-foreground">Address</p>
-            <p>{student.address}</p>
+            <p>{student.permanentAddress}</p>
             <p className="font-medium text-muted-foreground">Date of Birth</p>
-            <p>N/A</p>
+            <p>{student.dateOfBirth}</p>
              <p className="font-medium text-muted-foreground">Gender</p>
-            <p>N/A</p>
+            <p>{student.gender}</p>
           </div>
         </div>
         <div className="space-y-4">

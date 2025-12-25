@@ -41,7 +41,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
-import { students as initialStudents, Student } from '@/lib/data';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 const studentFormSchema = z
   .object({
@@ -127,6 +128,8 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddStudentPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const firestore = useFirestore();
+
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
     defaultValues,
@@ -147,26 +150,44 @@ export default function AddStudentPage() {
   }, [form]);
 
   async function onSubmit(data: StudentFormValues) {
+    if (!firestore) return;
 
-    const storedStudents = localStorage.getItem('studentsData');
-    const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudents;
+    // 1. Combine date parts
+    const dateOfBirth = `${data.dob_year}-${data.dob_month}-${data.dob_day}`;
+  
+    // 2. Create a mutable copy of the data to sanitize
+    let sanitizedData: Record<string, any> = { ...data };
+  
+    // 3. Remove file objects and other non-serializable data
+    Object.keys(sanitizedData).forEach(key => {
+      if (sanitizedData[key] instanceof File || sanitizedData[key] instanceof FileList) {
+        delete sanitizedData[key];
+      }
+    });
+  
+    // 4. Convert any remaining `undefined` values to `null`
+    Object.keys(sanitizedData).forEach(key => {
+      if (sanitizedData[key] === undefined) {
+        sanitizedData[key] = null;
+      }
+    });
 
-    const newStudent: Student = {
-        id: data.id,
-        name: `${data.title || ''} ${data.name}`.trim(),
-        class: data.classId,
-        parentName: data.fatherName,
-        admissionDate: format(new Date(), 'yyyy-MM-dd'),
-        email: data.parentEmail || '',
-        phone: data.fatherMobile,
-        address: data.permanentAddress,
-        profilePhoto: `https://picsum.photos/seed/${data.id}/200/200`,
-        classId: data.classId
-    }
+    const finalData = {
+      ...sanitizedData,
+      name: `${data.title || ''} ${data.name}`.trim(),
+      dateOfBirth,
+      schoolId: 'school-1',
+      admissionDate: format(new Date(), 'yyyy-MM-dd'),
+    };
+    
+    // Remove individual date parts as they are now combined
+    delete finalData.dob_day;
+    delete finalData.dob_month;
+    delete finalData.dob_year;
+    delete finalData.title;
 
-    const updatedStudents = [...students, newStudent];
-    localStorage.setItem('studentsData', JSON.stringify(updatedStudents));
-
+    const studentsCollection = collection(firestore, 'schools/school-1/students');
+    addDocumentNonBlocking(studentsCollection, finalData, data.id);
 
     toast({
       title: 'Student Registered',

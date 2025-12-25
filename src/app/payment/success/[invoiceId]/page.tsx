@@ -12,35 +12,35 @@ import {
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { feesData as initialFeesData } from '@/lib/data';
 import { format } from 'date-fns';
+import { useFirestore, setDocumentNonBlocking, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
-type Fee = (typeof initialFeesData)[0];
+type Fee = {
+    invoiceId: string;
+    status: 'Paid' | 'Unpaid' | 'Overdue';
+}
 
 export default function PaymentSuccessPage() {
   const params = useParams();
   const router = useRouter();
   const invoiceId = params.invoiceId as string;
+  const firestore = useFirestore();
+
+  const feeDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/fees', invoiceId) : null), [firestore, invoiceId]);
+  const { data: fee } = useDoc<Fee>(feeDocRef);
+
 
   useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
-
-    const updatedFees = fees.map(fee => {
-      if (fee.invoiceId === invoiceId) {
-        return {
-          ...fee,
-          status: 'Paid' as 'Paid',
-          paymentDate: format(new Date(), 'yyyy-MM-dd'),
-          paymentMethod: 'Credit Card (Online)',
-        };
-      }
-      return fee;
-    });
-
-    localStorage.setItem('feesData', JSON.stringify(updatedFees));
-
-  }, [invoiceId]);
+    if (firestore && fee && fee.status !== 'Paid') {
+        const feeRef = doc(firestore, 'schools/school-1/fees', invoiceId);
+        setDocumentNonBlocking(feeRef, {
+            status: 'Paid',
+            paymentDate: format(new Date(), 'yyyy-MM-dd'),
+            paymentMethod: 'Credit Card (Online)',
+        }, { merge: true });
+    }
+  }, [invoiceId, firestore, fee]);
 
   return (
     <div className="flex justify-center items-center min-h-[70vh]">

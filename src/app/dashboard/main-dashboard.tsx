@@ -7,7 +7,8 @@ import AttendanceCard from './attendance-card';
 import ClassesTable from './classes-table';
 import AnomalyDetector from './anomaly-detector';
 import ClassPerformanceChart from './student-charts/class-performance-chart';
-import { students, teachers, classesData } from '@/lib/data';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import { Briefcase, School2, Users, TrendingUp, UserCheck, UserX, UserPlus } from 'lucide-react';
 
 export type StatCardData = {
@@ -20,24 +21,45 @@ export type StatCardData = {
 
 
 export default function MainDashboard() {
+  const firestore = useFirestore();
+
+  const studentsQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
+    [firestore]
+  );
+  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
+
+  const teachersQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
+    [firestore]
+  );
+  const { data: teachers, isLoading: teachersLoading } = useCollection(teachersQuery);
+  
+  const classesQuery = useMemoFirebase(
+    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
+    [firestore]
+  );
+  const { data: classes, isLoading: classesLoading } = useCollection(classesQuery);
+
+
   const statCardsData: StatCardData[] = [
     {
       title: 'Total Students',
-      count: students.length.toString(),
+      count: studentsLoading ? '...' : students?.length.toString() || '0',
       Icon: Users,
       color: 'text-blue-500',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Total Teachers',
-      count: teachers.length.toString(),
+      count: teachersLoading ? '...' : teachers?.length.toString() || '0',
       Icon: Briefcase,
       color: 'text-green-500',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Classes Count',
-      count: classesData.length.toString(),
+      count: classesLoading ? '...' : classes?.length.toString() || '0',
       Icon: School2,
       color: 'text-pink-500',
       bgColor: 'bg-pink-100',
@@ -137,7 +159,7 @@ export default function MainDashboard() {
         <TabsContent value="teachers">
            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {teacherStatsData.map((card) => (
-              <StatCard key={card.title} {...card} />
+                <StatCard key={card.title} {...card} />
             ))}
           </div>
         </TabsContent>
