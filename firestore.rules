@@ -224,6 +224,19 @@ service cloud.firestore {
     }
 
     /**
+     * @description Controls access to calendar events.
+     * @path /schools/{schoolId}/events/{eventId}
+     * @allow Any school member can read event information.
+     * @allow Only admins can create, update, or delete events.
+     */
+    match /schools/{schoolId}/events/{eventId} {
+        allow get, list: if canReadSchoolData(schoolId);
+        allow create: if canCreateSchoolData(schoolId);
+        allow update: if canModifySchoolData(schoolId);
+        allow delete: if canModifySchoolData(schoolId);
+    }
+    
+    /**
      * @description Controls access to conversation threads.
      * @path /schools/{schoolId}/conversations/{conversationId}
      * @allow A user can read/list conversations they are a participant in.
@@ -354,5 +367,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
