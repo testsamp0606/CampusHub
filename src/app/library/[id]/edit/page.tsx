@@ -22,8 +22,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { booksData as initialBooksData, Book } from '@/lib/data';
 
@@ -48,22 +48,9 @@ const bookFormSchema = z.object({
 
 type BookFormValues = z.infer<typeof bookFormSchema>;
 
-const defaultValues: Partial<BookFormValues> = {
-  id: '',
-  title: '',
-  author: '',
-  isbn: '',
-  publisher: '',
-  edition: '',
-  category: '',
-  language: 'English',
-  quantity: 1,
-  lost: 0,
-  resourceType: 'Book',
-  barcode: '',
-  shelf: '',
-  rack: '',
-};
+type FullBook = BookFormValues & {
+    issued: number;
+}
 
 const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
   <FormLabel>
@@ -71,48 +58,73 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
   </FormLabel>
 );
 
-export default function AddBookPage() {
+export default function EditBookPage() {
   const { toast } = useToast();
   const router = useRouter();
-
+  const params = useParams();
+  const bookId = params.id as string;
+  const [isLoading, setIsLoading] = useState(true);
+  
   const form = useForm<BookFormValues>({
     resolver: zodResolver(bookFormSchema),
-    defaultValues,
   });
 
   useEffect(() => {
-    // Generate a unique book ID when the component mounts
-    const uniqueId = `B${Date.now().toString().slice(-6)}`;
-    form.setValue('id', uniqueId);
-  }, [form]);
+    const storedBooks = localStorage.getItem('booksData');
+    if (storedBooks) {
+        const books: Book[] = JSON.parse(storedBooks);
+        const bookToEdit = books.find(a => a.id === bookId);
+        if (bookToEdit) {
+            form.reset(bookToEdit);
+        } else {
+            toast({ title: "Error", description: "Book not found.", variant: "destructive"});
+            router.push('/library');
+        }
+    } else {
+        const bookToEdit = initialBooksData.find(a => a.id === bookId);
+        if(bookToEdit) {
+            form.reset(bookToEdit);
+        } else {
+            toast({ title: "Error", description: "Book not found.", variant: "destructive"});
+            router.push('/library');
+        }
+    }
+    setIsLoading(false);
+  }, [bookId, form, router, toast]);
 
   function onSubmit(data: BookFormValues) {
     const storedBooks = localStorage.getItem('booksData');
     const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
-    
-    const newBook: Book = {
-        ...data,
-        issued: 0,
-        coverImage: `https://picsum.photos/seed/${data.id}/200/300`, // Placeholder image
-    };
-    
-    const updatedBooks = [...currentBooks, newBook];
+
+    const updatedBooks = currentBooks.map(book => {
+        if (book.id === bookId) {
+            return {
+                ...book,
+                ...data,
+            };
+        }
+        return book;
+    });
+
     localStorage.setItem('booksData', JSON.stringify(updatedBooks));
     
     toast({
-      title: 'Book Added',
-      description: `"${data.title}" has been successfully added to the library.`,
+      title: 'Book Updated',
+      description: `"${data.title}" has been successfully updated.`,
     });
-    form.reset();
     router.push('/library');
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>
   }
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>Add New Book or Resource</CardTitle>
+        <CardTitle>Edit Book or Resource</CardTitle>
         <CardDescription>
-          Fill out the form below to add a new item to the library collection. Fields marked with <span className="text-destructive">*</span> are required.
+          Update the form below to modify the item in the library collection. Fields marked with <span className="text-destructive">*</span> are required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -232,7 +244,7 @@ export default function AddBookPage() {
                 render={({ field }) => (
                   <FormItem>
                     <RequiredLabel>Resource Type</RequiredLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a resource type" />
@@ -327,7 +339,7 @@ export default function AddBookPage() {
                       <Input type="file" accept="image/*" onChange={(e) => onChange(e.target.files)} {...field} />
                     </FormControl>
                     <FormDescription>
-                      Upload a cover image. If not provided, a placeholder will be used.
+                      Upload a new cover image to replace the existing one.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -335,7 +347,7 @@ export default function AddBookPage() {
               />
 
             <div className="flex gap-4">
-              <Button type="submit">Add Resource</Button>
+              <Button type="submit">Update Resource</Button>
                <Button
                 type="button"
                 variant="outline"

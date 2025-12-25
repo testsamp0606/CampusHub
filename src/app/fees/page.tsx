@@ -24,17 +24,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-
-type Fee = {
-  invoiceId: string;
-  studentName: string;
-  studentId: string;
-  amount: number;
-  dueDate: string;
-  status: 'Paid' | 'Unpaid' | 'Overdue';
-};
+import { feesData as initialFeesData, Fee } from '@/lib/data';
 
 type Role = 'Admin' | 'Accountant' | 'SuperAdmin';
 
@@ -43,23 +33,42 @@ const FEES_PER_PAGE = 5;
 export default function FeesPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
+  const [feesData, setFeesData] = useState<Fee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const feesQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/fees') : null), [firestore]);
-  const { data: feesData, isLoading } = useCollection<Fee>(feesQuery);
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    if(storedFees) {
+        setFeesData(JSON.parse(storedFees));
+    } else {
+        setFeesData(initialFeesData);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const updateAndStoreFees = (newFees: Fee[]) => {
+    setFeesData(newFees);
+    localStorage.setItem('feesData', JSON.stringify(newFees));
+  };
 
 
   const handleRecordPayment = (invoiceId: string) => {
-    if (!firestore) return;
-    const feeRef = doc(firestore, 'schools/school-1/fees', invoiceId);
-    setDocumentNonBlocking(feeRef, {
-        status: 'Paid',
-        paymentDate: format(new Date(), 'yyyy-MM-dd'),
-        paymentMethod: 'Manual Record',
-    }, { merge: true });
+    const updatedFees = feesData.map(fee => {
+        if(fee.invoiceId === invoiceId) {
+            return {
+                ...fee,
+                status: 'Paid' as 'Paid',
+                paymentDate: format(new Date(), 'yyyy-MM-dd'),
+                paymentMethod: 'Manual Record',
+            };
+        }
+        return fee;
+    });
+
+    updateAndStoreFees(updatedFees);
 
     toast({
       title: 'Payment Recorded',

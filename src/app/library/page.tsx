@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -23,37 +23,38 @@ import { Eye, Search, BookPlus, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
-import { deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { booksData as initialBooksData, Book } from '@/lib/data';
 
-type Book = {
-    id: string;
-    title: string;
-    author: string;
-    isbn: string;
-    category: string;
-    quantity: number;
-    issued: number;
-    lost: number;
-};
 
 const BOOKS_PER_PAGE = 5;
 
 export default function LibraryPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const booksQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/books') : null), [firestore]);
-  const { data: books, isLoading } = useCollection<Book>(booksQuery);
+  useEffect(() => {
+    const storedBooks = localStorage.getItem('booksData');
+    if (storedBooks) {
+      setBooks(JSON.parse(storedBooks));
+    } else {
+      setBooks(initialBooksData);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const updateAndStoreBooks = (newBooks: Book[]) => {
+    setBooks(newBooks);
+    localStorage.setItem('booksData', JSON.stringify(newBooks));
+  };
+
 
   const handleDelete = (bookId: string) => {
-    if(!firestore) return;
-    const bookDocRef = doc(firestore, 'schools/school-1/books', bookId);
-    deleteDocumentNonBlocking(bookDocRef);
+    const updatedBooks = books.filter(book => book.id !== bookId);
+    updateAndStoreBooks(updatedBooks);
     
     toast({
       title: 'Book Deleted',
@@ -223,5 +224,3 @@ export default function LibraryPage() {
     </div>
   );
 }
-
-    

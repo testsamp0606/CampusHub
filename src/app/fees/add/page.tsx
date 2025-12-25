@@ -24,7 +24,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Combobox } from '@/components/ui/combobox';
 import {
   Popover,
@@ -42,13 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { students as initialStudentsData, Fee, Student, feesData as initialFeesData } from '@/lib/data';
 
-type Student = {
-    id: string;
-    name: string;
-}
 
 const feeFormSchema = z.object({
   invoiceId: z.string(),
@@ -81,10 +76,12 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddFeePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
+  const [students, setStudents] = useState<Student[]>([]);
 
-  const studentsQuery = useMemoFirebase(() => (firestore ? collection(firestore, 'schools/school-1/students') : null), [firestore]);
-  const { data: students } = useCollection<Student>(studentsQuery);
+  useEffect(() => {
+    const storedStudents = localStorage.getItem('students');
+    setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudentsData);
+  }, []);
 
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
@@ -98,20 +95,25 @@ export default function AddFeePage() {
   }, [form]);
 
   function onSubmit(data: FeeFormValues) {
-    if (!firestore || !students) return;
+    if (!students) return;
 
     const student = students.find((s) => s.id === data.studentId);
     if (!student) return;
 
-    const feesCollection = collection(firestore, 'schools/school-1/fees');
-    const newFee = {
+    const storedFees = localStorage.getItem('feesData');
+    const currentFees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
+
+    const newFee: Fee = {
         ...data,
         studentName: student.name,
         dueDate: format(data.dueDate, 'yyyy-MM-dd'),
         status: 'Unpaid',
-        schoolId: 'school-1',
+        paymentDate: null,
+        paymentMethod: null,
     };
-    addDocumentNonBlocking(feesCollection, newFee, data.invoiceId);
+    
+    const updatedFees = [...currentFees, newFee];
+    localStorage.setItem('feesData', JSON.stringify(updatedFees));
     
     toast({
       title: 'Invoice Generated',

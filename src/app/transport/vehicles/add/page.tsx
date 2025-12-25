@@ -24,8 +24,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFirestore, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { vehiclesData as initialVehiclesData, Vehicle } from '@/lib/data';
+
 
 const vehicleFormSchema = z.object({
   id: z.string(),
@@ -56,7 +56,6 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddVehiclePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
 
   const form = useForm<VehicleFormValues>({
     resolver: zodResolver(vehicleFormSchema),
@@ -69,15 +68,15 @@ export default function AddVehiclePage() {
   }, [form]);
 
   function onSubmit(data: VehicleFormValues) {
-    if (!firestore) return;
+    const storedVehicles = localStorage.getItem('vehiclesData');
+    const currentVehicles: Vehicle[] = storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData;
     
-    const vehiclesCollection = collection(firestore, 'schools/school-1/vehicles');
-    const newVehicle = {
+    const newVehicle: Vehicle = {
       ...data,
-      schoolId: 'school-1',
     };
     
-    addDocumentNonBlocking(vehiclesCollection, newVehicle, data.id);
+    const updatedVehicles = [...currentVehicles, newVehicle];
+    localStorage.setItem('vehiclesData', JSON.stringify(updatedVehicles));
     
     toast({
       title: 'Vehicle Added',
@@ -231,5 +230,3 @@ export default function AddVehiclePage() {
     </div>
   );
 }
-
-    

@@ -23,27 +23,7 @@ import {
   Scale,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection } from 'firebase/firestore';
-
-type Fee = {
-  invoiceId: string;
-  studentId: string;
-  studentName: string;
-  amount: number;
-  status: 'Paid' | 'Unpaid' | 'Overdue';
-  paymentDate: string | null;
-  description: string;
-};
-
-type Expense = {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
-};
+import { feesData as initialFeesData, expensesData as initialExpensesData, Fee, Expense } from '@/lib/data';
 
 type Transaction = {
   id: string;
@@ -55,14 +35,27 @@ type Transaction = {
 };
 
 export default function AccountsPage() {
-  const firestore = useFirestore();
-  const { data: feesData, isLoading: feesLoading } = useCollection<Fee>(
-    firestore ? collection(firestore, '/schools/school-1/fees') : null
-  );
-  const { data: expensesData, isLoading: expensesLoading } = useCollection<Expense>(
-    firestore ? collection(firestore, '/schools/school-1/expenses') : null
-  );
+  const [feesData, setFeesData] = useState<Fee[]>([]);
+  const [expensesData, setExpensesData] = useState<Expense[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    if (storedFees) {
+      setFeesData(JSON.parse(storedFees));
+    } else {
+      setFeesData(initialFeesData);
+    }
+    
+    const storedExpenses = localStorage.getItem('expensesData');
+    if (storedExpenses) {
+      setExpensesData(JSON.parse(storedExpenses));
+    } else {
+      setExpensesData(initialExpensesData);
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     if (feesData && expensesData) {
@@ -111,7 +104,6 @@ export default function AccountsPage() {
   }, [transactions]);
 
   const netBalance = stats.totalIncome - stats.totalExpense;
-  const isLoading = feesLoading || expensesLoading;
 
   return (
     <div className="flex flex-col gap-6">

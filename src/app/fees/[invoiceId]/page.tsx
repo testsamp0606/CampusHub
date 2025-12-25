@@ -14,44 +14,34 @@ import { ArrowLeft, Printer, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
-
-type Fee = {
-  invoiceId: string;
-  studentId: string;
-  studentName: string;
-  amount: number;
-  dueDate: string;
-  status: 'Paid' | 'Unpaid' | 'Overdue';
-  paymentDate: string | null;
-  paymentMethod: string | null;
-  description: string;
-};
-type Student = {
-    id: string;
-    name: string;
-    address: string;
-    email: string;
-    phone: string;
-    classId: string;
-};
+import { useEffect, useState } from 'react';
+import { feesData as initialFeesData, students as initialStudentsData, Fee, Student } from '@/lib/data';
 
 export default function InvoiceDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
   const invoiceId = params.invoiceId as string;
+  const [invoice, setInvoice] = useState<Fee | undefined>();
+  const [student, setStudent] = useState<Student | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const feeDocRef = useMemoFirebase(() => (firestore ? doc(firestore, 'schools/school-1/fees', invoiceId) : null), [firestore, invoiceId]);
-  const { data: invoice, isLoading: feeLoading } = useDoc<Fee>(feeDocRef);
+  useEffect(() => {
+    const storedFees = localStorage.getItem('feesData');
+    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
+    const currentInvoice = fees.find(f => f.invoiceId === invoiceId);
+    setInvoice(currentInvoice);
 
-  const studentDocRef = useMemoFirebase(() => (firestore && invoice ? doc(firestore, 'schools/school-1/students', invoice.studentId) : null), [firestore, invoice]);
-  const { data: student, isLoading: studentLoading } = useDoc<Student>(studentDocRef);
+    if(currentInvoice) {
+        const storedStudents = localStorage.getItem('students');
+        const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+        setStudent(students.find(s => s.id === currentInvoice.studentId));
+    }
+    setIsLoading(false);
+  }, [invoiceId]);
 
 
-  if (feeLoading || studentLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <p>Loading invoice...</p>
@@ -158,7 +148,7 @@ export default function InvoiceDetailsPage() {
                     <h3 className="font-semibold">Billed To:</h3>
                     <p className="font-bold text-lg">{student.name}</p>
                     <p className="text-sm text-muted-foreground">
-                        {student.address}
+                        {student.permanentAddress}
                         <br/>
                         {student.email} | {student.phone}
                     </p>

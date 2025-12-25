@@ -1,4 +1,5 @@
 
+
 export type Student = {
   id: string;
   name: string;
@@ -355,16 +356,16 @@ export const routesData = [
 ];
 
 export const vehiclesData = [
-  { id: 'V001', vehicleNumber: 'KA-01-AB-1234', type: 'Bus', capacity: 40, driverName: 'John Doe', driverContact: '9876543210', status: 'Active' },
-  { id: 'V002', vehicleNumber: 'KA-01-CD-5678', type: 'Van', capacity: 15, driverName: 'Jane Smith', driverContact: '9876543211', status: 'Maintenance' },
-  { id: 'V003', vehicleNumber: 'KA-01-EF-9101', type: 'Bus', capacity: 50, driverName: 'Mike Ross', driverContact: '9876543212', status: 'Active' },
+  { id: 'V001', vehicleNumber: 'KA-01-AB-1234', type: 'Bus', capacity: 40, driverName: 'John Doe', driverContact: '9876543210', status: 'Active' as 'Active' | 'Maintenance' },
+  { id: 'V002', vehicleNumber: 'KA-01-CD-5678', type: 'Van', capacity: 15, driverName: 'Jane Smith', driverContact: '9876543211', status: 'Maintenance' as 'Active' | 'Maintenance' },
+  { id: 'V003', vehicleNumber: 'KA-01-EF-9101', type: 'Bus', capacity: 50, driverName: 'Mike Ross', driverContact: '9876543212', status: 'Active' as 'Active' | 'Maintenance' },
 ];
 
 export const studentTransportData = [
-  { allocationId: 'ST001', studentId: 'S001', routeId: 'R001', stop: 'City Market', feeStatus: 'Paid' },
-  { allocationId: 'ST002', studentId: 'S002', routeId: 'R002', stop: 'Suburb B', feeStatus: 'Unpaid' },
-  { allocationId: 'ST003', studentId: 'S004', routeId: 'R001', stop: 'Town Hall', feeStatus: 'Paid' },
-  { allocationId: 'ST004', studentId: 'S005', routeId: 'R003', stop: 'River Side', feeStatus: 'Unpaid' },
+  { allocationId: 'ST001', studentId: 'S001', routeId: 'R001', stop: 'City Market', feeStatus: 'Paid' as 'Paid' | 'Unpaid' },
+  { allocationId: 'ST002', studentId: 'S002', routeId: 'R002', stop: 'Suburb B', feeStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
+  { allocationId: 'ST003', studentId: 'S004', routeId: 'R001', stop: 'Town Hall', feeStatus: 'Paid' as 'Paid' | 'Unpaid' },
+  { allocationId: 'ST004', studentId: 'S005', routeId: 'R003', stop: 'River Side', feeStatus: 'Unpaid' as 'Paid' | 'Unpaid' },
 ];
 
 export const permissionsData: { [key: string]: { [key: string]: Permission[] } } = {

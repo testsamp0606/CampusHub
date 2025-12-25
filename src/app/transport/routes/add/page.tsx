@@ -33,14 +33,10 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { PlusCircle } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, addDocumentNonBlocking } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { vehiclesData as initialVehiclesData, routesData as initialRoutesData } from '@/lib/data';
 
-type Vehicle = {
-  id: string;
-  vehicleNumber: string;
-  type: string;
-};
+type Vehicle = (typeof initialVehiclesData)[0];
+type Route = (typeof initialRoutesData)[0];
 
 const routeFormSchema = z.object({
   id: z.string(),
@@ -67,10 +63,18 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddRoutePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const vehiclesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'schools/school-1/vehicles') : null, [firestore]);
-  const { data: vehicles, isLoading: vehiclesLoading, refetch } = useCollection<Vehicle>(vehiclesQuery);
+  const fetchVehicles = useCallback(() => {
+    const storedVehicles = localStorage.getItem('vehiclesData');
+    setVehicles(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
 
 
   const form = useForm<RouteFormValues>({
@@ -84,18 +88,18 @@ export default function AddRoutePage() {
   }, [form]);
 
   function onSubmit(data: RouteFormValues) {
-    if (!firestore) return;
-    const routesCollection = collection(firestore, 'schools/school-1/routes');
+    const storedRoutes = localStorage.getItem('routesData');
+    const currentRoutes: Route[] = storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData;
     
-    const newRoute = {
+    const newRoute: Route = {
         id: data.id,
         routeName: data.routeName,
         vehicleId: data.vehicleId,
         stops: data.stops.split(',').map(s => s.trim()).filter(s => s.length > 0),
-        schoolId: 'school-1',
     };
 
-    addDocumentNonBlocking(routesCollection, newRoute, data.id);
+    const updatedRoutes = [...currentRoutes, newRoute];
+    localStorage.setItem('routesData', JSON.stringify(updatedRoutes));
     
     toast({
       title: 'Route Added',
@@ -120,7 +124,7 @@ export default function AddRoutePage() {
       const timer = setInterval(() => {
         if (newWindow.closed) {
           clearInterval(timer);
-          refetch(); // Refetch vehicles after popup is closed
+          fetchVehicles();
         }
       }, 500);
     }
@@ -177,7 +181,7 @@ export default function AddRoutePage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={vehiclesLoading ? "Loading..." : "Select a vehicle"} />
+                              <SelectValue placeholder={isLoading ? "Loading..." : "Select a vehicle"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -234,5 +238,3 @@ export default function AddRoutePage() {
     </Card>
   );
 }
-
-    
