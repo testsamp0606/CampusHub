@@ -231,12 +231,13 @@ service cloud.firestore {
      * @principle Enforces that users can only interact with their own conversations.
      */
     match /schools/{schoolId}/conversations/{conversationId} {
-      // READ: Allow `get` if the user is a participant.
+      // READ (Single Doc): Allow `get` if the user is a school member and their UID is in the participantIds array.
       allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-      // LIST: Allow any school member to attempt a query. The query itself on the client
-      // MUST be constrained (e.g., using `array-contains`) and the `get` rule above
-      // will be checked on every document returned by the query.
-      allow list: if isSchoolMember(schoolId);
+
+      // READ (Query/List): Securely allow querying the collection. The rule ensures that any query
+      // MUST include a `where('participantIds', 'array-contains', request.auth.uid)` clause.
+      // This prevents users from listing all conversations and only allows them to fetch their own.
+      allow list: if isSchoolMember(schoolId) && request.query.where.size() > 0 && request.query.where[0][1] == 'array-contains' && request.query.where[0][2] == request.auth.uid;
       
       // CREATE: Allow if user is a member of the school AND their UID is in the new conversation's participant list.
       // Also ensures data integrity by checking schoolId.
@@ -269,3 +270,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
