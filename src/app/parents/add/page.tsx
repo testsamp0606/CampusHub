@@ -87,7 +87,7 @@ export default function AddParentPage() {
     () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
     [firestore]
   );
-  const { data: studentsData } = useCollection<{id: string, name: string, address: string}>(studentsQuery);
+  const { data: studentsData } = useCollection<{id: string, name: string, permanentAddress: string}>(studentsQuery);
 
   const form = useForm<ParentFormValues>({
     resolver: zodResolver(parentFormSchema),
@@ -112,7 +112,7 @@ export default function AddParentPage() {
     if (sameAsStudentAddress && studentId && studentsData) {
       const student = studentsData.find((s) => s.id === studentId);
       if (student) {
-        form.setValue('permanentAddress', student.address);
+        form.setValue('permanentAddress', student.permanentAddress);
       }
     }
   }, [sameAsStudentAddress, studentId, form, studentsData]);
