@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -124,7 +123,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
               <AccordionItem value={item.label} key={item.label} className="border-none">
                 <AccordionTrigger
                   asChild
-                  className="p-0 [&[data-state=open]>button>svg]:rotate-180"
+                  className="[&[data-state=open]>button>svg]:rotate-180"
                 >
                     <SidebarMenuButton
                       isActive={isParentActive}
