@@ -9,7 +9,7 @@
  * and financial records. This hierarchical structure ensures strong data isolation between different schools.
  *
  * Key Security Decisions:
- * - SuperAdmin Override: A 'SuperAdmin' role has unrestricted access to all data across all schools.
+ * - SuperAdmin Override: A 'SuperAdmin' role, set via custom claims, has unrestricted access to all data across all schools.
  * - School Segregation: The primary security boundary is the school. A user authenticated for one school cannot read,
  *   write, or even see data belonging to another, unless they are a SuperAdmin. This is enforced by the `isSchoolMember(schoolId)` function.
  * - Role-Based Writes: While any member of a school has broad read access within their school's data, write permissions
@@ -47,19 +47,16 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // Checks if the user is a SuperAdmin via custom claims. SuperAdmins have universal access.
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.isSuperAdmin == true;
+    }
+    
     // Retrieves the user's role data from their profile document.
     function getUserRole(schoolId) {
       return get(/databases/$(database)/documents/schools/$(schoolId)/users/$(request.auth.uid)).data.role;
     }
-
-    // Checks if the user is a SuperAdmin. SuperAdmins have universal access.
-    function isSuperAdmin() {
-      // This function needs to check if the user has the SuperAdmin role in ANY school context they might belong to.
-      // For simplicity in this ruleset, we check a specific path. A more robust implementation might use custom claims.
-      // Note: This rule will only work if a user document with role 'SuperAdmin' exists.
-      return isSignedIn() && get(/databases/$(database)/documents/schools/school-1/users/$(request.auth.uid)).data.role == 'SuperAdmin';
-    }
-
+    
     // Constructs the path to a user's profile document for a given school and user ID.
     function getUserDataPath(schoolId, userId) {
       return /databases/$(database)/documents/schools/$(schoolId)/users/$(userId);
@@ -68,12 +65,12 @@ service cloud.firestore {
     // Checks if the requesting user is a registered member of the specified school.
     // This is the foundational check for almost all data access. It performs a single document read.
     function isSchoolMember(schoolId) {
-      return isSignedIn() && (exists(getUserDataPath(schoolId, request.auth.uid)) || isSuperAdmin());
+      return isSuperAdmin() || (isSignedIn() && exists(getUserDataPath(schoolId, request.auth.uid)));
     }
 
     // Checks if the requesting user has the 'admin' role within the specified school.
     function isSchoolAdmin(schoolId) {
-      return isSchoolMember(schoolId) && (getUserRole(schoolId) == 'admin' || isSuperAdmin());
+      return isSuperAdmin() || (isSchoolMember(schoolId) && getUserRole(schoolId) == 'admin');
     }
 
     /**
@@ -96,26 +93,23 @@ service cloud.firestore {
      */
     // Grants read access to any verified member of the school or a SuperAdmin.
     function canReadSchoolData(schoolId) {
-      return isSchoolMember(schoolId) || isSuperAdmin();
+      return isSchoolMember(schoolId);
     }
 
-    // Grants create access to school admins and validates data integrity. SuperAdmins bypass this.
+    // Grants create access to school admins and validates data integrity.
     function canCreateSchoolData(schoolId) {
-      return (isSchoolAdmin(schoolId) || isSuperAdmin()) && schoolIdMatchesPath(schoolId);
+      return isSchoolAdmin(schoolId) && schoolIdMatchesPath(schoolId);
     }
 
-    // Grants update/delete access to school admins and ensures document existence. SuperAdmins bypass this.
+    // Grants update/delete access to school admins and ensures document existence.
     function canModifySchoolData(schoolId) {
-      return resource != null && (isSchoolAdmin(schoolId) || isSuperAdmin()) && schoolIdIsImmutable();
+      return resource != null && isSchoolAdmin(schoolId) && schoolIdIsImmutable();
     }
 
 
     /**
      * @description Controls access to the main school documents.
      * @path /schools/{schoolId}
-     * @allow A logged-in member of "school-abc" can read the school's public info (get).
-     * @deny A user from "school-xyz" cannot read any information about "school-abc" (get).
-     * @principle Enforces school-level data segregation. School creation and deletion are disallowed from the client.
      */
     match /schools/{schoolId} {
       allow get, list: if isSchoolMember(schoolId);
@@ -126,13 +120,9 @@ service cloud.firestore {
       /**
        * @description Controls access to user profiles within a school.
        * @path /schools/{schoolId}/users/{userId}
-       * @allow A user can create their own profile to join a school (create).
-       * @allow An admin can delete a user's profile from the school (delete).
-       * @deny A user cannot update another non-admin user's profile (update).
-       * @principle Implements self-service profile management combined with admin oversight.
        */
       match /users/{userId} {
-        allow get, list: if isSchoolMember(schoolId);
+        allow read: if isSchoolMember(schoolId);
         allow create: if isOwner(userId) && schoolIdMatchesPath(schoolId);
         allow update: if (isOwner(userId) || isSchoolAdmin(schoolId)) && schoolIdIsImmutable();
         allow delete: if isSchoolAdmin(schoolId);
@@ -140,7 +130,7 @@ service cloud.firestore {
 
       /**
        * @description Generic rules for most school data subcollections.
-       * @principle Restricts modifications to administrators, while allowing reads by all school members.
+       * @principle Grants read access to any school member, but restricts writes to admins.
        */
       match /students/{studentId} {
         allow read: if canReadSchoolData(schoolId);
@@ -183,20 +173,17 @@ service cloud.firestore {
       }
 
       match /events/{eventId} {
-          allow read: if canReadSchoolData(schoolId);
-          allow write: if isSchoolAdmin(schoolId);
+        allow read: if canReadSchoolData(schoolId);
+        allow write: if isSchoolAdmin(schoolId);
       }
       
       /**
        * @description Controls access to conversation threads.
        * @path /schools/{schoolId}/conversations/{conversationId}
-       * @allow A user can read/list conversations they are a participant in.
-       * @allow A user can create a conversation if they are one of the participants.
-       * @principle Enforces that users can only interact with their own conversations.
        */
       match /conversations/{conversationId} {
-        allow get: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds;
-        allow list: if isSchoolMember(schoolId) && request.query.where.participantIds_array_contains == request.auth.uid;
+        allow get: if isSchoolMember(schoolId) && (isSuperAdmin() || request.auth.uid in resource.data.participantIds);
+        allow list: if isSchoolMember(schoolId) && (isSuperAdmin() || request.query.where.participantIds_array_contains == request.auth.uid);
         allow create: if isSchoolMember(schoolId) && request.auth.uid in request.resource.data.participantIds && schoolIdMatchesPath(schoolId);
         allow update: if isSchoolMember(schoolId) && request.auth.uid in resource.data.participantIds && schoolIdIsImmutable();
         allow delete: if false;
@@ -204,19 +191,10 @@ service cloud.firestore {
         /**
          * @description Controls access to messages within a conversation.
          * @path /schools/{schoolId}/conversations/{conversationId}/messages/{messageId}
-         * @allow A participant can read all messages in the conversation.
-         * @allow A participant can create a new message in the conversation.
-         * @principle Inherits permissions from the parent conversation document.
          */
         match /messages/{messageId} {
-          // READ/LIST: Allow reading messages if the user is a participant in the parent conversation.
-          // The `get()` call securely checks the parent document.
-          allow get, list: if isSchoolMember(schoolId) && request.auth.uid in get(parent).data.participantIds;
-
-          // CREATE: Allow creating a message if the user is the sender and a participant in the parent conversation.
-          allow create: if isSchoolMember(schoolId) && request.resource.data.senderId == request.auth.uid && request.auth.uid in get(parent).data.participantIds;
-
-          // UPDATE/DELETE: Messages are typically immutable.
+          allow read: if isSchoolMember(schoolId) && (isSuperAdmin() || request.auth.uid in get(parent).data.participantIds);
+          allow create: if isSchoolMember(schoolId) && request.resource.data.senderId == request.auth.uid && (isSuperAdmin() || request.auth.uid in get(parent).data.participantIds);
           allow update, delete: if false;
         }
       }
