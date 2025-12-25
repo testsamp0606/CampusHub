@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -27,19 +27,44 @@ import {
   Truck,
   MapPin,
 } from 'lucide-react';
-import {
-  routesData as initialRoutesData,
-  vehiclesData as initialVehiclesData,
-  studentTransportData as initialStudentTransportData,
-  students,
-} from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Route = (typeof initialRoutesData)[0];
-type Vehicle = (typeof initialVehiclesData)[0];
-type Allocation = (typeof initialStudentTransportData)[0] & { 
+type Route = {
+  id: string;
+  routeName: string;
+  vehicleId: string;
+  stops: string[];
+};
+
+type Vehicle = {
+  id: string;
+  vehicleNumber: string;
+  type: string;
+  capacity: number;
+  driverName: string;
+  driverContact: string;
+  status: 'Active' | 'Maintenance';
+};
+
+type Student = {
+  id: string;
+  name: string;
+  classId: string;
+}
+
+type StudentTransport = {
+  allocationId: string;
+  studentId: string;
+  routeId: string;
+  stop: string;
+  feeStatus: 'Paid' | 'Unpaid';
+};
+
+type EnrichedAllocation = StudentTransport & { 
   studentName: string, 
   className: string, 
   routeName: string, 
@@ -50,48 +75,55 @@ type Allocation = (typeof initialStudentTransportData)[0] & {
 export default function TransportPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+  const firestore = useFirestore();
 
-  const [routesData, setRoutesData] = useState<Route[]>([]);
-  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>([]);
-  const [studentTransportData, setStudentTransportData] = useState<Allocation[]>([]);
+  const routesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'schools/school-1/routes') : null, [firestore]);
+  const { data: routesData, isLoading: routesLoading } = useCollection<Route>(routesQuery);
 
-  useEffect(() => {
-    const storedRoutes = localStorage.getItem('routesData');
-    const currentRoutes = storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData;
-    setRoutesData(currentRoutes);
+  const vehiclesQuery = useMemoFirebase(() => firestore ? collection(firestore, 'schools/school-1/vehicles') : null, [firestore]);
+  const { data: vehiclesData, isLoading: vehiclesLoading } = useCollection<Vehicle>(vehiclesQuery);
 
-    const storedVehicles = localStorage.getItem('vehiclesData');
-    const currentVehicles = storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData;
-    setVehiclesData(currentVehicles);
+  const allocationsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'schools/school-1/studentTransports') : null, [firestore]);
+  const { data: studentTransportData, isLoading: allocationsLoading } = useCollection<StudentTransport>(allocationsQuery);
 
-     const storedAllocations = localStorage.getItem('studentTransportData');
-     const allocations = storedAllocations ? JSON.parse(storedAllocations) : initialStudentTransportData;
+  const studentsQuery = useMemoFirebase(() => firestore ? collection(firestore, 'schools/school-1/students') : null, [firestore]);
+  const { data: studentsData, isLoading: studentsLoading } = useCollection<Student>(studentsQuery);
 
-     const enrichedAllocations = allocations.map((allocation: any) => {
-        const student = students.find(s => s.id === allocation.studentId);
-        const route = currentRoutes.find((r: Route) => r.id === allocation.routeId);
-        const vehicle = currentVehicles.find((v: Vehicle) => v.id === route?.vehicleId);
-        return {
-          ...allocation,
-          studentName: student?.name || 'N/A',
-          className: student?.class || 'N/A',
-          routeName: route?.routeName || 'N/A',
-          vehicleNumber: vehicle?.vehicleNumber || 'N/A',
-        };
-      });
-    setStudentTransportData(enrichedAllocations);
+  const enrichedAllocations = useMemo(() => {
+    if (!studentTransportData || !studentsData || !routesData || !vehiclesData) return [];
 
-  }, []);
+    const studentsMap = new Map(studentsData.map(s => [s.id, { name: s.name, className: s.classId }]));
+    const routesMap = new Map(routesData.map(r => [r.id, { routeName: r.routeName, vehicleId: r.vehicleId }]));
+    const vehiclesMap = new Map(vehiclesData.map(v => [v.id, v.vehicleNumber]));
+
+    return studentTransportData.map((allocation) => {
+      const student = studentsMap.get(allocation.studentId);
+      const route = routesMap.get(allocation.routeId);
+      const vehicleNumber = route ? vehiclesMap.get(route.vehicleId) : 'N/A';
+      return {
+        ...allocation,
+        studentName: student?.name || 'N/A',
+        className: student?.className || 'N/A',
+        routeName: route?.routeName || 'N/A',
+        vehicleNumber: vehicleNumber || 'N/A',
+      };
+    });
+  }, [studentTransportData, studentsData, routesData, vehiclesData]);
 
   const filteredAllocations = useMemo(() => {
-    return studentTransportData
-      .filter(
-        item =>
-          item.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.routeName.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-  }, [searchQuery, studentTransportData]);
+    return enrichedAllocations.filter(
+      item =>
+        item.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.studentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.routeName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, enrichedAllocations]);
+
+  const isLoading = routesLoading || vehiclesLoading || allocationsLoading || studentsLoading;
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -128,8 +160,8 @@ export default function TransportPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {routesData.map(route => {
-                const vehicle = vehiclesData.find(
+              {routesData?.map(route => {
+                const vehicle = vehiclesData?.find(
                   v => v.id === route.vehicleId
                 );
                 return (
@@ -192,7 +224,7 @@ export default function TransportPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {vehiclesData.map(vehicle => (
+                  {vehiclesData?.map(vehicle => (
                     <TableRow key={vehicle.id}>
                       <TableCell className="font-medium flex items-center gap-2">
                         <Truck className="h-4 w-4 text-muted-foreground" />
@@ -291,3 +323,5 @@ export default function TransportPage() {
     </div>
   );
 }
+
+    

@@ -221,6 +221,49 @@
         "schoolId": { "type": "string" }
       },
       "required": ["issueId", "bookId", "studentId", "issueDate", "dueDate", "status", "schoolId"]
+    },
+    "Vehicle": {
+      "title": "Vehicle",
+      "description": "Represents a school transport vehicle.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehicleNumber": { "type": "string" },
+        "type": { "type": "string", "enum": ["Bus", "Van", "Mini-bus"] },
+        "capacity": { "type": "number" },
+        "driverName": { "type": "string" },
+        "driverContact": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Maintenance"] },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "vehicleNumber", "type", "capacity", "driverName", "driverContact", "status", "schoolId"]
+    },
+    "Route": {
+      "title": "Route",
+      "description": "Represents a transport route.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "routeName": { "type": "string" },
+        "vehicleId": { "type": "string" },
+        "stops": { "type": "array", "items": { "type": "string" } },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["id", "routeName", "vehicleId", "stops", "schoolId"]
+    },
+    "StudentTransport": {
+      "title": "Student Transport",
+      "description": "Represents the transport allocation for a student.",
+      "type": "object",
+      "properties": {
+        "allocationId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "routeId": { "type": "string" },
+        "stop": { "type": "string" },
+        "feeStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "schoolId": { "type": "string" }
+      },
+      "required": ["allocationId", "studentId", "routeId", "stop", "feeStatus", "schoolId"]
     }
   },
   "auth": {
@@ -382,6 +425,42 @@
           "params": [
             { "name": "schoolId", "description": "The unique ID of the school." },
             { "name": "issueId", "description": "The unique ID of the issue record." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": { "$ref": "#/backend/entities/Vehicle" },
+          "description": "Stores transport vehicle information.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "vehicleId", "description": "The unique ID of the vehicle." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/routes/{routeId}",
+        "definition": {
+          "entityName": "Route",
+          "schema": { "$ref": "#/backend/entities/Route" },
+          "description": "Stores transport route information.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "routeId", "description": "The unique ID of the route." }
+          ]
+        }
+      },
+      {
+        "path": "/schools/{schoolId}/studentTransports/{allocationId}",
+        "definition": {
+          "entityName": "StudentTransport",
+          "schema": { "$ref": "#/backend/entities/StudentTransport" },
+          "description": "Stores transport allocation records.",
+          "params": [
+            { "name": "schoolId", "description": "The unique ID of the school." },
+            { "name": "allocationId", "description": "The unique ID of the allocation record." }
           ]
         }
       }
