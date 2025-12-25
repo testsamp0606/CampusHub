@@ -8,7 +8,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
-  SidebarFooter,
   SidebarCollapsible,
   SidebarCollapsibleContent,
   SidebarCollapsibleTrigger,
@@ -130,6 +129,7 @@ const renderNavItems = (items: NavItem[], pathname: string, isCollapsed: boolean
                       <item.icon />
                       <span>{item.label}</span>
                     </div>
+                     <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                   </SidebarMenuButton>
                 </AccordionTrigger>
                 <AccordionContent className="p-0 pl-4">
