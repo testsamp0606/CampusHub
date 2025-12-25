@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,16 +11,29 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { detectAttendanceAnomalies } from '@/ai/flows/detect-attendance-anomalies';
-import { attendanceData } from '@/lib/data';
 import { Loader2, AlertTriangle, ListChecks } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export default function AnomalyDetector() {
+  const firestore = useFirestore();
   const [loading, setLoading] = useState(false);
   const [anomalies, setAnomalies] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const attendanceQuery = useMemo(() => {
+      if(!firestore) return null;
+      return collection(firestore, 'schools/school-1/attendances')
+  }, [firestore])
+  const { data: attendanceData, isLoading: attendanceLoading } = useCollection(attendanceQuery);
+
+
   const handleDetectAnomalies = async () => {
+    if (!attendanceData) {
+        setError("Attendance data is not available yet.");
+        return;
+    }
     setLoading(true);
     setError(null);
     setAnomalies([]);
@@ -40,6 +53,8 @@ export default function AnomalyDetector() {
       setLoading(false);
     }
   };
+  
+  const isButtonDisabled = loading || attendanceLoading || !attendanceData;
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -51,11 +66,13 @@ export default function AnomalyDetector() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {loading || attendanceLoading ? (
           <div className="flex items-center justify-center rounded-lg border border-dashed p-10">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span className="font-medium">Analyzing data...</span>
+              <span className="font-medium">
+                {attendanceLoading ? 'Loading attendance data...' : 'Analyzing data...'}
+                </span>
             </div>
           </div>
         ) : anomalies.length > 0 ? (
@@ -82,7 +99,7 @@ export default function AnomalyDetector() {
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleDetectAnomalies} disabled={loading}>
+        <Button onClick={handleDetectAnomalies} disabled={isButtonDisabled}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

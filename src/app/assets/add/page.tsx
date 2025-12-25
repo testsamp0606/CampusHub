@@ -24,7 +24,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { assetsData as initialAssetsData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -33,7 +32,18 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
-type Asset = (typeof initialAssetsData)[0];
+type Asset = {
+    id: string;
+    name: string;
+    category: string;
+    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
+    purchaseDate: string;
+    warrantyEndDate?: string;
+    value: number;
+    assignedTo: string;
+    notes?: string;
+};
+
 
 const assetFormSchema = z.object({
   id: z.string(),

@@ -6,6 +6,7 @@ import AppSidebar from '@/components/layout/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/header';
 import { ThemeProvider } from '@/components/layout/theme-provider';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
   title: 'Campus Hub',
@@ -42,14 +43,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster />
-          <SidebarProvider>
-            <AppSidebar />
-            <div className="flex h-screen flex-1 flex-col overflow-y-auto">
-              <Header />
-              <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
-            </div>
-          </SidebarProvider>
+          <FirebaseClientProvider>
+            <Toaster />
+            <SidebarProvider>
+              <AppSidebar />
+              <div className="flex h-screen flex-1 flex-col overflow-y-auto">
+                <Header />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+              </div>
+            </SidebarProvider>
+          </FirebaseClientProvider>
         </ThemeProvider>
       </body>
     </html>

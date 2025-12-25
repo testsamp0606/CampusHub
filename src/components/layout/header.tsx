@@ -28,7 +28,6 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
-import { conversationsData } from '@/lib/data';
 import { formatDistanceToNow } from 'date-fns';
 import { ThemeToggle } from './theme-toggle';
 
@@ -36,9 +35,7 @@ export default function Header() {
   const userAvatar = PlaceHolderImages.find(
     (img) => img.id === 'user-avatar-1'
   );
-  const unreadConversations = conversationsData
-    .filter((c) => !c.read)
-    .slice(0, 3);
+  const unreadConversations: any[] = [];
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -90,7 +87,7 @@ export default function Header() {
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
                           {convo.participants
-                            .find((p) => p.id !== 'user')
+                            .find((p: any) => p.id !== 'user')
                             ?.name.charAt(0)}
                         </AvatarFallback>
                       </Avatar>

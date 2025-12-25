@@ -21,12 +21,21 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Eye, Search, PlusCircle, Trash2, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { assetsData as initialAssetsData } from '@/lib/data';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-type Asset = (typeof initialAssetsData)[0];
+type Asset = {
+    id: string;
+    name: string;
+    category: string;
+    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
+    purchaseDate: string;
+    warrantyEndDate?: string;
+    value: number;
+    assignedTo: string;
+    notes?: string;
+};
 
 const ASSETS_PER_PAGE = 5;
 
@@ -41,9 +50,6 @@ export default function AssetsPage() {
     const storedAssets = localStorage.getItem('assetsData');
     if (storedAssets) {
       setAssets(JSON.parse(storedAssets));
-    } else {
-      setAssets(initialAssetsData);
-      localStorage.setItem('assetsData', JSON.stringify(initialAssetsData));
     }
   }, []);
 

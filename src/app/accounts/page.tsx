@@ -22,12 +22,28 @@ import {
   DollarSign,
   Scale,
 } from 'lucide-react';
-import { feesData as initialFeesData } from '@/lib/data';
-import { expensesData as initialExpensesData } from '@/lib/data';
 import { format } from 'date-fns';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-type Fee = (typeof initialFeesData)[0];
-type Expense = (typeof initialExpensesData)[0];
+type Fee = {
+  invoiceId: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  status: 'Paid' | 'Unpaid' | 'Overdue';
+  paymentDate: string | null;
+  description: string;
+};
+
+type Expense = {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  status: 'Approved' | 'Pending' | 'Rejected';
+};
 
 type Transaction = {
   id: string;
@@ -39,47 +55,46 @@ type Transaction = {
 };
 
 export default function AccountsPage() {
+  const firestore = useFirestore();
+  const { data: feesData, isLoading: feesLoading } = useCollection<Fee>(
+    firestore ? collection(firestore, '/schools/school-1/fees') : null
+  );
+  const { data: expensesData, isLoading: expensesLoading } = useCollection<Expense>(
+    firestore ? collection(firestore, '/schools/school-1/expenses') : null
+  );
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    const fees: Fee[] = storedFees
-      ? JSON.parse(storedFees)
-      : initialFeesData;
+    if (feesData && expensesData) {
+      const incomeTransactions: Transaction[] = feesData
+        .filter((fee) => fee.status === 'Paid' && fee.paymentDate)
+        .map((fee) => ({
+          id: `inc-${fee.invoiceId}`,
+          date: fee.paymentDate!,
+          description: `Fee collection: ${fee.description} (Student: ${fee.studentName})`,
+          amount: fee.amount,
+          type: 'Income' as 'Income',
+          category: 'Fee Collection',
+        }));
 
-    const storedExpenses = localStorage.getItem('expensesData');
-    const expenses: Expense[] = storedExpenses
-      ? JSON.parse(storedExpenses)
-      : initialExpensesData;
+      const expenseTransactions: Transaction[] = expensesData
+        .filter((expense) => expense.status === 'Approved')
+        .map((expense) => ({
+          id: `exp-${expense.id}`,
+          date: expense.date,
+          description: expense.description,
+          amount: expense.amount,
+          type: 'Expense' as 'Expense',
+          category: expense.category,
+        }));
 
-    const incomeTransactions: Transaction[] = fees
-      .filter((fee) => fee.status === 'Paid' && fee.paymentDate)
-      .map((fee) => ({
-        id: `inc-${fee.invoiceId}`,
-        date: fee.paymentDate!,
-        description: `Fee collection: ${fee.description} (Student: ${fee.studentName})`,
-        amount: fee.amount,
-        type: 'Income',
-        category: 'Fee Collection',
-      }));
+      const allTransactions = [...incomeTransactions, ...expenseTransactions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
 
-    const expenseTransactions: Transaction[] = expenses
-      .filter((expense) => expense.status === 'Approved')
-      .map((expense) => ({
-        id: `exp-${expense.id}`,
-        date: expense.date,
-        description: expense.description,
-        amount: expense.amount,
-        type: 'Expense',
-        category: expense.category,
-      }));
-
-    const allTransactions = [...incomeTransactions, ...expenseTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    setTransactions(allTransactions);
-  }, []);
+      setTransactions(allTransactions);
+    }
+  }, [feesData, expensesData]);
 
   const stats = useMemo(() => {
     return transactions.reduce(
@@ -96,6 +111,7 @@ export default function AccountsPage() {
   }, [transactions]);
 
   const netBalance = stats.totalIncome - stats.totalExpense;
+  const isLoading = feesLoading || expensesLoading;
 
   return (
     <div className="flex flex-col gap-6">
@@ -169,6 +185,20 @@ export default function AccountsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    Loading transactions...
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && transactions.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">
+                    No transactions found.
+                  </TableCell>
+                </TableRow>
+              )}
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>
@@ -201,11 +231,6 @@ export default function AccountsPage() {
               ))}
             </TableBody>
           </Table>
-          {transactions.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No transactions found.
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

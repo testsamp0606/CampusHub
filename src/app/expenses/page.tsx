@@ -30,33 +30,40 @@ import {
   CircleOff,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { expensesData as initialExpensesData } from '@/lib/data';
 import Link from 'next/link';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection, doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
-type Expense = (typeof initialExpensesData)[0];
+type Expense = {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  department: string;
+  status: 'Approved' | 'Pending' | 'Rejected';
+};
+
 type Role = 'Admin' | 'Accountant' | 'SuperAdmin';
 
 const EXPENSES_PER_PAGE = 7;
 
 export default function ExpensesPage() {
   const { toast } = useToast();
+  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [expensesData, setExpensesData] = useState<Expense[]>([]);
   const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
 
-  useEffect(() => {
-    // In a real app, you'd fetch this data. For now, we use localStorage.
-    const storedExpenses = localStorage.getItem('expensesData');
-    if (storedExpenses) {
-      setExpensesData(JSON.parse(storedExpenses));
-    } else {
-      setExpensesData(initialExpensesData);
-      localStorage.setItem('expensesData', JSON.stringify(initialExpensesData));
-    }
-  }, []);
-  
+  const expensesCol = useMemo(
+    () => (firestore ? collection(firestore, 'schools/school-1/expenses') : null),
+    [firestore]
+  );
+  const { data: expensesData, isLoading } = useCollection<Expense>(expensesCol);
+
   const stats = useMemo(() => {
+    if (!expensesData) return { totalAmount: 0, pending: 0, rejected: 0 };
     return expensesData.reduce(
       (acc, expense) => {
         acc.totalAmount += expense.amount;
@@ -73,6 +80,7 @@ export default function ExpensesPage() {
 
 
   const filteredExpenses = useMemo(() => {
+    if (!expensesData) return [];
     return expensesData.filter(
       (expense) =>
         expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -104,6 +112,16 @@ export default function ExpensesPage() {
         case 'Rejected': return 'destructive';
         default: return 'outline';
     }
+  }
+
+  const handleStatusUpdate = (expenseId: string, newStatus: 'Approved' | 'Rejected') => {
+    if (!firestore) return;
+    const expenseRef = doc(firestore, 'schools/school-1/expenses', expenseId);
+    setDocumentNonBlocking(expenseRef, { status: newStatus }, { merge: true });
+    toast({
+        title: `Expense ${newStatus}`,
+        description: `Expense with ID ${expenseId} has been ${newStatus.toLowerCase()}.`
+    });
   }
 
   const canCreate = userRole === 'Accountant' || userRole === 'SuperAdmin';
@@ -195,6 +213,11 @@ export default function ExpensesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {isLoading && (
+                 <TableRow>
+                  <TableCell colSpan={7} className="text-center">Loading...</TableCell>
+                </TableRow>
+              )}
               {paginatedExpenses.map((expense) => (
                   <TableRow key={expense.id}>
                     <TableCell className="font-medium">{expense.description}</TableCell>
@@ -215,11 +238,11 @@ export default function ExpensesPage() {
                         </Button>
                         {canApprove && expense.status === 'Pending' && (
                             <>
-                                 <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" title="Approve">
+                                 <Button variant="ghost" size="icon" className="text-green-600 hover:text-green-700" title="Approve" onClick={() => handleStatusUpdate(expense.id, 'Approved')}>
                                     <CheckCircle className="h-4 w-4" />
                                     <span className="sr-only">Approve</span>
                                 </Button>
-                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Reject">
+                                 <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" title="Reject" onClick={() => handleStatusUpdate(expense.id, 'Rejected')}>
                                     <XCircle className="h-4 w-4" />
                                     <span className="sr-only">Reject</span>
                                 </Button>
@@ -229,13 +252,15 @@ export default function ExpensesPage() {
                     </TableCell>
                   </TableRow>
               ))}
+              {!isLoading && paginatedExpenses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    No expenses found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
-           {paginatedExpenses.length === 0 && (
-            <div className="py-10 text-center text-muted-foreground">
-              No expenses found.
-            </div>
-          )}
         </CardContent>
          <CardFooter className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">

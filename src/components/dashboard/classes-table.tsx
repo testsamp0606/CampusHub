@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -13,10 +15,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { classesData } from '@/lib/data';
 import { Progress } from '../ui/progress';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 
 export default function ClassesTable() {
+  const firestore = useFirestore();
+
+  const classesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'schools', 'school-1', 'classes'));
+  }, [firestore]);
+  
+  const { data: classesData, isLoading } = useCollection(classesQuery);
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
       <CardHeader>
@@ -37,21 +49,35 @@ export default function ClassesTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {classesData.map((item) => (
-                <TableRow key={item.name}>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              )}
+              {classesData?.map((item: any) => (
+                <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell className="text-center">
                     {item.studentCount}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Progress value={item.dailyAttendance} className="w-[60%]" />
-                      <span>{item.dailyAttendance}%</span>
+                      <Progress value={item.dailyAttendance || 0} className="w-[60%]" />
+                      <span>{item.dailyAttendance || 0}%</span>
                     </div>
                   </TableCell>
                   <TableCell>{item.classTeacher}</TableCell>
                 </TableRow>
               ))}
+               {(!isLoading && (!classesData || classesData.length === 0)) && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    No classes found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>

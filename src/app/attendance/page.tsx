@@ -36,7 +36,6 @@ import { Label } from '@/components/ui/label';
 import { CalendarIcon, Search, FileDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { attendanceData, students, classesData } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import {
@@ -76,34 +75,13 @@ export default function AttendancePage() {
   const [reportMonth, setReportMonth] = useState<string>((new Date().getMonth() + 1).toString());
   const [reportYear, setReportYear] = useState<string>(new Date().getFullYear().toString());
 
-  const classOptions = classesData.map((c) => ({ value: c.id, label: c.name }));
+  const classOptions: any[] = [];
   const monthOptions = Array.from({ length: 12 }, (_, i) => ({ value: (i + 1).toString(), label: format(new Date(0, i), 'MMMM')}));
   const yearOptions = Array.from({ length: 5 }, (_, i) => ({ value: (new Date().getFullYear() - i).toString(), label: (new Date().getFullYear() - i).toString()}));
 
   const fetchAttendance = () => {
     if (selectedDate && selectedClass) {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const existingRecords = attendanceData.filter(
-        (rec) => rec.date === dateStr && rec.classId === selectedClass
-      );
-
-      const classStudents = students.filter(
-        (s) => s.classId === selectedClass
-      );
-
-      const records: AttendanceRecord[] = classStudents.map((student) => {
-        const existing = existingRecords.find(
-          (rec) => rec.studentId === student.id
-        );
-        return {
-          studentId: student.id,
-          studentName: student.name,
-          status: (existing?.status as AttendanceStatus) || 'unmarked',
-        };
-      });
-
-      setAttendance(records);
-      setIsEditing(records.length > 0);
+        setIsEditing(true);
     }
   };
 
@@ -128,7 +106,7 @@ export default function AttendancePage() {
         });
         toast({
             title: 'Attendance Saved',
-            description: `Attendance for ${classesData.find(c => c.id === selectedClass)?.name} on ${format(selectedDate, 'PPP')} has been saved as a draft.`,
+            description: `Attendance has been saved as a draft.`,
         });
     }
   };
@@ -142,9 +120,7 @@ export default function AttendancePage() {
       });
       toast({
         title: 'Attendance Submitted',
-        description: `Attendance for ${
-          classesData.find((c) => c.id === selectedClass)?.name
-        } on ${format(selectedDate, 'PPP')} has been finalized.`,
+        description: `Attendance has been finalized.`,
         variant: 'success'
       });
       router.push('/students');
@@ -164,7 +140,7 @@ export default function AttendancePage() {
 
         if (reportType === 'class') {
             if (reportClassId) {
-                reportDetails += `, Class: ${classesData.find(c => c.id === reportClassId)?.name}`;
+                reportDetails += `, Class: ${reportClassId}`;
             } else {
                  toast({
                     variant: 'destructive',
@@ -363,7 +339,7 @@ export default function AttendancePage() {
              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <CardTitle>
-                        Attendance for {classesData.find(c => c.id === selectedClass)?.name}
+                        Attendance for {selectedClass}
                     </CardTitle>
                     <CardDescription>
                         Date: {selectedDate ? format(selectedDate, 'PPP') : ''}

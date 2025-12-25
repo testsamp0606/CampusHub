@@ -1,6 +1,5 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
-import { assetsData as initialAssetsData } from '@/lib/data';
 import {
   Card,
   CardContent,
@@ -15,7 +14,18 @@ import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-type Asset = (typeof initialAssetsData)[0];
+type Asset = {
+    id: string;
+    name: string;
+    category: string;
+    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
+    purchaseDate: string;
+    warrantyEndDate?: string;
+    value: number;
+    assignedTo: string;
+    notes?: string;
+};
+
 
 export default function AssetDetailsPage() {
   const params = useParams();
@@ -26,9 +36,11 @@ export default function AssetDetailsPage() {
 
   useEffect(() => {
     const storedAssets = localStorage.getItem('assetsData');
-    const assets: Asset[] = storedAssets ? JSON.parse(storedAssets) : initialAssetsData;
-    const currentAsset = assets.find((a) => a.id === assetId);
-    setAsset(currentAsset);
+    if(storedAssets){
+        const assets: Asset[] = JSON.parse(storedAssets);
+        const currentAsset = assets.find((a) => a.id === assetId);
+        setAsset(currentAsset);
+    }
   }, [assetId]);
   
   if (!asset) {

@@ -11,18 +11,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, User, Calendar } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { announcementsData as initialData } from '@/lib/data';
 import Link from 'next/link';
 
-type Announcement = (typeof initialData)[0];
+type Announcement = {
+    id: string;
+    title: string;
+    content: string;
+    author: string;
+    date: string;
+    audience: 'All' | 'Teachers' | 'Students' | 'Parents';
+};
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
     const storedData = localStorage.getItem('announcementsData');
-    setAnnouncements(storedData ? JSON.parse(storedData) : initialData);
+    if (storedData) {
+        setAnnouncements(JSON.parse(storedData));
+    }
   }, []);
 
   const getAudienceBadgeVariant = (audience: Announcement['audience']) => {

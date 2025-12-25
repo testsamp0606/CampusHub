@@ -23,12 +23,18 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { announcementsData as initialData } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 
-type Announcement = (typeof initialData)[0];
+type Announcement = {
+    id: string;
+    title: string;
+    content: string;
+    author: string;
+    date: string;
+    audience: 'All' | 'Teachers' | 'Students' | 'Parents';
+};
 
 const announcementFormSchema = z.object({
   id: z.string(),
