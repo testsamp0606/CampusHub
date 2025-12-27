@@ -1,4 +1,4 @@
-import MainDashboard from '@/components/dashboard/main-dashboard';
+import MainDashboard from '@/app/dashboard/main-dashboard';
 
 export default function Home() {
   return <MainDashboard />;

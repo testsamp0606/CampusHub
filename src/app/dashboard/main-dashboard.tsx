@@ -2,14 +2,15 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import StatCard from './stat-card';
-import AttendanceCard from './attendance-card';
-import ClassesTable from './classes-table';
-import AnomalyDetector from './anomaly-detector';
-import ClassPerformanceChart from './student-charts/class-performance-chart';
+import StatCard from '@/components/dashboard/stat-card';
+import AttendanceCard from '@/components/dashboard/attendance-card';
+import ClassesTable from '@/components/dashboard/classes-table';
+import AnomalyDetector from '@/components/dashboard/anomaly-detector';
+import ClassPerformanceChart from '@/components/dashboard/student-charts/class-performance-chart';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Briefcase, School2, Users, TrendingUp, UserCheck, UserX, UserPlus } from 'lucide-react';
+import StudentDistributionChart from '@/components/dashboard/student-charts/student-distribution-chart';
 
 export type StatCardData = {
   title: string;
@@ -40,7 +41,7 @@ export default function MainDashboard() {
     [firestore]
   );
   const { data: classes, isLoading: classesLoading } = useCollection(classesQuery);
-
+  
 
   const statCardsData: StatCardData[] = [
     {
@@ -151,8 +152,9 @@ export default function MainDashboard() {
                 <StatCard key={card.title} {...card} />
               ))}
             </div>
-            <div className="grid gap-4 md:grid-cols-1">
+            <div className="grid gap-4 md:grid-cols-2">
               <ClassPerformanceChart />
+              <StudentDistributionChart />
             </div>
           </div>
         </TabsContent>
