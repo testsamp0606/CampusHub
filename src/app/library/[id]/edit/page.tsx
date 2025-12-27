@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -70,44 +71,20 @@ export default function EditBookPage() {
   });
 
   useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    if (storedBooks) {
-        const books: Book[] = JSON.parse(storedBooks);
-        const bookToEdit = books.find(a => a.id === bookId);
-        if (bookToEdit) {
-            form.reset(bookToEdit);
-        } else {
-            toast({ title: "Error", description: "Book not found.", variant: "destructive"});
-            router.push('/library');
-        }
+    const books: Book[] = initialBooksData;
+    const bookToEdit = books.find(a => a.id === bookId);
+    if (bookToEdit) {
+        form.reset(bookToEdit);
     } else {
-        const bookToEdit = initialBooksData.find(a => a.id === bookId);
-        if(bookToEdit) {
-            form.reset(bookToEdit);
-        } else {
-            toast({ title: "Error", description: "Book not found.", variant: "destructive"});
-            router.push('/library');
-        }
+        toast({ title: "Error", description: "Book not found.", variant: "destructive"});
+        router.push('/library');
     }
     setIsLoading(false);
   }, [bookId, form, router, toast]);
 
   function onSubmit(data: BookFormValues) {
-    const storedBooks = localStorage.getItem('booksData');
-    const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
-
-    const updatedBooks = currentBooks.map(book => {
-        if (book.id === bookId) {
-            return {
-                ...book,
-                ...data,
-            };
-        }
-        return book;
-    });
-
-    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
-    
+    // In a real app this would update the backend.
+    // Here we just show a toast.
     toast({
       title: 'Book Updated',
       description: `"${data.title}" has been successfully updated.`,

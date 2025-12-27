@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -74,16 +75,12 @@ export default function AddAnnouncementPage() {
   }, [form]);
 
   function onSubmit(data: AnnouncementFormValues) {
-    const storedData = localStorage.getItem('announcementsData');
-    const currentData: Announcement[] = storedData ? JSON.parse(storedData) : [];
-
     const newAnnouncement: Announcement = {
         ...data,
         date: format(new Date(), 'yyyy-MM-dd'),
     };
 
-    const updatedData = [...currentData, newAnnouncement];
-    localStorage.setItem('announcementsData', JSON.stringify(updatedData));
+    console.log("New announcement:", newAnnouncement);
     
     toast({
       title: 'Announcement Posted',

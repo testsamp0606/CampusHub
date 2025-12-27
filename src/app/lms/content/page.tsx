@@ -27,14 +27,9 @@ type EnrichedContent = CourseContent & {
 };
 
 export default function ContentPage() {
-    const [content, setContent] = useState<CourseContent[]>([]);
-    const [courses, setCourses] = useState<Course[]>([]);
+    const [content, setContent] = useState<CourseContent[]>(initialContentData);
+    const [courses, setCourses] = useState<Course[]>(initialCoursesData);
     const [searchQuery, setSearchQuery] = useState('');
-
-    useEffect(() => {
-        setContent(JSON.parse(localStorage.getItem('courseContentData') || JSON.stringify(initialContentData)));
-        setCourses(JSON.parse(localStorage.getItem('coursesData') || JSON.stringify(initialCoursesData)));
-    }, []);
 
     const enrichedContent = useMemo(() => {
         const coursesMap = new Map(courses.map(c => [c.id, c.title]));

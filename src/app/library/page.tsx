@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -33,28 +34,12 @@ export default function LibraryPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    if (storedBooks) {
-      setBooks(JSON.parse(storedBooks));
-    } else {
-      setBooks(initialBooksData);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const updateAndStoreBooks = (newBooks: Book[]) => {
-    setBooks(newBooks);
-    localStorage.setItem('booksData', JSON.stringify(newBooks));
-  };
-
+  const [books, setBooks] = useState<Book[]>(initialBooksData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = (bookId: string) => {
     const updatedBooks = books.filter(book => book.id !== bookId);
-    updateAndStoreBooks(updatedBooks);
+    setBooks(updatedBooks);
     
     toast({
       title: 'Book Deleted',

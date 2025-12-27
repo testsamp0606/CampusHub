@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -36,24 +37,8 @@ export default function FeesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole] = useState<Role>('SuperAdmin'); // Simulating user role
-  const [feesData, setFeesData] = useState<Fee[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    if(storedFees) {
-        setFeesData(JSON.parse(storedFees));
-    } else {
-        setFeesData(initialFeesData);
-    }
-    setIsLoading(false);
-  }, []);
-
-  const updateAndStoreFees = (newFees: Fee[]) => {
-    setFeesData(newFees);
-    localStorage.setItem('feesData', JSON.stringify(newFees));
-  };
-
+  const [feesData, setFeesData] = useState<Fee[]>(initialFeesData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRecordPayment = (invoiceId: string) => {
     const updatedFees = feesData.map(fee => {
@@ -68,7 +53,7 @@ export default function FeesPage() {
         return fee;
     });
 
-    updateAndStoreFees(updatedFees);
+    setFeesData(updatedFees);
 
     toast({
       title: 'Payment Recorded',

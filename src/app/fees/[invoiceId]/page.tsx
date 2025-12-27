@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -27,14 +28,12 @@ export default function InvoiceDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    const fees: Fee[] = storedFees ? JSON.parse(storedFees) : initialFeesData;
+    const fees: Fee[] = initialFeesData;
     const currentInvoice = fees.find(f => f.invoiceId === invoiceId);
     setInvoice(currentInvoice);
 
     if(currentInvoice) {
-        const storedStudents = localStorage.getItem('students');
-        const students: Student[] = storedStudents ? JSON.parse(storedStudents) : initialStudentsData;
+        const students: Student[] = initialStudentsData;
         setStudent(students.find(s => s.id === currentInvoice.studentId));
     }
     setIsLoading(false);

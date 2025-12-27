@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -87,17 +88,14 @@ export default function AddBookPage() {
   }, [form]);
 
   function onSubmit(data: BookFormValues) {
-    const storedBooks = localStorage.getItem('booksData');
-    const currentBooks: Book[] = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
-    
     const newBook: Book = {
         ...data,
         issued: 0,
         coverImage: `https://picsum.photos/seed/${data.id}/200/300`, // Placeholder image
     };
     
-    const updatedBooks = [...currentBooks, newBook];
-    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
+    // In a real app, you would save this to a database
+    console.log('New book data:', newBook);
     
     toast({
       title: 'Book Added',

@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -24,18 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-
-type Asset = {
-    id: string;
-    name: string;
-    category: string;
-    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
-    purchaseDate: string;
-    warrantyEndDate?: string;
-    value: number;
-    assignedTo: string;
-    notes?: string;
-};
+import { assetsData as initialAssetsData, Asset } from '@/lib/data';
 
 const ASSETS_PER_PAGE = 5;
 
@@ -44,24 +34,11 @@ export default function AssetsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [assets, setAssets] = useState<Asset[]>([]);
-
-  useEffect(() => {
-    const storedAssets = localStorage.getItem('assetsData');
-    if (storedAssets) {
-      setAssets(JSON.parse(storedAssets));
-    }
-  }, []);
-
-  const updateAndStoreAssets = (newAssets: Asset[]) => {
-    setAssets(newAssets);
-    localStorage.setItem('assetsData', JSON.stringify(newAssets));
-  };
-
+  const [assets, setAssets] = useState<Asset[]>(initialAssetsData);
 
   const handleDelete = (assetId: string) => {
     const updatedAssets = assets.filter(asset => asset.id !== assetId);
-    updateAndStoreAssets(updatedAssets);
+    setAssets(updatedAssets);
     toast({
       title: 'Asset Deleted',
       variant: 'destructive',

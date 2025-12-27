@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -32,38 +33,19 @@ export default function BookDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedBooks = localStorage.getItem('booksData');
-    const books = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
+    const books = initialBooksData;
     setBook(books.find((b: Book) => b.id === bookId));
 
-    const storedIssues = localStorage.getItem('bookIssuesData');
-    const issues = storedIssues ? JSON.parse(storedIssues) : initialBookIssuesData;
+    const issues = initialBookIssuesData;
     setIssueHistory(issues.filter((i: BookIssue) => i.bookId === bookId));
 
-    const storedStudents = localStorage.getItem('students');
-    setStudents(storedStudents ? JSON.parse(storedStudents) : initialStudentsData);
+    const studentsData = initialStudentsData;
+    setStudents(studentsData);
     
     setIsLoading(false);
   }, [bookId]);
 
   const studentOptions = useMemo(() => students?.map(s => ({ value: s.id, label: `${s.name} (${s.id})` })) || [], [students]);
-
-  const updateAndStoreBook = (updatedBook: Book) => {
-    setBook(updatedBook);
-    const storedBooks = localStorage.getItem('booksData');
-    const books = storedBooks ? JSON.parse(storedBooks) : initialBooksData;
-    const updatedBooks = books.map((b: Book) => b.id === updatedBook.id ? updatedBook : b);
-    localStorage.setItem('booksData', JSON.stringify(updatedBooks));
-  };
-  
-  const updateAndStoreIssues = (updatedIssues: BookIssue[]) => {
-    setIssueHistory(updatedIssues.filter(i => i.bookId === bookId));
-    const storedIssues = localStorage.getItem('bookIssuesData');
-    const allIssues = storedIssues ? JSON.parse(storedIssues) : initialBookIssuesData;
-    const otherIssues = allIssues.filter((i: BookIssue) => i.bookId !== bookId);
-    localStorage.setItem('bookIssuesData', JSON.stringify([...otherIssues, ...updatedIssues]));
-  }
-
 
   const handleIssueBook = () => {
     if (!issueStudentId) {
@@ -100,9 +82,8 @@ export default function BookDetailsPage() {
         fineStatus: 'Unpaid' as 'Unpaid',
     };
 
-    const updatedBook = { ...book, issued: (book.issued || 0) + 1 };
-    updateAndStoreBook(updatedBook);
-    updateAndStoreIssues([...issueHistory, newIssue]);
+    setBook({ ...book, issued: (book.issued || 0) + 1 });
+    setIssueHistory(prev => [...prev, newIssue]);
 
     toast({
       title: 'Book Issued',
@@ -148,10 +129,9 @@ export default function BookDetailsPage() {
         fineStatus: fineAmount > 0 ? 'Unpaid' as 'Unpaid' : 'Paid' as 'Paid',
      } : issue);
 
-     updateAndStoreIssues(updatedIssues);
+     setIssueHistory(updatedIssues);
      
-     const updatedBook = { ...book, issued: Math.max(0, (book.issued || 0) - 1) };
-     updateAndStoreBook(updatedBook);
+     setBook({ ...book, issued: Math.max(0, (book.issued || 0) - 1) });
   }
 
   const handlePayFine = (issueId: string) => {

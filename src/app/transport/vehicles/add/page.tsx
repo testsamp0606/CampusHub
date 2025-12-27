@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -68,26 +69,18 @@ export default function AddVehiclePage() {
   }, [form]);
 
   function onSubmit(data: VehicleFormValues) {
-    const storedVehicles = localStorage.getItem('vehiclesData');
-    const currentVehicles: Vehicle[] = storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData;
-    
     const newVehicle: Vehicle = {
       ...data,
     };
     
-    const updatedVehicles = [...currentVehicles, newVehicle];
-    localStorage.setItem('vehiclesData', JSON.stringify(updatedVehicles));
+    console.log("New vehicle added:", newVehicle);
     
     toast({
       title: 'Vehicle Added',
       description: `Vehicle "${data.vehicleNumber}" has been successfully added.`,
     });
 
-    if (window.opener) {
-        window.close();
-    } else {
-        router.push('/transport');
-    }
+    router.push('/transport');
   }
 
   return (
@@ -218,7 +211,7 @@ export default function AddVehiclePage() {
                    <Button
                     type="button"
                     variant="outline"
-                    onClick={() => window.close()}
+                    onClick={() => router.back()}
                   >
                     Close
                   </Button>

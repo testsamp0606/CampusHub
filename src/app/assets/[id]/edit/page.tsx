@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,19 +32,7 @@ import { CalendarIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
-
-type Asset = {
-    id: string;
-    name: string;
-    category: string;
-    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
-    purchaseDate: string;
-    warrantyEndDate?: string;
-    value: number;
-    assignedTo: string;
-    notes?: string;
-};
-
+import { assetsData as initialAssetsData, Asset } from '@/lib/data';
 
 const assetFormSchema = z.object({
   id: z.string(),
@@ -76,40 +65,22 @@ export default function EditAssetPage() {
   });
 
   useEffect(() => {
-    const storedAssets = localStorage.getItem('assetsData');
-    if (storedAssets) {
-        const assets: Asset[] = JSON.parse(storedAssets);
-        const assetToEdit = assets.find(a => a.id === assetId);
-        if (assetToEdit) {
-            form.reset({
-                ...assetToEdit,
-                purchaseDate: parseISO(assetToEdit.purchaseDate),
-                warrantyEndDate: assetToEdit.warrantyEndDate ? parseISO(assetToEdit.warrantyEndDate) : undefined,
-            });
-        } else {
-            toast({ title: "Error", description: "Asset not found.", variant: "destructive"});
-            router.push('/assets');
-        }
+    const assets: Asset[] = initialAssetsData;
+    const assetToEdit = assets.find(a => a.id === assetId);
+    if (assetToEdit) {
+        form.reset({
+            ...assetToEdit,
+            purchaseDate: parseISO(assetToEdit.purchaseDate),
+            warrantyEndDate: assetToEdit.warrantyEndDate ? parseISO(assetToEdit.warrantyEndDate) : undefined,
+        });
+    } else {
+        toast({ title: "Error", description: "Asset not found.", variant: "destructive"});
+        router.push('/assets');
     }
   }, [assetId, form, router, toast]);
 
   function onSubmit(data: AssetFormValues) {
-    const storedAssets = localStorage.getItem('assetsData');
-    const currentAssets: Asset[] = storedAssets ? JSON.parse(storedAssets) : [];
-
-    const updatedAssets = currentAssets.map(asset => {
-        if (asset.id === assetId) {
-            return {
-                ...data,
-                purchaseDate: format(data.purchaseDate, 'yyyy-MM-dd'),
-                warrantyEndDate: data.warrantyEndDate ? format(data.warrantyEndDate, 'yyyy-MM-dd') : '',
-            };
-        }
-        return asset;
-    });
-
-    localStorage.setItem('assetsData', JSON.stringify(updatedAssets));
-    
+    // In a real app, you would save this to your backend
     toast({
       title: 'Asset Updated',
       description: `Asset "${data.name}" has been successfully updated.`,

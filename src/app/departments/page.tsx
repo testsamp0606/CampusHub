@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -26,19 +27,9 @@ import { Input } from '@/components/ui/input';
 export default function DepartmentsPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [departmentsData, setDepartmentsData] = useState<Department[]>([]);
-  const [teachersData, setTeachersData] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedDepartments = localStorage.getItem('departmentsData');
-    setDepartmentsData(storedDepartments ? JSON.parse(storedDepartments) : initialDepartmentsData);
-
-    const storedTeachers = localStorage.getItem('teachersData');
-    setTeachersData(storedTeachers ? JSON.parse(storedTeachers) : initialTeachersData);
-
-    setIsLoading(false);
-  }, []);
+  const [departmentsData, setDepartmentsData] = useState<Department[]>(initialDepartmentsData);
+  const [teachersData, setTeachersData] = useState<Teacher[]>(initialTeachersData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const enrichedDepartments = useMemo(() => {
     if (!departmentsData || !teachersData) return [];

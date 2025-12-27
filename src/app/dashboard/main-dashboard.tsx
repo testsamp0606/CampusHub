@@ -11,6 +11,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { Briefcase, School2, Users, TrendingUp, UserCheck, UserX, UserPlus } from 'lucide-react';
 import StudentDistributionChart from '@/components/dashboard/student-charts/student-distribution-chart';
+import { students as initialStudents, teachersData as initialTeachers, classesData as initialClasses } from '@/lib/data';
 
 export type StatCardData = {
   title: string;
@@ -22,45 +23,25 @@ export type StatCardData = {
 
 
 export default function MainDashboard() {
-  const firestore = useFirestore();
-
-  const studentsQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/students') : null),
-    [firestore]
-  );
-  const { data: students, isLoading: studentsLoading } = useCollection(studentsQuery);
-
-  const teachersQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/teachers') : null),
-    [firestore]
-  );
-  const { data: teachers, isLoading: teachersLoading } = useCollection(teachersQuery);
-  
-  const classesQuery = useMemoFirebase(
-    () => (firestore ? collection(firestore, 'schools/school-1/classes') : null),
-    [firestore]
-  );
-  const { data: classes, isLoading: classesLoading } = useCollection(classesQuery);
-  
 
   const statCardsData: StatCardData[] = [
     {
       title: 'Total Students',
-      count: studentsLoading ? '...' : students?.length.toString() || '0',
+      count: initialStudents.length.toString(),
       Icon: Users,
       color: 'text-blue-500',
       bgColor: 'bg-blue-100',
     },
     {
       title: 'Total Teachers',
-      count: teachersLoading ? '...' : teachers?.length.toString() || '0',
+      count: initialTeachers.length.toString(),
       Icon: Briefcase,
       color: 'text-green-500',
       bgColor: 'bg-green-100',
     },
     {
       title: 'Classes Count',
-      count: classesLoading ? '...' : classes?.length.toString() || '0',
+      count: initialClasses.length.toString(),
       Icon: School2,
       color: 'text-pink-500',
       bgColor: 'bg-pink-100',

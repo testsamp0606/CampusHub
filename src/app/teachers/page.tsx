@@ -33,27 +33,11 @@ export default function TeachersPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-
-  useEffect(() => {
-    const storedTeachers = localStorage.getItem('teachersData');
-    if (storedTeachers) {
-      setTeachers(JSON.parse(storedTeachers));
-    } else {
-      setTeachers(initialTeachersData);
-      localStorage.setItem('teachersData', JSON.stringify(initialTeachersData));
-    }
-  }, []);
-
-  const updateAndStoreTeachers = (newTeachers: Teacher[]) => {
-    setTeachers(newTeachers);
-    localStorage.setItem('teachersData', JSON.stringify(newTeachers));
-  };
-
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachersData);
 
   const handleDelete = (teacherId: string) => {
     const updatedTeachers = teachers.filter(teacher => teacher.id !== teacherId);
-    updateAndStoreTeachers(updatedTeachers);
+    setTeachers(updatedTeachers);
 
     toast({
       title: 'Teacher Deleted',
@@ -226,5 +210,3 @@ export default function TeachersPage() {
     </div>
   );
 }
-
-    

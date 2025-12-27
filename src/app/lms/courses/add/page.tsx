@@ -58,16 +58,9 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddCoursePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-
-  useEffect(() => {
-    setTeachers(JSON.parse(localStorage.getItem('teachersData') || JSON.stringify(initialTeachersData)));
-    setClasses(JSON.parse(localStorage.getItem('classesData') || JSON.stringify(initialClassesData)));
-    setSubjects(JSON.parse(localStorage.getItem('subjectsData') || JSON.stringify(initialSubjectsData)));
-  }, []);
-
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachersData);
+  const [classes, setClasses] = useState<ClassInfo[]>(initialClassesData);
+  const [subjects, setSubjects] = useState<Subject[]>(initialSubjectsData);
 
   const form = useForm<CourseFormValues>({
     resolver: zodResolver(courseFormSchema),
@@ -80,16 +73,12 @@ export default function AddCoursePage() {
   }, [form]);
 
   function onSubmit(data: CourseFormValues) {
-    const storedData = localStorage.getItem('coursesData');
-    const currentData: Course[] = storedData ? JSON.parse(storedData) : initialCoursesData;
-
     const newCourse: Course = {
         ...data,
         coverImage: `https://picsum.photos/seed/${data.id}/600/400`,
     };
-
-    const updatedData = [...currentData, newCourse];
-    localStorage.setItem('coursesData', JSON.stringify(updatedData));
+    // In a real app, you would save this to the backend
+    console.log(newCourse);
     
     toast({
       title: 'Course Created',

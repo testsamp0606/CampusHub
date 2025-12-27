@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -29,19 +30,10 @@ export default function DepartmentDetailsPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
   useEffect(() => {
-    const storedDepartments = localStorage.getItem('departmentsData');
-    const depts: Department[] = storedDepartments ? JSON.parse(storedDepartments) : initialDepartmentsData;
-    setDepartment(depts.find(d => d.id === departmentId));
-
-    const storedTeachers = localStorage.getItem('teachersData');
-    setTeachers(storedTeachers ? JSON.parse(storedTeachers) : initialTeachersData);
-    
-    const storedSubjects = localStorage.getItem('subjectsData');
-    setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjectsData);
-
-    const storedExpenses = localStorage.getItem('expensesData');
-    setExpenses(storedExpenses ? JSON.parse(storedExpenses) : initialExpensesData);
-
+    setDepartment(initialDepartmentsData.find(d => d.id === departmentId));
+    setTeachers(initialTeachersData);
+    setSubjects(initialSubjectsData);
+    setExpenses(initialExpensesData);
   }, [departmentId]);
 
   const departmentDetails = useMemo(() => {
@@ -72,7 +64,6 @@ export default function DepartmentDetailsPage() {
   const handleExpenseApproval = (expenseId: string, status: 'Approved' | 'Rejected') => {
     const updatedExpenses = expenses.map(e => e.id === expenseId ? {...e, status} : e);
     setExpenses(updatedExpenses);
-    localStorage.setItem('expensesData', JSON.stringify(updatedExpenses));
     toast({
         title: `Expense ${status}`,
         description: `Expense ID ${expenseId} has been marked as ${status}.`

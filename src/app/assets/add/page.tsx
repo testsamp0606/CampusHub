@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -88,17 +89,13 @@ export default function AddAssetPage() {
   }, [form]);
 
   function onSubmit(data: AssetFormValues) {
-    const storedAssets = localStorage.getItem('assetsData');
-    const currentAssets: Asset[] = storedAssets ? JSON.parse(storedAssets) : [];
-
     const newAsset: Asset = {
         ...data,
         purchaseDate: format(data.purchaseDate, 'yyyy-MM-dd'),
         warrantyEndDate: data.warrantyEndDate ? format(data.warrantyEndDate, 'yyyy-MM-dd') : '',
     };
 
-    const updatedAssets = [...currentAssets, newAsset];
-    localStorage.setItem('assetsData', JSON.stringify(updatedAssets));
+    console.log("New Asset:", newAsset);
     
     toast({
       title: 'Asset Added',

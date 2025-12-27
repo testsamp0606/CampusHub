@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,23 +56,16 @@ export default function EditDepartmentPage() {
   const params = useParams();
   const departmentId = params.id as string;
   
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachersData);
+  const [subjects, setSubjects] = useState<Subject[]>(initialSubjectsData);
   
   const form = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
   });
 
   useEffect(() => {
-    const storedDepartments = localStorage.getItem('departmentsData');
-    const depts: Department[] = storedDepartments ? JSON.parse(storedDepartments) : initialDepartmentsData;
+    const depts: Department[] = initialDepartmentsData;
     const departmentToEdit = depts.find(d => d.id === departmentId);
-
-    const storedTeachers = localStorage.getItem('teachersData');
-    setTeachers(storedTeachers ? JSON.parse(storedTeachers) : initialTeachersData);
-
-    const storedSubjects = localStorage.getItem('subjectsData');
-    setSubjects(storedSubjects ? JSON.parse(storedSubjects) : initialSubjectsData);
 
     if (departmentToEdit) {
       form.reset(departmentToEdit);
@@ -82,12 +76,7 @@ export default function EditDepartmentPage() {
   }, [departmentId, form, router, toast]);
 
   function onSubmit(data: DepartmentFormValues) {
-    const storedDepartments = localStorage.getItem('departmentsData');
-    const currentDepartments: Department[] = storedDepartments ? JSON.parse(storedDepartments) : initialDepartmentsData;
-
-    const updatedDepartments = currentDepartments.map(d => d.id === departmentId ? data : d);
-    localStorage.setItem('departmentsData', JSON.stringify(updatedDepartments));
-    
+    // In a real app, you would save this data to your backend
     toast({
       title: 'Department Updated',
       description: `Department "${data.name}" has been successfully updated.`,

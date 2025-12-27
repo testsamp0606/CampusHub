@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -35,27 +36,10 @@ type Transaction = {
 };
 
 export default function AccountsPage() {
-  const [feesData, setFeesData] = useState<Fee[]>([]);
-  const [expensesData, setExpensesData] = useState<Expense[]>([]);
+  const [feesData, setFeesData] = useState<Fee[]>(initialFeesData);
+  const [expensesData, setExpensesData] = useState<Expense[]>(initialExpensesData);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedFees = localStorage.getItem('feesData');
-    if (storedFees) {
-      setFeesData(JSON.parse(storedFees));
-    } else {
-      setFeesData(initialFeesData);
-    }
-    
-    const storedExpenses = localStorage.getItem('expensesData');
-    if (storedExpenses) {
-      setExpensesData(JSON.parse(storedExpenses));
-    } else {
-      setExpensesData(initialExpensesData);
-    }
-    setIsLoading(false);
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (feesData && expensesData) {

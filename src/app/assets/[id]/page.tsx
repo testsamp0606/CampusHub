@@ -1,3 +1,4 @@
+
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -13,18 +14,7 @@ import { ArrowLeft, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-type Asset = {
-    id: string;
-    name: string;
-    category: string;
-    status: 'In Use' | 'In Storage' | 'Under Maintenance' | 'Disposed';
-    purchaseDate: string;
-    warrantyEndDate?: string;
-    value: number;
-    assignedTo: string;
-    notes?: string;
-};
+import { assetsData as initialAssetsData, Asset } from '@/lib/data';
 
 
 export default function AssetDetailsPage() {
@@ -35,12 +25,9 @@ export default function AssetDetailsPage() {
   const [asset, setAsset] = useState<Asset | undefined>(undefined);
 
   useEffect(() => {
-    const storedAssets = localStorage.getItem('assetsData');
-    if(storedAssets){
-        const assets: Asset[] = JSON.parse(storedAssets);
-        const currentAsset = assets.find((a) => a.id === assetId);
-        setAsset(currentAsset);
-    }
+    const assets: Asset[] = initialAssetsData;
+    const currentAsset = assets.find((a) => a.id === assetId);
+    setAsset(currentAsset);
   }, [assetId]);
   
   if (!asset) {

@@ -21,27 +21,9 @@ import { useMemo, useState, useEffect } from 'react';
 import { classesData as initialClassesData, teachersData as initialTeachersData, ClassInfo, Teacher } from '@/lib/data';
 
 export default function ClassesTable() {
-  const [classesData, setClassesData] = useState<ClassInfo[]>([]);
-  const [teachersData, setTeachersData] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedClasses = localStorage.getItem('classesData');
-    if (storedClasses) {
-      setClassesData(JSON.parse(storedClasses));
-    } else {
-      setClassesData(initialClassesData);
-    }
-    
-    const storedTeachers = localStorage.getItem('teachersData');
-    if (storedTeachers) {
-      setTeachersData(JSON.parse(storedTeachers));
-    } else {
-      setTeachersData(initialTeachersData);
-    }
-
-    setIsLoading(false);
-  }, []);
+  const [classesData, setClassesData] = useState<ClassInfo[]>(initialClassesData);
+  const [teachersData, setTeachersData] = useState<Teacher[]>(initialTeachersData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const enrichedClasses = useMemo(() => {
     if (!classesData || !teachersData) return [];
@@ -107,5 +89,3 @@ export default function ClassesTable() {
     </Card>
   );
 }
-
-    

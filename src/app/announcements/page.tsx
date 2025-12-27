@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -12,25 +13,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, User, Calendar } from 'lucide-react';
 import Link from 'next/link';
-
-type Announcement = {
-    id: string;
-    title: string;
-    content: string;
-    author: string;
-    date: string;
-    audience: 'All' | 'Teachers' | 'Students' | 'Parents';
-};
+import { announcementsData as initialAnnouncementsData, Announcement } from '@/lib/data';
 
 export default function AnnouncementsPage() {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-
-  useEffect(() => {
-    const storedData = localStorage.getItem('announcementsData');
-    if (storedData) {
-        setAnnouncements(JSON.parse(storedData));
-    }
-  }, []);
+  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncementsData);
 
   const getAudienceBadgeVariant = (audience: Announcement['audience']) => {
     switch (audience) {

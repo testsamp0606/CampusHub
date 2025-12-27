@@ -28,16 +28,10 @@ type EnrichedAssignment = CourseAssignment & {
 };
 
 export default function AssignmentsPage() {
-    const [assignments, setAssignments] = useState<CourseAssignment[]>([]);
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [classes, setClasses] = useState<ClassInfo[]>([]);
+    const [assignments, setAssignments] = useState<CourseAssignment[]>(initialAssignmentsData);
+    const [courses, setCourses] = useState<Course[]>(initialCoursesData);
+    const [classes, setClasses] = useState<ClassInfo[]>(initialClassesData);
     const [searchQuery, setSearchQuery] = useState('');
-
-    useEffect(() => {
-        setAssignments(JSON.parse(localStorage.getItem('courseAssignmentsData') || JSON.stringify(initialAssignmentsData)));
-        setCourses(JSON.parse(localStorage.getItem('coursesData') || JSON.stringify(initialCoursesData)));
-        setClasses(JSON.parse(localStorage.getItem('classesData') || JSON.stringify(initialClassesData)));
-    }, []);
 
     const enrichedAssignments = useMemo(() => {
         const coursesMap = new Map(courses.map(c => [c.id, { title: c.title, classId: c.classId }]));

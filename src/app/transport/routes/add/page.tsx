@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -63,19 +64,8 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddRoutePage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchVehicles = useCallback(() => {
-    const storedVehicles = localStorage.getItem('vehiclesData');
-    setVehicles(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
-
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehiclesData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<RouteFormValues>({
     resolver: zodResolver(routeFormSchema),
@@ -88,18 +78,14 @@ export default function AddRoutePage() {
   }, [form]);
 
   function onSubmit(data: RouteFormValues) {
-    const storedRoutes = localStorage.getItem('routesData');
-    const currentRoutes: Route[] = storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData;
-    
     const newRoute: Route = {
         id: data.id,
         routeName: data.routeName,
         vehicleId: data.vehicleId,
         stops: data.stops.split(',').map(s => s.trim()).filter(s => s.length > 0),
     };
-
-    const updatedRoutes = [...currentRoutes, newRoute];
-    localStorage.setItem('routesData', JSON.stringify(updatedRoutes));
+    // In a real app, you'd save this to your backend
+    console.log(newRoute);
     
     toast({
       title: 'Route Added',
@@ -108,27 +94,6 @@ export default function AddRoutePage() {
     form.reset();
     router.push('/transport');
   }
-
-  const handleAddVehiclePopup = () => {
-    const width = 800;
-    const height = 700;
-    const left = (window.screen.width / 2) - (width / 2);
-    const top = (window.screen.height / 2) - (height / 2);
-    const newWindow = window.open(
-        '/transport/vehicles/add',
-        'addVehicleWindow',
-        `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-    );
-
-    if (newWindow) {
-      const timer = setInterval(() => {
-        if (newWindow.closed) {
-          clearInterval(timer);
-          fetchVehicles();
-        }
-      }, 500);
-    }
-  };
 
   const vehicleOptions = vehicles?.map(v => ({ value: v.id, label: `${v.vehicleNumber} (${v.type})`})) || [];
 
@@ -194,7 +159,7 @@ export default function AddRoutePage() {
                       </FormItem>
                     )}
                   />
-                  <Button type="button" variant="outline" onClick={handleAddVehiclePopup}>
+                  <Button type="button" variant="outline" onClick={() => router.push('/transport/vehicles/add')}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Add Vehicle
                   </Button>
                 </div>

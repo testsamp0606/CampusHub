@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,12 +52,7 @@ const RequiredLabel = ({ children }: { children: React.ReactNode }) => (
 export default function AddDepartmentPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-
-  useEffect(() => {
-    const storedTeachers = localStorage.getItem('teachersData');
-    setTeachers(storedTeachers ? JSON.parse(storedTeachers) : initialTeachersData);
-  }, []);
+  const [teachers, setTeachers] = useState<Teacher[]>(initialTeachersData);
 
   const form = useForm<DepartmentFormValues>({
     resolver: zodResolver(departmentFormSchema),
@@ -72,13 +68,10 @@ export default function AddDepartmentPage() {
   }, [form]);
 
   function onSubmit(data: DepartmentFormValues) {
-    const storedDepartments = localStorage.getItem('departmentsData');
-    const currentDepartments: Department[] = storedDepartments ? JSON.parse(storedDepartments) : initialDepartmentsData;
-    
     const newDepartment: Department = { ...data };
     
-    const updatedDepartments = [...currentDepartments, newDepartment];
-    localStorage.setItem('departmentsData', JSON.stringify(updatedDepartments));
+    // In a real app you'd save this to a database
+    console.log(newDepartment);
     
     toast({
       title: 'Department Created',

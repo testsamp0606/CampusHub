@@ -27,10 +27,10 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<EnrichedCourse[]>([]);
 
   useEffect(() => {
-    const storedCourses = JSON.parse(localStorage.getItem('coursesData') || JSON.stringify(initialCoursesData));
-    const storedTeachers = JSON.parse(localStorage.getItem('teachersData') || JSON.stringify(initialTeachersData));
-    const storedSubjects = JSON.parse(localStorage.getItem('subjectsData') || JSON.stringify(initialSubjectsData));
-    const storedClasses = JSON.parse(localStorage.getItem('classesData') || JSON.stringify(initialClassesData));
+    const storedCourses = initialCoursesData;
+    const storedTeachers = initialTeachersData;
+    const storedSubjects = initialSubjectsData;
+    const storedClasses = initialClassesData;
     
     const teachersMap = new Map(storedTeachers.map((t: Teacher) => [t.id, t.name]));
     const subjectsMap = new Map(storedSubjects.map((s: Subject) => [s.id, s.name]));

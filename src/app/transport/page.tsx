@@ -1,3 +1,4 @@
+
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -48,31 +49,12 @@ type EnrichedAllocation = StudentTransport & {
 export default function TransportPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
-  const [routesData, setRoutesData] = useState<Route[]>([]);
-  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>([]);
-  const [studentTransportData, setStudentTransportData] = useState<StudentTransport[]>([]);
-  const [studentsData, setStudentsData] = useState<Student[]>([]);
-  const [classesData, setClassesData] = useState<ClassInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const storedRoutes = localStorage.getItem('routesData');
-    setRoutesData(storedRoutes ? JSON.parse(storedRoutes) : initialRoutesData);
-
-    const storedVehicles = localStorage.getItem('vehiclesData');
-    setVehiclesData(storedVehicles ? JSON.parse(storedVehicles) : initialVehiclesData);
-
-    const storedAllocations = localStorage.getItem('studentTransportData');
-    setStudentTransportData(storedAllocations ? JSON.parse(storedAllocations) : initialStudentTransportData);
-
-    const storedStudents = localStorage.getItem('students');
-    setStudentsData(storedStudents ? JSON.parse(storedStudents) : initialStudentsData);
-
-    const storedClasses = localStorage.getItem('classesData');
-    setClassesData(storedClasses ? JSON.parse(storedClasses) : initialClassesData);
-
-    setIsLoading(false);
-  }, []);
+  const [routesData, setRoutesData] = useState<Route[]>(initialRoutesData);
+  const [vehiclesData, setVehiclesData] = useState<Vehicle[]>(initialVehiclesData);
+  const [studentTransportData, setStudentTransportData] = useState<StudentTransport[]>(initialStudentTransportData);
+  const [studentsData, setStudentsData] = useState<Student[]>(initialStudentsData);
+  const [classesData, setClassesData] = useState<ClassInfo[]>(initialClassesData);
+  const [isLoading, setIsLoading] = useState(false);
 
   const enrichedAllocations = useMemo(() => {
     if (!studentTransportData || !studentsData || !routesData || !vehiclesData || !classesData) return [];
